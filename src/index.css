@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "@/design-system/tokens.css";
+
+@plugin "tailwindcss-animate";
+
+
+/* base */
+@layer base {
+    html {
+        font-family: IranSansX, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    * { @apply border-border; }
+    body { @apply bg-background text-foreground; }
+}
