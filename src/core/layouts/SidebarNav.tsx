@@ -32,7 +32,7 @@ export default function SidebarNav() {
             key={to}
             asChild
             variant={active ? "secondary" : "ghost"}
-            className="justify-start gap-2"
+            className="justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <Link to={to}>
               <Icon className="size-4" />
