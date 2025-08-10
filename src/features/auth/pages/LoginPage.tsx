@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate, type Location } from "react-router-dom";
-import { useAuth } from "@/app/providers/AuthProvider";
+import { useAuth } from "@/app/providers/useAuth";
 import { useI18n } from "@/shared/hooks/useI18n";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
