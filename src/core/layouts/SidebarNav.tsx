@@ -1,8 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
+import { useI18n } from "@/shared/hooks/useI18n";
 
 export default function SidebarNav() {
     const { pathname } = useLocation();
+    const { t } = useI18n();
 
     const Item = ({
                       to,
@@ -27,8 +29,8 @@ export default function SidebarNav() {
 
     return (
         <nav className="grid gap-1">
-            <Item to="/">داشبورد</Item>
-            <Item to="/login">ورود</Item>
+            <Item to="/">{t("nav.dashboard")}</Item>
+            <Item to="/login">{t("nav.login")}</Item>
         </nav>
     );
 }

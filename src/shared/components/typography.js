@@ -1,0 +1,20 @@
+import { jsx as _jsx } from "react/jsx-runtime";
+import { cn } from "@/lib/utils";
+export function H1({ children, className }) {
+    return _jsx("h1", { className: cn("scroll-m-20 text-3xl md:text-4xl font-extrabold tracking-tight", className), children: children });
+}
+export function H2({ children, className }) {
+    return _jsx("h2", { className: cn("scroll-m-20 text-2xl md:text-3xl font-bold tracking-tight", className), children: children });
+}
+export function H3({ children, className }) {
+    return _jsx("h3", { className: cn("scroll-m-20 text-xl md:text-2xl font-semibold tracking-tight", className), children: children });
+}
+export function Lead({ children, className }) {
+    return _jsx("p", { className: cn("text-sm md:text-base text-muted-foreground", className), children: children });
+}
+export function Muted({ children, className }) {
+    return _jsx("p", { className: cn("text-xs text-muted-foreground", className), children: children });
+}
+export function Small({ children, className }) {
+    return _jsx("small", { className: cn("text-xs font-medium leading-none", className), children: children });
+}

@@ -29,7 +29,7 @@ export default function LoginPage() {
                 <div className="mb-6 text-center">
                     <div className="inline-flex items-center gap-2 justify-center mb-2">
                         <span className="inline-block size-3 rounded-full bg-primary" />
-                        <span className="font-bold">My Dashboard</span>
+                        <span className="font-bold">{t("appTitle")}</span>
                     </div>
                     <H2 className="mb-1">{t("login")}</H2>
                     <Lead>{t("welcome")}</Lead>
@@ -41,7 +41,7 @@ export default function LoginPage() {
                         <CardTitle className="text-base flex items-center gap-2">
                             <LogIn className="size-4 opacity-70" />
                             {t("login")}
-                            <Badge variant="secondary" className="ms-auto">Secure</Badge>
+                            <Badge variant="secondary" className="ms-auto">{t("secure")}</Badge>
                         </CardTitle>
                     </CardHeader>
 
@@ -104,7 +104,7 @@ export default function LoginPage() {
                         <div className="muted-surface p-3 rounded-[var(--radius)] flex items-start gap-2">
                             <Shield className="size-4 mt-0.5 opacity-70" />
                             <Small className="leading-5">
-                                از ایمیل درست استفاده کنید. با تغییر تم یا زبان، این صفحه با دیزاین سیستم هماهنگ می‌ماند.
+                                {t("login.securityNote")}
                             </Small>
                         </div>
                     </CardContent>
