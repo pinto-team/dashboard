@@ -1,36 +1,46 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { useI18n } from "@/shared/hooks/useI18n";
+import {
+  Home,
+  ShoppingCart,
+  Package2,
+  Users2,
+  LineChart,
+  LogIn as LoginIcon,
+} from "lucide-react";
 
 export default function SidebarNav() {
-    const { pathname } = useLocation();
-    const { t } = useI18n();
+  const { pathname } = useLocation();
+  const { t } = useI18n();
 
-    const Item = ({
-                      to,
-                      children,
-                  }: {
-        to: string;
-        children: React.ReactNode;
-    }) => {
-        const active =
-            (to === "/" && pathname === "/") ||
-            (to !== "/" && pathname.startsWith(to));
+  const items = [
+    { to: "/", label: t("nav.dashboard"), icon: Home },
+    { to: "/orders", label: "Orders", icon: ShoppingCart },
+    { to: "/products", label: "Products", icon: Package2 },
+    { to: "/customers", label: "Customers", icon: Users2 },
+    { to: "/analytics", label: "Analytics", icon: LineChart },
+    { to: "/login", label: t("nav.login"), icon: LoginIcon },
+  ];
+
+  return (
+    <nav className="grid gap-1">
+      {items.map(({ to, label, icon: Icon }) => {
+        const active = (to === "/" && pathname === "/") || (to !== "/" && pathname.startsWith(to));
         return (
-            <Button
-                asChild
-                variant={active ? "secondary" : "ghost"}
-                className="justify-start"
-            >
-                <Link to={to}>{children}</Link>
-            </Button>
+          <Button
+            key={to}
+            asChild
+            variant={active ? "secondary" : "ghost"}
+            className="justify-start gap-2"
+          >
+            <Link to={to}>
+              <Icon className="size-4" />
+              <span className="truncate">{label}</span>
+            </Link>
+          </Button>
         );
-    };
-
-    return (
-        <nav className="grid gap-1">
-            <Item to="/">{t("nav.dashboard")}</Item>
-            <Item to="/login">{t("nav.login")}</Item>
-        </nav>
-    );
+      })}
+    </nav>
+  );
 }
