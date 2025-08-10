@@ -49,7 +49,7 @@ export default function AppSidebar() {
   const side: "left" | "right" = locale === "fa" ? "right" : "left";
 
   return (
-    <Sidebar side={side} collapsible="icon">
+    <Sidebar side={side} collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

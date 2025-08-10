@@ -11,6 +11,7 @@ import { Input } from "@/shared/components/ui/input";
 
 import AppSidebar from "./AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const { t, locale } = useI18n();
@@ -22,7 +23,7 @@ export default function DashboardLayout({ children }: { children?: React.ReactNo
     <SidebarProvider>
       <AppSidebar />
 
-      <div className="min-h-dvh flex flex-col bg-background text-foreground">
+      <SidebarInset>
         {/* Header */}
         <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur border-border">
           <div className="container mx-auto flex items-center gap-3 p-3">
@@ -56,7 +57,7 @@ export default function DashboardLayout({ children }: { children?: React.ReactNo
           <Outlet />
           {children}
         </main>
-      </div>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
