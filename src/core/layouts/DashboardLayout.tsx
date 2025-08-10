@@ -18,7 +18,7 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 
 import SidebarNav from "./SidebarNav";
 
-export default function DashboardLayout() {
+export default function DashboardLayout({ children }: { children?: React.ReactNode }) {
     const { t, locale } = useI18n();
 
     const sheetSide = useMemo<"left" | "right">(

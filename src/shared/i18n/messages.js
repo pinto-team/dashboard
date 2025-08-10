@@ -1,6 +1,4 @@
-export type Locale = "fa" | "en";
-
-export const messages: Record<Locale, Record<string, string>> = {
+export const messages = {
     fa: {
         appTitle: "داشبورد من",
         login: "ورود",
