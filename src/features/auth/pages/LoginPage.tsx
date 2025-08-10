@@ -11,95 +11,103 @@ import { Separator } from "@/shared/components/ui/separator";
 import { Badge } from "@/shared/components/ui/badge";
 import { H2, Lead, Small } from "@/shared/components/typography";
 import { cn } from "@/lib/utils";
-import { LogIn, Mail, Shield } from "lucide-react";
+import { LogIn, Mail } from "lucide-react";
 
 type LocationState = { from?: string };
 
 export default function LoginPage() {
-    const { t } = useI18n();
-    const navigate = useNavigate();
-    const location = useLocation() as Location & { state?: LocationState };
-    const { login } = useAuth();
-    const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const location = useLocation() as Location & { state?: LocationState };
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
-    return (
-        <div className={cn("min-h-dvh grid place-items-center p-6", "bg-background text-foreground")}>
-            <div className="w-full max-w-md">
-
-                {/* کارت فرم */}
-                <Card className="card-surface">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <LogIn className="size-4 opacity-70" />
-                            {t("login")}
-                            <Badge variant="secondary" className="ms-auto">{t("secure")}</Badge>
-                        </CardTitle>
-                    </CardHeader>
-
-                    <CardContent className="grid gap-4">
-                        <form
-                            className="grid gap-4"
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                const form = e.currentTarget as HTMLFormElement;
-                                const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-                                setLoading(true);
-                                setTimeout(() => {
-                                    login(email);
-                                    const to = location.state?.from || "/";
-                                    navigate(to, { replace: true });
-                                }, 500);
-                            }}
-                        >
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">{t("email")}</Label>
-                                <div className="relative">
-                                    <Mail className="size-4 absolute top-1/2 -translate-y-1/2 start-3 opacity-60" />
-                                    <Input
-                                        id="email"
-                                        name="email"
-                                        dir="ltr"
-                                        inputMode="email"
-                                        className="ps-9 font-mono text-sm"
-                                        placeholder="name@example.com"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">{t("password")}</Label>
-                                <Input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    dir="ltr"
-                                    className="text-sm"
-                                    placeholder="••••••••"
-                                    required
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                            >
-                                {loading ? t("loading") : t("signIn")}
-                            </Button>
-                        </form>
-
-                        <Separator />
-
-                        <div className="muted-surface p-3 rounded-[var(--radius)] flex items-start gap-2">
-                            <Shield className="size-4 mt-0.5 opacity-70" />
-                            <Small className="leading-5">
-                                {t("login.securityNote")}
-                            </Small>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+  return (
+    <div className={cn("min-h-dvh grid grid-cols-1 lg:grid-cols-2", "bg-background text-foreground")}>      
+      {/* Left panel (brand/marketing) */}
+      <div className="hidden lg:flex flex-col justify-between border-e p-10">
+        <div>
+          <div className="inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md bg-primary/10 text-primary">
+            <span className="font-medium">{t("appTitle")}</span>
+          </div>
+          <H2 className="mt-6">{t("welcome")}</H2>
+          <Lead className="mt-2 text-muted-foreground">
+            {t("dashboard.subtitle")}
+          </Lead>
         </div>
-    );
+        <Small className="text-muted-foreground">© {new Date().getFullYear()} {t("appTitle")} – All rights reserved.</Small>
+      </div>
+
+      {/* Right panel (form) */}
+      <div className="flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <Card className="card-surface">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <LogIn className="size-4 opacity-70" />
+                {t("login")}
+                <Badge variant="secondary" className="ms-auto">{t("secure")}</Badge>
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="grid gap-4">
+              <form
+                className="grid gap-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget as HTMLFormElement;
+                  const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+                  setLoading(true);
+                  setTimeout(() => {
+                    login(email);
+                    const to = location.state?.from || "/";
+                    navigate(to, { replace: true });
+                  }, 500);
+                }}
+              >
+                <div className="grid gap-2">
+                  <Label htmlFor="email">{t("email")}</Label>
+                  <div className="relative">
+                    <Mail className="size-4 absolute top-1/2 -translate-y-1/2 start-3 opacity-60" />
+                    <Input
+                      id="email"
+                      name="email"
+                      dir="ltr"
+                      inputMode="email"
+                      className="ps-9 font-mono text-sm"
+                      placeholder="name@example.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="password">{t("password")}</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    dir="ltr"
+                    className="text-sm"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                  {loading ? t("loading") : t("signIn")}
+                </Button>
+              </form>
+
+              <Separator />
+
+              <div className="muted-surface p-3 rounded-[var(--radius)] text-sm text-muted-foreground">
+                {t("login.securityNote")}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
 }
