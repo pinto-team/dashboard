@@ -3,13 +3,13 @@ import { useLocation, useNavigate, type Location } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useI18n } from "@/shared/hooks/useI18n";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
-import { Separator } from "@/shared/components/ui/separator";
-import { Badge } from "@/shared/components/ui/badge";
-import { H2, Lead, Small } from "@/shared/components/typography";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { H2, Lead, Small } from "@/components/typography";
 import { cn } from "@/lib/utils";
 import { LogIn, Mail } from "lucide-react";
 
@@ -60,8 +60,8 @@ export default function LoginPage() {
                   setLoading(true);
                   setTimeout(() => {
                     login(email);
-                    const to = location.state?.from || "/";
-                    navigate(to, { replace: true });
+                      const from = (location.state as any)?.from ?? "/";
+                      navigate(from, { replace: true });
                   }, 500);
                 }}
               >

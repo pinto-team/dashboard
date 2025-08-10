@@ -1,5 +1,5 @@
-import { H1, Lead } from "@/shared/components/typography";
-import { cn } from "@/lib/utils";
+import { H1, Lead } from "@/components/typography.tsx";
+import { cn } from "@/lib/utils.ts";
 
 export default function PageHeader({
                                        title,

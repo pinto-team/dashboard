@@ -1,20 +1,37 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Ctx, type AuthCtx } from "./auth-context";
 
-type AuthCtx = {
-    isAuthenticated: boolean;
-    login: (email: string) => void;
-    logout: () => void;
-    user: { email: string } | null;
-};
+type User = { email: string } | null;
 
-const Ctx = createContext<AuthCtx | null>(null);
+function getInitialUser(): User {
+    try {
+        if (typeof window === "undefined") return null;
+        const raw = localStorage.getItem("auth_user");
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<{ email: string } | null>(null);
+    // مقدار اولیه را مستقیم از localStorage می‌گیریم تا فلش/سفیدی نباشد
+    const [user, setUser] = useState<User>(getInitialUser);
+    // اگر بخواهی می‌توانیم ready را نگه داریم؛ با lazy-init عملاً از همان ابتدا true است
+    const [ready] = useState(true);
 
+    // همگام‌سازی با تغییرات تب‌های دیگر
     useEffect(() => {
-        const raw = localStorage.getItem("auth_user");
-        if (raw) setUser(JSON.parse(raw));
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === "auth_user") {
+                try {
+                    setUser(e.newValue ? JSON.parse(e.newValue) : null);
+                } catch {
+                    setUser(null);
+                }
+            }
+        };
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
     }, []);
 
     const login = (email: string) => {
@@ -28,16 +45,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("auth_user");
     };
 
-    return (
-        <Ctx.Provider value={{ isAuthenticated: !!user, user, login, logout }}>
-            {children}
-        </Ctx.Provider>
-    );
-}
+    const value: AuthCtx = {
+        isAuthenticated: !!user,
+        user,
+        login,
+        logout,
+        ready,
+    };
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function useAuth() {
-    const ctx = useContext(Ctx);
-    if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-    return ctx;
+    return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

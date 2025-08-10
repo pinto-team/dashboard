@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/shared/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/shared/hooks/useI18n";
 import {
   Home,
@@ -9,18 +9,19 @@ import {
   LineChart,
   LogIn as LoginIcon,
 } from "lucide-react";
+import {ROUTES} from "@/app/routes/routes.ts";
 
 export default function SidebarNav() {
   const { pathname } = useLocation();
   const { t } = useI18n();
 
   const items = [
-    { to: "/", label: t("nav.dashboard"), icon: Home },
+    { to: ROUTES.ROOT, label: t("nav.dashboard"), icon: Home },
     { to: "/orders", label: "Orders", icon: ShoppingCart },
     { to: "/products", label: "Products", icon: Package2 },
     { to: "/customers", label: "Customers", icon: Users2 },
     { to: "/analytics", label: "Analytics", icon: LineChart },
-    { to: "/login", label: t("nav.login"), icon: LoginIcon },
+    { to: ROUTES.LOGIN, label: t("nav.login"), icon: LoginIcon },
   ];
 
   return (
