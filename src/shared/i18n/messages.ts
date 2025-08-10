@@ -2,7 +2,7 @@ export type Locale = "fa" | "en";
 
 export const messages: Record<Locale, Record<string, string>> = {
     fa: {
-        appTitle: "داشبورد من",
+        appTitle: "پینتو مکس",
         login: "ورود",
         email: "ایمیل",
         password: "رمز عبور",
@@ -47,7 +47,7 @@ export const messages: Record<Locale, Record<string, string>> = {
         "login.securityNote": "از ایمیل درست استفاده کنید. با تغییر تم یا زبان، این صفحه با دیزاین سیستم هماهنگ می‌ماند.",
     },
     en: {
-        appTitle: "My Dashboard",
+        appTitle: "Pinto MAX",
         login: "Login",
         email: "Email",
         password: "Password",

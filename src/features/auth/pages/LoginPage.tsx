@@ -25,15 +25,6 @@ export default function LoginPage() {
     return (
         <div className={cn("min-h-dvh grid place-items-center p-6", "bg-background text-foreground")}>
             <div className="w-full max-w-md">
-                {/* برند/عنوان بالا */}
-                <div className="mb-6 text-center">
-                    <div className="inline-flex items-center gap-2 justify-center mb-2">
-                        <span className="inline-block size-3 rounded-full bg-primary" />
-                        <span className="font-bold">{t("appTitle")}</span>
-                    </div>
-                    <H2 className="mb-1">{t("login")}</H2>
-                    <Lead>{t("welcome")}</Lead>
-                </div>
 
                 {/* کارت فرم */}
                 <Card className="card-surface">
@@ -100,7 +91,6 @@ export default function LoginPage() {
 
                         <Separator />
 
-                        {/* نکات امنیتی/راهنما */}
                         <div className="muted-surface p-3 rounded-[var(--radius)] flex items-start gap-2">
                             <Shield className="size-4 mt-0.5 opacity-70" />
                             <Small className="leading-5">
