@@ -4,21 +4,17 @@ import LoginPage from "@/features/auth/pages/LoginPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
 import NotFound from "./NotFound";
+import {ROUTES} from "@/app/routes/routes.ts";
 
 export const router = createBrowserRouter([
     {
-        path: "/",
+        path: ROUTES.ROOT,
         element: <AppRoot />,
         children: [
-            { path: "login", element: <LoginPage /> },
-            {
-                element: <ProtectedRoute />,
-                children: [
-                    { index: true, element: <DashboardPage /> },
-                    { path: "*", element: <NotFound /> }, // ⬅️ 404
-                ],
-            },
-        ],
+            { path: ROUTES.LOGIN, element: <LoginPage /> },
+            { element: <ProtectedRoute />, children: [{ index: true, element: <DashboardPage /> }] },
+            { path: ROUTES.NOT_FOUND, element: <NotFound /> },
+        ]
     },
 ]);
 

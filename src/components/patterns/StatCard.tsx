@@ -1,6 +1,6 @@
-import { Card, CardHeader, CardContent } from "@/shared/components/ui/card";
-import { Small } from "@/shared/components/typography";
-import { cn } from "@/lib/utils";
+import { Card, CardHeader, CardContent } from "@/components/ui/card.tsx";
+import { Small } from "@/components/typography.tsx";
+import { cn } from "@/lib/utils.ts";
 
 export default function StatCard({
                                      label,

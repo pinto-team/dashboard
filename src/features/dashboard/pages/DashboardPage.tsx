@@ -1,8 +1,8 @@
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Separator } from "@/shared/components/ui/separator";
-import { H3, Small } from "@/shared/components/typography";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { H3, Small } from "@/components/typography";
 import { useI18n } from "@/shared/hooks/useI18n";
 import { dashboardKpis, recentActivities } from "@/mocks/dashboard";
 import { formatNumber } from "@/shared/i18n/numbers";
