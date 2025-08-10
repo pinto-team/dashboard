@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Ctx, type AuthCtx } from "./auth-context";
+import { Ctx } from "./auth-context";
+import type { AuthCtx } from "./auth-types";
 
 type User = { email: string } | null;
 
