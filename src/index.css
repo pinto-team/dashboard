@@ -1,8 +1,9 @@
 @import "tailwindcss";
 @import "@/design-system/tokens.css";
 
-@plugin "tailwindcss-animate";
+@custom-variant dark (&:is(.dark *));
 
+@plugin "tailwindcss-animate";
 
 /* base */
 @layer base {
