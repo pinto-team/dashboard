@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: { children?: React.ReactNo
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr] bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur border-border">
         <div className="container mx-auto flex items-center gap-3 p-3">
           {/* Mobile menu trigger */}
           <div className="lg:hidden">
@@ -37,8 +37,8 @@ export default function DashboardLayout({ children }: { children?: React.ReactNo
                   <Menu className="size-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side={sheetSide} className="w-72 p-0">
-                <div className="p-4 border-b">
+              <SheetContent side={sheetSide} className="w-72 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border">
+                <div className="p-4 border-b border-sidebar-border">
                   <SheetHeader>
                     <SheetTitle>{t("appTitle")}</SheetTitle>
                   </SheetHeader>
@@ -75,8 +75,8 @@ export default function DashboardLayout({ children }: { children?: React.ReactNo
       {/* Body */}
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] min-h-0">
         {/* Static sidebar (desktop) */}
-        <aside className="hidden lg:flex lg:flex-col border-e">
-          <div className="p-4 border-b font-bold">{t("appTitle")}</div>
+        <aside className="hidden lg:flex lg:flex-col border-e border-sidebar-border bg-sidebar text-sidebar-foreground">
+          <div className="p-4 border-b border-sidebar-border font-bold">{t("appTitle")}</div>
           <ScrollArea className="flex-1 p-4">
             <SidebarNav />
           </ScrollArea>
