@@ -1,146 +1,167 @@
-import { Link } from "react-router-dom";
-import { useI18n } from "@/shared/hooks/useI18n";
-import {
-  Calendar,
-  Home,
-  Inbox,
-  Search,
-  Settings,
-  ChevronDown,
-  MoreHorizontal,
-  Plus,
-  User2,
-} from "lucide-react";
+import { Calendar, ChevronDown, Home, Inbox, Plus, Search, Settings, User2 } from "lucide-react"
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-  SidebarSeparator,
-} from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupAction,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+} from "@/components/ui/sidebar"
 
-// Items with translation keys
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+
+// Menu items + children
 const items = [
-  { titleKey: "nav.dashboard", to: "/", icon: Home },
-  { titleKey: "nav.inbox", to: "#", icon: Inbox },
-  { titleKey: "nav.calendar", to: "#", icon: Calendar },
-  { titleKey: "nav.search", to: "#", icon: Search },
-  { titleKey: "nav.settings", to: "#", icon: Settings },
-];
+    {
+        title: "Home",
+        url: "#",
+        icon: Home,
+        children: [
+            { title: "Overview", url: "#home-overview" },
+            { title: "Updates", url: "#home-updates" },
+            { title: "Quick actions", url: "#home-actions" },
+        ],
+    },
+    {
+        title: "Inbox",
+        url: "#",
+        icon: Inbox,
+        children: [
+            { title: "All", url: "#inbox-all" },
+            { title: "Unread", url: "#inbox-unread" },
+            { title: "Assigned to me", url: "#inbox-me" },
+        ],
+    },
+    {
+        title: "Calendar",
+        url: "#",
+        icon: Calendar,
+        children: [
+            { title: "Month", url: "#calendar-month" },
+            { title: "Week", url: "#calendar-week" },
+            { title: "Day", url: "#calendar-day" },
+        ],
+    },
+    {
+        title: "Search",
+        url: "#",
+        icon: Search,
+        children: [
+            { title: "All", url: "#search-all" },
+            { title: "People", url: "#search-people" },
+            { title: "Messages", url: "#search-messages" },
+        ],
+    },
+    {
+        title: "Settings",
+        url: "#",
+        icon: Settings,
+        children: [
+            { title: "Profile", url: "#settings-profile" },
+            { title: "Team", url: "#settings-team" },
+            { title: "Billing", url: "#settings-billing" },
+        ],
+    },
+]
 
-export default function AppSidebar() {
-  const { locale, t } = useI18n();
-  const side: "left" | "right" = locale === "fa" ? "right" : "left";
+export function AppSidebar() {
+    return (
+        <Sidebar collapsible="icon">
+            <SidebarContent>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Stores</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {items.map((item) => (
+                                <Collapsible key={item.title} defaultOpen className="group/collapsible">
+                                    <SidebarMenuItem>
+                                        <CollapsibleTrigger asChild>
+                                            <SidebarMenuButton asChild>
+                                                {/* اگه نمی‌خوای ناوبری انجام بشه، preventDefault بزن */}
+                                                <a href={item.url} onClick={(e) => e.preventDefault()} className="flex items-center gap-2 w-full">
+                                                    <item.icon />
+                                                    <span className="flex-1">{item.title}</span>
+                                                    {/* فلش: وقتی بازه، می‌چرخه */}
+                                                    <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                                                </a>
+                                            </SidebarMenuButton>
+                                        </CollapsibleTrigger>
 
-  return (
-    <Sidebar side={side} collapsible="icon" variant="inset">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  {t("appTitle")}
-                  <ChevronDown className="ms-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
-                <DropdownMenuItem>
-                  <span>Acme Inc</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Acme Corp.</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+                                        {item.children?.length ? (
+                                            <CollapsibleContent>
+                                                <SidebarMenuSub>
+                                                    {item.children.map((sub) => (
+                                                        <SidebarMenuSubItem key={sub.title}>
+                                                            <SidebarMenuSubButton asChild>
+                                                                <a href={sub.url}>
+                                                                    <span>{sub.title}</span>
+                                                                </a>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        ) : null}
+                                    </SidebarMenuItem>
+                                </Collapsible>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
 
-      <SidebarSeparator />
+                <SidebarGroup>
+                    <SidebarGroupLabel>Orders</SidebarGroupLabel>
+                    <SidebarGroupAction>
+                        <Plus /> <span className="sr-only">Add Project</span>
+                    </SidebarGroupAction>
+                    <SidebarGroupContent />
+                </SidebarGroup>
+            </SidebarContent>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>{t("sidebar.application")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.titleKey}>
-                  <SidebarMenuButton asChild tooltip={t(item.titleKey)} isActive={item.to === "/"}>
-                    <Link to={item.to}>
-                      <item.icon />
-                      <span>{t(item.titleKey)}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                  <SidebarMenuAction title="More">
-                    <MoreHorizontal />
-                  </SidebarMenuAction>
-                  <SidebarMenuBadge>12</SidebarMenuBadge>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>{t("sidebar.projects")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <SidebarMenuItem key={i}>
-                  <SidebarMenuButton>
-                    <span>{t("sidebar.projectX", { value: i + 1 })}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <User2 /> Username
-                  <ChevronDown className="ms-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                <DropdownMenuItem>
-                  <span>{t("sidebar.account")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>{t("sidebar.billing")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>{t("sidebar.signOut")}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-
-      <SidebarRail />
-    </Sidebar>
-  );
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <SidebarMenuButton>
+                                    <User2 /> Username
+                                    {/* این Chevron ربطی به Collapsible نداره، می‌تونی همون رو نگه داری */}
+                                    <ChevronDown className="ml-auto h-4 w-4" />
+                                </SidebarMenuButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+                                <DropdownMenuItem>
+                                    <span>Account</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <span>Billing</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <span>Sign out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
+    )
 }

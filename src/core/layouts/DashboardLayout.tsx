@@ -6,7 +6,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 import ThemeToggle from "@/components/ThemeToggle";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import AppSidebar from "./AppSidebar";
+import {AppSidebar} from "@/core/sidebar/components/app-sidebar.tsx";
 
 export default function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const { t, locale } = useI18n();
@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: { children?: React.ReactNo
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar/>
       <SidebarInset>
         {/* Header */}
         <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
