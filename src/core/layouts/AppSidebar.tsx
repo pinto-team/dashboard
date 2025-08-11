@@ -35,17 +35,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Sample items (from docs)
-const sampleItems = [
-  { title: "Home", to: "/", icon: Home },
-  { title: "Inbox", to: "#", icon: Inbox },
-  { title: "Calendar", to: "#", icon: Calendar },
-  { title: "Search", to: "#", icon: Search },
-  { title: "Settings", to: "#", icon: Settings },
+// Items with translation keys
+const items = [
+  { titleKey: "nav.dashboard", to: "/", icon: Home },
+  { titleKey: "nav.inbox", to: "#", icon: Inbox },
+  { titleKey: "nav.calendar", to: "#", icon: Calendar },
+  { titleKey: "nav.search", to: "#", icon: Search },
+  { titleKey: "nav.settings", to: "#", icon: Settings },
 ];
 
 export default function AppSidebar() {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const side: "left" | "right" = locale === "fa" ? "right" : "left";
 
   return (
@@ -56,7 +56,7 @@ export default function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  Select Workspace
+                  {t("appTitle")}
                   <ChevronDown className="ms-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -77,15 +77,15 @@ export default function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("sidebar.application")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {sampleItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title} isActive={item.to === "/"}>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.titleKey}>
+                  <SidebarMenuButton asChild tooltip={t(item.titleKey)} isActive={item.to === "/"}>
                     <Link to={item.to}>
                       <item.icon />
-                      <span>{item.title}</span>
+                      <span>{t(item.titleKey)}</span>
                     </Link>
                   </SidebarMenuButton>
                   <SidebarMenuAction title="More">
@@ -99,13 +99,13 @@ export default function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel asChild>Projects</SidebarGroupLabel>
+          <SidebarGroupLabel asChild>{t("sidebar.projects")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {Array.from({ length: 5 }).map((_, i) => (
                 <SidebarMenuItem key={i}>
                   <SidebarMenuButton>
-                    <span>Project {i + 1}</span>
+                    <span>{t("sidebar.projectX", { value: i + 1 })}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -126,13 +126,13 @@ export default function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem>
-                  <span>Account</span>
+                  <span>{t("sidebar.account")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span>Billing</span>
+                  <span>{t("sidebar.billing")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span>Sign out</span>
+                  <span>{t("sidebar.signOut")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
