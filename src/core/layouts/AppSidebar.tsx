@@ -27,6 +27,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { useI18n } from "@/shared/hooks/useI18n";
 
 // Menu items + children
 const items = [
@@ -83,8 +84,10 @@ const items = [
 ]
 
 export function AppSidebar() {
+    const { locale } = useI18n();
+    const side = locale === "fa" ? "right" : "left";
     return (
-        <Sidebar collapsible="icon">
+        <Sidebar collapsible="icon" side={side}>
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel>Stores</SidebarGroupLabel>
