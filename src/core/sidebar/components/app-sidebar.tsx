@@ -30,76 +30,104 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { useI18n } from "@/shared/hooks/useI18n";
+import { useAuth } from "@/app/providers/useAuth";
 
 // Menu items + children (ساب‌منوها)
-const items = [
+const buildItems = (t: (k: string) => string) => [
     {
-        title: "Home",
-        url: "#",
-        icon: Home,
-        children: [
-            { title: "Overview", url: "#home-overview" },
-            { title: "Updates", url: "#home-updates" },
-            { title: "Quick actions", url: "#home-actions" },
-        ],
-    },
-    {
-        title: "Inbox",
+        title: t("menu.orders"),
         url: "#",
         icon: Inbox,
         children: [
-            { title: "All", url: "#inbox-all" },
-            { title: "Unread", url: "#inbox-unread" },
-            { title: "Assigned to me", url: "#inbox-me" },
+            { title: t("menu.orders.active"), url: "#orders-active" },
+            { title: t("menu.orders.history"), url: "#orders-history" },
         ],
     },
     {
-        title: "Calendar",
+        title: t("menu.store"),
         url: "#",
-        icon: Calendar,
+        icon: Home,
         children: [
-            { title: "Month", url: "#calendar-month" },
-            { title: "Week", url: "#calendar-week" },
-            { title: "Day", url: "#calendar-day" },
+            { title: t("menu.store.restaurants"), url: "#store-restaurants" },
+            { title: t("menu.store.supermarket"), url: "#store-supermarket" },
         ],
     },
     {
-        title: "Search",
-        url: "#",
-        icon: Search,
-        children: [
-            { title: "All", url: "#search-all" },
-            { title: "People", url: "#search-people" },
-            { title: "Messages", url: "#search-messages" },
-        ],
-    },
-    {
-        title: "Settings",
+        title: t("menu.pinto"),
         url: "#",
         icon: Settings,
         children: [
-            { title: "Profile", url: "#settings-profile" },
-            { title: "Team", url: "#settings-team" },
-            { title: "Billing", url: "#settings-billing" },
+            { title: t("menu.pinto.max"), url: "#pinto-max" },
+            { title: t("menu.pinto.eco"), url: "#pinto-eco" },
+            { title: t("menu.pinto.pro"), url: "#pinto-pro" },
+        ],
+    },
+    {
+        title: t("menu.users"),
+        url: "#",
+        icon: User2,
+        children: [
+            { title: t("menu.users.customers"), url: "#users-customers" },
+            { title: t("menu.users.admins"), url: "#users-admins" },
+        ],
+    },
+    {
+        title: t("menu.logistics"),
+        url: "#",
+        icon: Calendar,
+        children: [
+            { title: t("menu.logistics.motorcycle"), url: "#logistics-motorcycle" },
+            { title: t("menu.logistics.van"), url: "#logistics-van" },
+        ],
+    },
+    {
+        title: t("menu.finance"),
+        url: "#",
+        icon: Search,
+        children: [
+            { title: t("menu.finance.dailySales"), url: "#finance-daily-sales" },
+            { title: t("menu.finance.logisticsCosts"), url: "#finance-logistics-costs" },
+        ],
+    },
+    {
+        title: t("menu.reports"),
+        url: "#",
+        icon: Settings,
+        children: [
+            { title: t("menu.reports.orders"), url: "#reports-orders" },
+            { title: t("menu.reports.topProducts"), url: "#reports-top-products" },
+        ],
+    },
+    {
+        title: t("menu.settings"),
+        url: "#",
+        icon: Settings,
+        children: [
+            { title: t("menu.settings.shippingRate"), url: "#settings-shipping-rate" },
+            { title: t("menu.settings.addProducts"), url: "#settings-add-products" },
         ],
     },
 ]
 
 export function AppSidebar() {
-    const { locale } = useI18n();
+    const { t, locale } = useI18n();
+    const { user, logout } = useAuth();
     const side = locale === "fa" ? "right" : "left";
+    const dirClass = locale === "fa" ? "rtl" : "ltr";
+    const items = buildItems(t);
+
     return (
         <Sidebar collapsible="icon" side={side}>
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Stores</SidebarGroupLabel>
+                    <SidebarGroupLabel>{t("appTitle")}</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
                                 <Collapsible key={item.title} className="group/collapsible">
                                     <SidebarMenuItem>
                                         <CollapsibleTrigger asChild>
-                                            <SidebarMenuButton className="w-full">
+                                            <SidebarMenuButton className={`w-full ${dirClass === "rtl" ? "text-right" : "text-left"}`}>
                                                 <item.icon />
                                                 <span className="flex-1">{item.title}</span>
                                                 <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
@@ -112,7 +140,7 @@ export function AppSidebar() {
                                                     {item.children.map((sub) => (
                                                         <SidebarMenuSubItem key={sub.title}>
                                                             <SidebarMenuSubButton asChild>
-                                                                <a href={sub.url}>
+                                                                <a href={sub.url} className={dirClass === "rtl" ? "text-right w-full" : "text-left w-full"}>
                                                                     <span>{sub.title}</span>
                                                                 </a>
                                                             </SidebarMenuSubButton>
@@ -130,7 +158,7 @@ export function AppSidebar() {
                 </SidebarGroup>
 
                 <SidebarGroup>
-                    <SidebarGroupLabel>Orders</SidebarGroupLabel>
+                    <SidebarGroupLabel>{t("menu.orders")}</SidebarGroupLabel>
                     <SidebarGroupAction>
                         <Plus /> <span className="sr-only">Add Project</span>
                     </SidebarGroupAction>
@@ -143,20 +171,20 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton>
-                                    <User2 /> Username
+                                <SidebarMenuButton className="w-full">
+                                    <User2 /> {user?.email ?? "Guest"}
                                     <ChevronUp className="ml-auto" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
                                 <DropdownMenuItem>
-                                    <span>Account</span>
+                                    <span>{t("sidebar.account")}</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
-                                    <span>Billing</span>
+                                    <span>{user?.email ?? "-"}</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <span>Sign out</span>
+                                <DropdownMenuItem onClick={logout}>
+                                    <span>{t("sidebar.signOut")}</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
