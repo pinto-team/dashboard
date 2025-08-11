@@ -19,6 +19,16 @@ export const messages: Record<Locale, Record<string, string>> = {
         // Sidebar
         "nav.dashboard": "داشبورد",
         "nav.login": "ورود",
+        "nav.inbox": "صندوق ورودی",
+        "nav.calendar": "تقویم",
+        "nav.search": "جستجو",
+        "nav.settings": "تنظیمات",
+        "sidebar.application": "اپلیکیشن",
+        "sidebar.projects": "پروژه‌ها",
+        "sidebar.projectX": "پروژه {value}",
+        "sidebar.account": "حساب کاربری",
+        "sidebar.billing": "صورتحساب",
+        "sidebar.signOut": "خروج",
         // Dashboard Page
         "dashboard.subtitle": "مرور سریع وضعیت امروز",
         "actions.createReport": "ساخت گزارش",
@@ -64,6 +74,16 @@ export const messages: Record<Locale, Record<string, string>> = {
         // Sidebar
         "nav.dashboard": "Dashboard",
         "nav.login": "Login",
+        "nav.inbox": "Inbox",
+        "nav.calendar": "Calendar",
+        "nav.search": "Search",
+        "nav.settings": "Settings",
+        "sidebar.application": "Application",
+        "sidebar.projects": "Projects",
+        "sidebar.projectX": "Project {value}",
+        "sidebar.account": "Account",
+        "sidebar.billing": "Billing",
+        "sidebar.signOut": "Sign out",
         // Dashboard Page
         "dashboard.subtitle": "Quick overview of today",
         "actions.createReport": "Create Report",
