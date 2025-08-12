@@ -14,7 +14,8 @@
     --color-muted-foreground: var(--muted-foreground);
     --color-border: var(--border);
     --color-ring: var(--ring);
-
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
     --color-secondary: var(--secondary);
@@ -56,6 +57,11 @@
     --card-foreground: var(--foreground);
     --muted: oklch(0.96 0 0);
     --muted-foreground: oklch(0.52 0 0);
+
+
+    /* popover (light) */
+    --popover: oklch(0.985 0 0);               /* نزدیک به card لایت */
+    --popover-foreground: var(--foreground);
 
     /* borders & rings */
     --border: oklch(0.92 0 0);
@@ -136,7 +142,7 @@
     --sidebar-background: 240 5.9% 10%;
 }
 
-/* component classes (اختیاری و مفید) */
+/* component classes () */
 @layer components {
     .surface { @apply rounded-[var(--radius)] border bg-background text-foreground; }
     .card-surface { @apply rounded-[var(--radius)] border bg-card text-card-foreground; }

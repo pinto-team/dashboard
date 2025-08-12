@@ -4,8 +4,10 @@ import { messages, type Locale } from "@/shared/i18n/messages";
 import { convertDigitsByLocale } from "@/shared/i18n/numbers";
 
 export default function I18nProvider({ children }: { children: ReactNode }) {
-    const [locale, setLocale] = useState<Locale>(() => (localStorage.getItem("locale") as Locale) || "fa");
-
+    const [locale, setLocale] = useState<Locale>(() => {
+        const saved = localStorage.getItem("locale") as Locale | null;
+        return saved ?? "en"; // اگر نبود، en
+    });
     useEffect(() => {
         const root = document.documentElement;
         root.setAttribute("lang", locale);
