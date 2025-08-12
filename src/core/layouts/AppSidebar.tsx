@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown, Home, Inbox, Plus, Search, Settings, User2 } from "lucide-react"
+import {BikeIcon, Calendar, ChevronDown, Home, Inbox, Plus, Search, Settings, User2} from "lucide-react"
 
 import {
     Sidebar,
@@ -74,7 +74,7 @@ const items = [
     {
         title: "Settings",
         url: "#",
-        icon: Settings,
+        icon: BikeIcon,
         children: [
             { title: "Profile", url: "#settings-profile" },
             { title: "Team", url: "#settings-team" },
