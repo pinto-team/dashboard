@@ -1,23 +1,25 @@
+import React, { useMemo } from "react"
 import {
-    Calendar,
     ChevronDown,
-    ChevronUp, CircleUser,
+    ChevronUp,
+    CircleUser,
     DollarSignIcon,
-    Home,
-    Inbox,
     NotebookIcon,
-    Plus,
-    Settings, ShoppingBagIcon, Store, Truck,
-    User2, Warehouse
+    Settings,
+    ShoppingBagIcon,
+    Store,
+    Truck,
+    User2,
+    Warehouse,
 } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
     SidebarGroup,
-    SidebarGroupAction,
     SidebarGroupContent,
-    SidebarGroupLabel, SidebarHeader,
+    SidebarGroupLabel,
+    SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
@@ -29,106 +31,128 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger,}
-    from "@/components/ui/dropdown-menu"
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,}
-    from "@/components/ui/collapsible"
-import {useI18n} from "@/shared/hooks/useI18n";
-import {useAuth} from "@/app/providers/useAuth";
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { useI18n } from "@/shared/hooks/useI18n"
+import { useAuth } from "@/app/providers/useAuth"
 
-const buildItems1 = (t: (k: string) => string) => [
-    {
-        title: t("menu.orders"),
-        url: "#",
-        icon: ShoppingBagIcon,
-        children: [
-            {title: t("menu.orders.active"), url: "#orders-active"},
-            {title: t("menu.orders.history"), url: "#orders-history"},
-        ],
-    },
-    {
-        title: t("menu.store"),
-        url: "#",
-        icon: Store,
-        children: [
-            {title: t("menu.store.restaurants"), url: "#store-restaurants"},
-            {title: t("menu.store.supermarket"), url: "#store-supermarket"},
-        ],
-    },
-    {
-        title: t("menu.pinto"),
-        url: "#",
-        icon: Warehouse,
-        children: [
-            {title: t("menu.pinto.max"), url: "#pinto-max"},
-            {title: t("menu.pinto.eco"), url: "#pinto-eco"},
-            {title: t("menu.pinto.pro"), url: "#pinto-pro"},
-        ],
-    },
-    {
-        title: t("menu.users"),
-        url: "#",
-        icon: CircleUser,
-        children: [
-            {title: t("menu.users.customers"), url: "#users-customers"},
-            {title: t("menu.users.admins"), url: "#users-admins"},
-        ],
-    },
-    {
-        title: t("menu.logistics"),
-        url: "#",
-        icon: Truck,
-        children: [
-            {title: t("menu.logistics.motorcycle"), url: "#logistics-motorcycle"},
-            {title: t("menu.logistics.van"), url: "#logistics-van"},
-        ],
-    }
+type TranslateFn = (key: string) => string
+
+type MenuChild = {
+    titleKey: string
+    url: string
+}
+
+type MenuItem = {
+    titleKey: string
+    url?: string
+    icon: React.ComponentType<{ className?: string }>
+    children?: MenuChild[]
+}
+
+const itemsSchema1: MenuItem[] = [
+    { titleKey: "menu.orders", icon: ShoppingBagIcon, children: [
+            { titleKey: "menu.orders.active", url: "#orders-active" },
+            { titleKey: "menu.orders.history", url: "#orders-history" },
+        ]},
+    { titleKey: "menu.store", icon: Store, children: [
+            { titleKey: "menu.store.restaurants", url: "#store-restaurants" },
+            { titleKey: "menu.store.supermarket", url: "#store-supermarket" },
+        ]},
+    { titleKey: "menu.pinto", icon: Warehouse, children: [
+            { titleKey: "menu.pinto.max", url: "#pinto-max" },
+            { titleKey: "menu.pinto.eco", url: "#pinto-eco" },
+            { titleKey: "menu.pinto.pro", url: "#pinto-pro" },
+        ]},
+    { titleKey: "menu.users", icon: CircleUser, children: [
+            { titleKey: "menu.users.customers", url: "#users-customers" },
+            { titleKey: "menu.users.admins", url: "#users-admins" },
+        ]},
+    { titleKey: "menu.logistics", icon: Truck, children: [
+            { titleKey: "menu.logistics.motorcycle", url: "#logistics-motorcycle" },
+            { titleKey: "menu.logistics.van", url: "#logistics-van" },
+        ]},
 ]
 
-const buildItems2 = (t: (k: string) => string) => [
-    {
-        title: t("menu.finance"),
-        url: "#",
-        icon: DollarSignIcon,
-        children: [
-            {title: t("menu.finance.dailySales"), url: "#finance-daily-sales"},
-            {title: t("menu.finance.logisticsCosts"), url: "#finance-logistics-costs"},
-        ],
-    },
-    {
-        title: t("menu.reports"),
-        url: "#",
-        icon: NotebookIcon,
-        children: [
-            {title: t("menu.reports.orders"), url: "#reports-orders"},
-            {title: t("menu.reports.topProducts"), url: "#reports-top-products"},
-        ],
-    },
-    {
-        title: t("menu.settings"),
-        url: "#",
-        icon: Settings,
-        children: [
-            {title: t("menu.settings.shippingRate"), url: "#settings-shipping-rate"},
-            {title: t("menu.settings.addProducts"), url: "#settings-add-products"},
-        ],
-    },
+const itemsSchema2: MenuItem[] = [
+    { titleKey: "menu.finance", icon: DollarSignIcon, children: [
+            { titleKey: "menu.finance.dailySales", url: "#finance-daily-sales" },
+            { titleKey: "menu.finance.logisticsCosts", url: "#finance-logistics-costs" },
+        ]},
+    { titleKey: "menu.reports", icon: NotebookIcon, children: [
+            { titleKey: "menu.reports.orders", url: "#reports-orders" },
+            { titleKey: "menu.reports.topProducts", url: "#reports-top-products" },
+        ]},
+    { titleKey: "menu.settings", icon: Settings, children: [
+            { titleKey: "menu.settings.shippingRate", url: "#settings-shipping-rate" },
+            { titleKey: "menu.settings.addProducts", url: "#settings-add-products" },
+        ]},
 ]
+
+const translateItems = (items: MenuItem[], t: TranslateFn) =>
+    items.map((item) => ({
+        ...item,
+        title: t(item.titleKey),
+        children: item.children?.map((child) => ({ ...child, title: t(child.titleKey) })) ?? [],
+    }))
+
+const alignClass = (isRTL: boolean) => (isRTL ? "text-right" : "text-left")
+
+function MenuSection({ label, items, isRTL }: { label: string; items: ReturnType<typeof translateItems>; isRTL: boolean }) {
+    const align = alignClass(isRTL)
+    return (
+        <SidebarGroup>
+            <SidebarGroupLabel>{label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+                <SidebarMenu>
+                    {items.map((item) => (
+                        <Collapsible key={item.title} className="group/collapsible">
+                            <SidebarMenuItem>
+                                <CollapsibleTrigger asChild>
+                                    <SidebarMenuButton className={`w-full ${align}`}>
+                                        <item.icon />
+                                        <span className="flex-1 text-black">{item.title}</span>
+                                        <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                                    </SidebarMenuButton>
+                                </CollapsibleTrigger>
+                                {item.children.length > 0 && (
+                                    <CollapsibleContent className="data-[state=closed]:hidden">
+                                        <SidebarMenuSub>
+                                            {item.children.map((subItem) => (
+                                                <SidebarMenuSubItem key={subItem.url}>
+                                                    <SidebarMenuSubButton asChild>
+                                                        <a href={subItem.url} className={`w-full ${align}`}>
+                                                            <span>{subItem.title}</span>
+                                                        </a>
+                                                    </SidebarMenuSubButton>
+                                                </SidebarMenuSubItem>
+                                            ))}
+                                        </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                )}
+                            </SidebarMenuItem>
+                        </Collapsible>
+                    ))}
+                </SidebarMenu>
+            </SidebarGroupContent>
+        </SidebarGroup>
+    )
+}
 
 export function AppSidebar() {
-    const {t, locale} = useI18n();
-    const {user, logout} = useAuth();
-    const side = locale === "fa" ? "right" : "left";
-    const dirClass = locale === "fa" ? "rtl" : "ltr";
-    const items1 = buildItems1(t);
-    const items2 = buildItems2(t);
+    const { t, locale } = useI18n()
+    const { user, logout } = useAuth()
+
+    const isRTL = locale === "fa"
+    const side = isRTL ? "right" : "left"
+
+    const items1 = useMemo(() => translateItems(itemsSchema1, t), [t])
+    const items2 = useMemo(() => translateItems(itemsSchema2, t), [t])
 
     return (
         <Sidebar collapsible="icon" side={side}>
-            <SidebarHeader className={"flex flex-col gap-2 p-2 border-b"}>
+            <SidebarHeader className="flex flex-col gap-2 p-2 border-b">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton>
@@ -138,96 +162,17 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>{t("appTitle")}</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {items1.map((item) => (
-                                <Collapsible key={item.title} className="group/collapsible">
-                                    <SidebarMenuItem>
-                                        <CollapsibleTrigger asChild>
-                                            <SidebarMenuButton
-                                                className={`w-full ${dirClass === "rtl" ? "text-right" : "text-left"}`}>
-                                                <item.icon/>
-                                                <span className="flex-1 text-black">{item.title}</span>
-                                                <ChevronDown
-                                                    className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180"/>
-                                            </SidebarMenuButton>
-                                        </CollapsibleTrigger>
-
-                                        {item.children?.length ? (
-                                            <CollapsibleContent className="data-[state=closed]:hidden">
-                                                <SidebarMenuSub>
-                                                    {item.children.map((sub) => (
-                                                        <SidebarMenuSubItem key={sub.title}>
-                                                            <SidebarMenuSubButton asChild>
-                                                                <a href={sub.url}
-                                                                   className={dirClass === "rtl" ? "text-right w-full" : "text-left w-full"}>
-                                                                    <span>{sub.title}</span>
-                                                                </a>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                    ))}
-                                                </SidebarMenuSub>
-                                            </CollapsibleContent>
-                                        ) : null}
-                                    </SidebarMenuItem>
-                                </Collapsible>
-                            ))}
-
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Morteza Group</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {items2.map((item) => (
-                                <Collapsible key={item.title} className="group/collapsible">
-                                    <SidebarMenuItem>
-                                        <CollapsibleTrigger asChild>
-                                            <SidebarMenuButton
-                                                className={`w-full ${dirClass === "rtl" ? "text-right" : "text-left"}`}>
-                                                <item.icon/>
-                                                <span className="flex-1 text-black">{item.title}</span>
-                                                <ChevronDown
-                                                    className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180"/>
-                                            </SidebarMenuButton>
-                                        </CollapsibleTrigger>
-
-                                        {item.children?.length ? (
-                                            <CollapsibleContent className="data-[state=closed]:hidden">
-                                                <SidebarMenuSub>
-                                                    {item.children.map((sub) => (
-                                                        <SidebarMenuSubItem key={sub.title}>
-                                                            <SidebarMenuSubButton asChild>
-                                                                <a href={sub.url}
-                                                                   className={dirClass === "rtl" ? "text-right w-full" : "text-left w-full"}>
-                                                                    <span>{sub.title}</span>
-                                                                </a>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                    ))}
-                                                </SidebarMenuSub>
-                                            </CollapsibleContent>
-                                        ) : null}
-                                    </SidebarMenuItem>
-                                </Collapsible>
-                            ))}
-
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                <MenuSection label={t("appTitle")} items={items1} isRTL={isRTL} />
+                <MenuSection label="Morteza Group" items={items2} isRTL={isRTL} />
             </SidebarContent>
-
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <SidebarMenuButton className="w-full">
-                                    <User2/> {user?.email ?? "Guest"}
-                                    <ChevronUp className="ml-auto"/>
+                                    <User2 /> {user?.email ?? "Guest"}
+                                    <ChevronUp className="ml-auto" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
