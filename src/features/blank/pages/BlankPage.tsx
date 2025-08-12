@@ -10,6 +10,8 @@ import {
 
 import data from "./data.json"
 import React from "react";
+import LanguageToggle from "@/components/LanguageToggle.tsx";
+import ThemeToggle from "@/components/ThemeToggle.tsx";
 
 export default function Page() {
     return (
@@ -32,6 +34,10 @@ export default function Page() {
                                 <ChartAreaInteractive />
                             </div>
                             <DataTable data={data} />
+                            <div className="ms-auto flex items-center gap-2">
+                                <LanguageToggle />
+                                <ThemeToggle />
+                            </div>
                         </div>
                     </div>
                 </div>
