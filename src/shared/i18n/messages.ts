@@ -16,6 +16,7 @@ export const messages: Record<Locale, Record<string, string>> = {
         outline: "حاشیه‌دار",
         back: "بازگشت",
         secure: "امن",
+        changeLanguage: "تغییر زبان",
         // Sidebar
         "nav.dashboard": "داشبورد",
         "nav.login": "ورود",
@@ -97,6 +98,7 @@ export const messages: Record<Locale, Record<string, string>> = {
         outline: "Outline",
         back: "Back",
         secure: "Secure",
+        changeLanguage: "Change language",
         // Sidebar
         "nav.dashboard": "Dashboard",
         "nav.login": "Login",
