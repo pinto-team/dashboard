@@ -36,6 +36,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { useI18n } from "@/shared/hooks/useI18n"
 import { useAuth } from "@/app/providers/useAuth"
+import {IconInnerShadowTop} from "@tabler/icons-react";
 
 type TranslateFn = (key: string) => string
 
@@ -152,11 +153,16 @@ export function AppSidebar() {
 
     return (
         <Sidebar collapsible="icon" side={side}>
-            <SidebarHeader className="flex flex-col gap-2 p-2 border-b">
+            <SidebarHeader
+                className="data-[slot=sidebar-menu-button]:!p-1.5"
+            ><a href="#">
+                <IconInnerShadowTop className="!size-5"/>
+                <span className="text-base font-semibold">Acme Inc.</span>
+            </a>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton>
-                            <span className="text-3xl font-black">Acme Inc.</span>
+                            <span className="text-base font-black">Pinto Admin.</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
