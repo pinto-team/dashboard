@@ -55,7 +55,8 @@ const itemsSchema: MenuItem[] = [
         titleKey: 'menu.basic',
         icon: SettingsIcon,
         children: [
-            { titleKey: 'menu.basic.brand', url: ROUTES.LIST }, // /brand
+            { titleKey: 'menu.basic.brand', url: ROUTES.BRAND.LIST }, // /brand
+            { titleKey: 'menu.basic.category', url: ROUTES.CATEGORY.LIST }, // /brand
         ],
     },
 ]
