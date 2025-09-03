@@ -1,0 +1,166 @@
+/* ===== Global Theme Variables (OKLCH) ===== */
+
+/* Light */
+:root {
+    --radius: 0.625rem;
+
+    /* Base */
+    --background: oklch(100% 0 0);
+    --foreground: oklch(14.5% 0 0);
+
+    /* Surfaces */
+    --card: oklch(100% 0 0);
+    --card-foreground: var(--foreground);
+    --popover: oklch(100% 0 0);
+    --popover-foreground: var(--foreground);
+
+    /* Brand – آبی شاد فقط برای لهجه‌ها (لینک/رینگ/اکشن‌ها) */
+    --color-blue-300: oklch(78% 0.12 264.38);
+    --color-blue-500: oklch(67% 0.15 264.38);
+    --color-blue-600: oklch(61% 0.16 264.38);
+    --color-blue-700: oklch(53% 0.16 264.38);
+    --color-blue-800: oklch(45% 0.16 264.38);
+
+    --wolt: #000b22;
+
+    --primary: var(--wolt);
+    --primary-foreground: oklch(98.5% 0 0);
+    --ring: var(--color-blue-600);
+
+    /* Neutrals */
+    --secondary: oklch(97% 0 0);
+    --secondary-foreground: var(--foreground);
+    --muted: oklch(97% 0 0);
+    --muted-foreground: oklch(55.6% 0 0);
+    --accent: oklch(97% 0 0);
+    --accent-foreground: var(--foreground);
+
+    /* Semantic states */
+    --success: oklch(75% 0.12 145);
+    --success-foreground: oklch(15% 0 0);
+    --warning: oklch(88% 0.14 85);
+    --warning-foreground: oklch(22% 0 0);
+    --info: var(--color-blue-500);
+    --info-foreground: oklch(98.5% 0 0);
+    --destructive: oklch(57.7% 0.245 27.325);
+    --destructive-foreground: oklch(98.5% 0 0);
+
+    /* Lines / inputs */
+    --border: oklch(92.2% 0 0);
+    --input: oklch(92.2% 0 0);
+    --ring-offset: oklch(100% 0 0);
+
+    /* Charts */
+    --chart-1: var(--color-blue-300);
+    --chart-2: var(--color-blue-500);
+    --chart-3: var(--color-blue-600);
+    --chart-4: var(--color-blue-700);
+    --chart-5: var(--color-blue-800);
+
+    /* Sidebar */
+    --sidebar: oklch(97% 0 0);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: oklch(14% 0 0);
+    --sidebar-primary-foreground: oklch(98.5% 0 0);
+    --sidebar-accent: oklch(96% 0 0);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: oklch(92.2% 0 0);
+    --sidebar-ring: oklch(70.8% 0 0);
+
+    /* Optional surfaces */
+    --surface: oklch(98% 0 0);
+    --surface-foreground: var(--foreground);
+    --code: var(--surface);
+    --code-foreground: var(--surface-foreground);
+    --code-highlight: oklch(96% 0 0);
+    --code-number: oklch(56% 0 0);
+    --selection: oklch(14.5% 0 0);
+    --selection-foreground: oklch(100% 0 0);
+}
+
+/* Dark */
+.dark {
+    --background: oklch(14.5% 0 0);
+    --foreground: oklch(98.5% 0 0);
+
+    --card: oklch(20.5% 0 0);
+    --card-foreground: var(--foreground);
+    --popover: oklch(26.9% 0 0);
+    --popover-foreground: var(--foreground);
+
+    --primary: var(--color-blue-500);
+    --primary-foreground: oklch(14% 0 0);
+    --ring: var(--color-blue-500);
+
+    --secondary: oklch(26.9% 0 0);
+    --secondary-foreground: var(--foreground);
+    --muted: oklch(26.9% 0 0);
+    --muted-foreground: oklch(75% 0 0);
+    --accent: oklch(26.9% 0 0);
+    --accent-foreground: var(--foreground);
+
+    --border: oklch(26.9% 0 0);
+    --input: oklch(26.9% 0 0);
+
+    --sidebar: oklch(20.5% 0 0);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: oklch(98.5% 0 0);
+    --sidebar-primary-foreground: oklch(14% 0 0);
+    --sidebar-accent: oklch(26.9% 0 0);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: oklch(26.9% 0 0);
+    --sidebar-ring: oklch(70.8% 0 0);
+
+    --surface: oklch(20.5% 0 0);
+    --surface-foreground: var(--foreground);
+    --code: var(--surface);
+    --code-foreground: var(--surface-foreground);
+    --code-highlight: oklch(26.9% 0 0);
+    --code-number: oklch(75% 0 0);
+    --selection: oklch(98.5% 0 0);
+    --selection-foreground: oklch(14.5% 0 0);
+}
+
+/* ===== RTL Support ===== */
+.rtl {
+    direction: rtl;
+    text-align: start;
+}
+
+.rtl [data-side='right'] {
+    border-inline-start: 1px solid var(--sidebar-border);
+    border-inline-end: none;
+}
+
+.rtl [data-side='left'] {
+    border-inline-end: 1px solid var(--sidebar-border);
+    border-inline-start: none;
+}
+
+.rtl .dropdown-menu-content,
+.rtl .dropdown-menu-item,
+.rtl input,
+.rtl textarea,
+.rtl select,
+.rtl .form-input,
+.rtl .form-label,
+.rtl .form-error,
+.rtl .table-header,
+.rtl .table-cell,
+.rtl .nav-item,
+.rtl .nav-link {
+    text-align: start;
+}
+
+.rtl .recharts-cartesian-axis-tick-value {
+    text-anchor: end;
+}
+
+.rtl .recharts-legend-item,
+.rtl .modal-header,
+.rtl .modal-footer,
+.rtl .btn-group,
+.rtl .card-header,
+.rtl .card-footer {
+    flex-direction: row-reverse;
+}

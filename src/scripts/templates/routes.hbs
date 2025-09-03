@@ -1,0 +1,16 @@
+export const ROUTES = {
+ROOT: '/',
+
+LOGIN: '/login',
+
+DASHBOARD: '/dashboard',
+
+{{#each entities}}
+    // {{upper}}
+    {{ENTITY_UPPER}}: {
+    LIST: '/{{lowerPlural}}',
+    NEW: '/{{lowerPlural}}/new',
+    EDIT: (id = ':id') => `/{{lowerPlural}}/${id}`,
+    },
+{{/each}}
+} as const

@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "target": "ESNext", // لازم برای پشتیبانی از import.meta
+        "useDefineForClassFields": true,
+        "module": "ESNext", // 👈 بدون این، TS1343 میگیری
+        "lib": ["ESNext", "DOM"], // پشتیبانی از ویژگی‌های جدید JS و APIهای مرورگر
+        "moduleResolution": "bundler", // 👈 اصلاح شد
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "react-jsx",
+
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "allowImportingTsExtensions": true,
+
+        "types": ["vite/client", "node"], // تایپ‌های Vite
+        "strict": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
+
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"],
+            "@/app/*": ["./src/app/*"],
+            "@/core/*": ["./src/core/*"],
+            "@/shared/*": ["./src/shared/*"],
+            "@/features/*": ["./src/features/*"]
+        }
+    },
+    "include": ["src"]
+}

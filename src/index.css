@@ -1,0 +1,168 @@
+@import 'tailwindcss';
+@import '@/design-system/globals.css';
+@import '@/design-system/tokens.css';
+
+@custom-variant dark (&:is(.dark *));
+@plugin "tailwindcss-animate";
+
+/* Base resets */
+@layer base {
+    html {
+        font-family:
+            IranSansX,
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            Segoe UI,
+            Roboto,
+            Arial,
+            'Noto Sans',
+            'Apple Color Emoji',
+            'Segoe UI Emoji';
+    }
+
+    /* RTL language font adjustments */
+    html[lang='fa'] {
+        font-family: IranSansX, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    html[lang='ar'] {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        overflow-y: auto; /* اطمینان از فعال بودن اسکرول مرورگر */
+    }
+
+    /* Wrapper برای محتوای اصلی */
+    .scroll-container {
+        width: 100%;
+        height: 100vh; /* تمام صفحه */
+        overflow-y: auto; /* اسکرول عمودی */
+    }
+
+    /* در LTR، اسکرول پیش‌فرض (راست) */
+    html:not(.rtl) .scroll-container {
+        direction: ltr;
+    }
+
+    /* در RTL، اسکرول به چپ */
+    .rtl .scroll-container {
+        direction: rtl;
+    }
+
+    /* محتوای داخلی wrapper */
+    .content-wrapper {
+        direction: inherit; /* ارث‌بری از scroll-container */
+    }
+
+    /* اصلاح sidebar و محتوا در RTL */
+    .rtl .sidebar {
+        border-inline-end: none;
+        border-inline-start: 1px solid var(--sidebar-border);
+    }
+
+    .rtl .content-wrapper > * {
+        direction: rtl; /* اطمینان از RTL بودن متن و عناصر داخلی */
+        text-align: right;
+    }
+}
+
+/* Additional RTL support */
+@layer utilities {
+    .rtl-flip {
+        transform: scaleX(-1);
+    }
+
+    .rtl-flip-horizontal {
+        transform: scaleX(-1);
+    }
+
+    .rtl-flip-vertical {
+        transform: scaleY(-1);
+    }
+
+    .rtl-rotate-180 {
+        transform: rotate(180deg);
+    }
+}
+
+/* RTL-specific component adjustments */
+.rtl .sidebar-menu-button {
+    flex-direction: row-reverse;
+}
+
+.rtl .sidebar-menu-button .icon {
+    margin-right: 0;
+    margin-left: 0.5rem;
+}
+
+.rtl .dropdown-menu-trigger {
+    flex-direction: row-reverse;
+}
+
+.rtl .form-input {
+    text-align: right;
+}
+
+.rtl .form-label {
+    text-align: right;
+}
+
+.rtl .form-error {
+    text-align: right;
+}
+
+/* Chart and data visualization RTL support */
+.rtl .recharts-cartesian-axis-tick-value {
+    text-anchor: end;
+}
+
+.rtl .recharts-legend-item {
+    flex-direction: row-reverse;
+}
+
+/* Table RTL support */
+.rtl .table-header {
+    text-align: right;
+}
+
+.rtl .table-cell {
+    text-align: right;
+}
+
+/* Modal and dialog RTL support */
+.rtl .modal-header {
+    flex-direction: row-reverse;
+}
+
+.rtl .modal-footer {
+    flex-direction: row-reverse;
+}
+
+/* Navigation RTL support */
+.rtl .nav-item {
+    text-align: right;
+}
+
+.rtl .nav-link {
+    text-align: right;
+}
+
+/* Button group RTL support */
+.rtl .btn-group {
+    flex-direction: row-reverse;
+}
+
+/* Card RTL support */
+.rtl .card-header {
+    flex-direction: row-reverse;
+}
+
+.rtl .card-footer {
+    flex-direction: row-reverse;
+}
