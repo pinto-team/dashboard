@@ -28,9 +28,9 @@ export const router = createBrowserRouter([
                     { path: ROUTES.DASHBOARD, element: <DashboardPage /> }, // /dashboard
 
                     //Brands
-                    { path: ROUTES.Brand.LIST, element: <BrandsPage /> }, // /brand
-                    { path: ROUTES.Brand.NEW, element: <AddBrandPage /> }, // /brand/new
-                    { path: ROUTES.Brand.EDIT(), element: <EditBrandPage /> }, // /brand/:id
+                    { path: ROUTES.BRAND.LIST, element: <BrandsPage /> }, // /brand
+                    { path: ROUTES.BRAND.NEW, element: <AddBrandPage /> }, // /brand/new
+                    { path: ROUTES.BRAND.EDIT(), element: <EditBrandPage /> }, // /brand/:id
 
                     // Categories
                     { path: ROUTES.CATEGORY.LIST, element: <CategoriesPage /> }, // /category

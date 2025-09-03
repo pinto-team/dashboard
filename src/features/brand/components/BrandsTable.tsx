@@ -113,7 +113,7 @@ export default function BrandsTable({ items, onDelete }: Props): JSX.Element {
                                         }
                                         title={t('brand.actions.edit') as string}
                                     >
-                                        <Link to={ROUTES.Brand.EDIT(b.id)}>
+                                        <Link to={ROUTES.BRAND.EDIT(b.id)}>
                                             {t('brand.actions.edit')}
                                         </Link>
                                     </Button>
