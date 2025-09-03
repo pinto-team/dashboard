@@ -247,5 +247,12 @@
     "pagination.prev": "قبلی",
     "pagination.next": "بعدی",
     "pagination.last": "آخرین",
-    "pagination.page_of": "صفحه {page} از {pages}"
+    "pagination.page_of": "صفحه {page} از {pages}",
+
+  "brands.undo_bar.deleted_short": "حذف شد. برای بازگردانی بزنید.",
+  "common.undo": "واگردانی",
+  "common.restored": "با موفقیت بازگردانده شد",
+  "brands.saved_success": "برند با موفقیت ذخیره شد",
+  "brands.actions": "اقدامات"
+
 }

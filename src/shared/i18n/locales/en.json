@@ -247,5 +247,11 @@
     "nav.documents.more": "More",
     "nav.documents.open": "Open",
     "nav.documents.share": "Share",
-    "nav.documents.delete": "Delete"
+    "nav.documents.delete": "Delete",
+
+  "brands.undo_bar.deleted_short": "Deleted. Tap to undo.",
+  "common.undo": "Undo",
+  "common.restored": "Restored successfully",
+  "brands.saved_success": "Brand saved successfully",
+  "brands.actions": "Actions"
 }
