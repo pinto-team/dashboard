@@ -55,10 +55,7 @@ const itemsSchema: MenuItem[] = [
 titleKey: 'menu.basic',
 icon: SettingsIcon,
 children: [
-    { titleKey: 'menu.basic.product', url: ROUTES.PRODUCT.LIST },
     { titleKey: 'menu.basic.category', url: ROUTES.CATEGORY.LIST },
-    { titleKey: 'menu.basic.brand', url: ROUTES.BRAND.LIST },
-    { titleKey: 'menu.basic.warehouse', url: ROUTES.WAREHOUSE.LIST },
 ],
 },
 ]
@@ -107,79 +104,3 @@ items: ReturnType<typeof translateItems>
                                             to={subItem.url}
                                             className="w-full text-sidebar-foreground/90 hover:text-sidebar-foreground text-start ps-6"
                                         >
-                                            <span>{subItem.title}</span>
-                                        </NavLink>
-                                    </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                                ))}
-                            </SidebarMenuSub>
-                        </CollapsibleContent>
-                    </SidebarMenuItem>
-                </Collapsible>
-                ) : (
-                <SidebarMenuItem key={item.titleKey}>
-                    <SidebarMenuButton
-                        asChild
-                        className="w-full flex items-center text-sidebar-foreground text-start"
-                    >
-                        <NavLink to={item.url ?? '#'}>
-                        <item.icon className="shrink-0 me-2" />
-                        <span className="flex-1">{item.title}</span>
-                        </NavLink>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                ),
-                )}
-            </SidebarMenu>
-        </SidebarGroupContent>
-    </SidebarGroup>
-    )
-    }
-    // ================
-    // Component
-    // ================
-    export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
-    const { t, locale } = useI18n()
-    const { user: authUser, logout } = useAuth()
-
-    const user = authUser
-    ? {
-    name: `${authUser.firstName} ${authUser.lastName}`.trim() || authUser.username,
-    email: authUser.email,
-    avatar: authUser.image ?? '/avatars/placeholder.png',
-    }
-    : {
-    name: t('guest'),
-    email: '',
-    avatar: '/avatars/placeholder.png',
-    }
-
-    const isRTL = isRTLLocale(locale)
-    const side = getSidebarSide(locale)
-    const items = useMemo(() => translateItems(itemsSchema, t), [t])
-
-    return (
-    <Sidebar collapsible="offcanvas" side={side} dir={isRTL ? 'rtl' : 'ltr'} {...props}>
-    <SidebarHeader className="data-[slot=sidebar-menu-button]:!p-1.5">
-        <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton asChild className="text-sidebar-foreground">
-                    <a href="#">
-                        <IconInnerShadowTop className="!size-5 me-2" />
-                        <span className="text-base font-semibold">{t('appTitle')}</span>
-                    </a>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
-    </SidebarHeader>
-
-    <SidebarContent>
-        <MenuSection label={t('appTitle')} items={items} />
-    </SidebarContent>
-
-    <SidebarFooter>
-        <NavUser user={user} onLogout={logout} />
-    </SidebarFooter>
-    </Sidebar>
-    )
-    }

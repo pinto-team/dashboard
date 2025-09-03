@@ -3,7 +3,6 @@ import { z } from 'zod'
 
 import * as React from 'react'
 import { JSX } from 'react'
-
 import { useForm } from 'react-hook-form'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,8 +10,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useI18n } from '@/shared/hooks/useI18n'
 import { CreateCategoryRequest } from '@/features/categories/model/types'
-// ⚠️ اگر uploader خاصی داشتیم باید بعداً جداگانه بسازیم
-// import CategoryLogoUploader from '@/features/categories/components/CategoryLogoUploader'
 
 type Props = Readonly<{
 defaultValues?: Partial<CreateCategoryRequest>
@@ -31,21 +28,18 @@ defaultValues?: Partial<CreateCategoryRequest>
     }: Props): JSX.Element {
     const { t } = useI18n()
 
+    // ---------- Zod schema (بر اساس createFields) ----------
     const schema = React.useMemo(
     () =>
     z.object({
-    name: z
-    .string()
-    .trim()
-    .min(1, t('validation.required'))
-    .min(2, t('validation.min_length', { n: 2 }))
-    .max(120, t('validation.max_length', { n: 120 })),
-    description: z
-    .union([
-    z.string().max(500, t('validation.max_length', { n: 500 })),
-    z.literal(''),
-    ])
-    .optional(),
+            name: z.string().trim()
+            .min(1, t('validation.required')).min(2, t('validation.min_length', { n: 2 }))
+            ,
+
+
+
+
+
     }),
     [t],
     )
@@ -59,19 +53,15 @@ defaultValues?: Partial<CreateCategoryRequest>
     } = useForm<CreateCategoryRequest>({
     resolver: zodResolver(schema),
     defaultValues: {
-    name: '',
-    description: '',
+            name: '',
     ...defaultValues,
-    },
+    } as any, // در صورت تفاوت جزئی تایپ‌ها
     mode: 'onBlur',
     })
 
     React.useEffect(() => {
     if (defaultValues) {
-    reset({
-    name: defaultValues.name ?? '',
-    description: defaultValues.description ?? '',
-    })
+    reset({ ...defaultValues } as any)
     }
     }, [defaultValues, reset])
 
@@ -79,12 +69,12 @@ defaultValues?: Partial<CreateCategoryRequest>
     if (!apiErrors || apiErrors.length === 0) return
     apiErrors.forEach((err) => {
     const path = err.field?.split('.')?.pop() ?? err.field
-    if (path === 'name' || path === 'description') {
-    setError(path as keyof CreateCategoryRequest, {
-    type: 'server',
-    message: err.message,
-    })
-    }
+        if (path === 'name') {
+        setError('name' as any, {
+        type: 'server',
+        message: err.message,
+        })
+        }
     })
     }, [apiErrors, setError])
 
@@ -94,10 +84,9 @@ defaultValues?: Partial<CreateCategoryRequest>
         noValidate
         className="grid gap-6"
         onSubmit={handleSubmit((values) => {
-    const cleaned: CreateCategoryRequest = {
-    name: values.name.trim(),
-    description: values.description?.trim() || '',
-    }
+    const cleaned = {
+            name: (values.name ?? '').toString().trim(),
+    } as CreateCategoryRequest
     onSubmit(cleaned)
     })}
     >
@@ -110,41 +99,27 @@ defaultValues?: Partial<CreateCategoryRequest>
 
         <CardContent className="grid gap-6 p-6 md:grid-cols-2">
             <div className="flex flex-col gap-4">
-                <div>
-                    <Label htmlFor="category-name">
-                        {t('category.form.name')}*
-                    </Label>
-                    <Input
-                        id="category-name"
-                        placeholder={t('category.form.name_ph')}
-                        autoComplete="organization"
-                        aria-invalid={Boolean(errors.name)}
-                        {...register('name')}
-                    />
-                    {errors.name && (
-                    <p className="mt-1 text-xs text-destructive">
-                        {errors.name.message}
-                    </p>
-                    )}
-                </div>
+                            <div>
+                                <Label htmlFor="category-name">
+                                    {t('category.form.name')}*
+                                </Label>
+                                <Input
+                                    id="category-name"
+                                    placeholder={t('category.form.name_ph')}
+                                    autoComplete="off"
+                                    aria-invalid={Boolean(errors.name)}
+                                    {...register('name' as const)}
+                                />
+                                {errors.name && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.name.message as string}
+                                </p>
+                                )}
+                            </div>
 
-                <div>
-                    <Label htmlFor="category-description">
-                        {t('category.form.description')}
-                    </Label>
-                    <textarea
-                        id="category-description"
-                        placeholder={t('category.form.description_ph')}
-                        className="min-h-24 w-full resize-vertical rounded-md border bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-invalid={Boolean(errors.description)}
-                        {...register('description')}
-                    />
-                    {errors.description && (
-                    <p className="mt-1 text-xs text-destructive">
-                        {errors.description.message}
-                    </p>
-                    )}
-                </div>
+
+
+
             </div>
         </CardContent>
     </Card>

@@ -9,7 +9,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import handlebars from "handlebars";
+import handlebars from 'handlebars';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +25,29 @@ const ROUTES_FILE = path.resolve(
     __dirname,
     "../app/routes/routes.ts"
 );
+
+const SIDEBAR_FILE = path.resolve(
+    __dirname,
+    "../features/sidebar/app-sidebar.tsx"
+);
+const PAGES_FILE = path.resolve(
+    __dirname,
+    "../app/routes/index.tsx"
+);
 const FEATURES_DIR = path.resolve(__dirname, `../features/`);
+
+// generate i18n keys
+const i18nEnFile = path.resolve(__dirname, "../shared/i18n/locales/en.json");
+const i18nFaFile = path.resolve(__dirname, "../shared/i18n/locales/fa.json");
+
+function mergeJson(filePath, newKeys) {
+    let data = {};
+    if (fs.existsSync(filePath)) {
+        data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    }
+    const merged = { ...data, ...newKeys };
+    fs.writeFileSync(filePath, JSON.stringify(merged, null, 2), "utf-8");
+}
 
 // ---------- Helpers ----------
 function loadCollection() {
@@ -115,6 +137,27 @@ function singularize(name) {
 // ---------- Main ----------
 function main() {
 
+    // ----- Handlebars helpers -----
+    handlebars.registerHelper('eq', (a, b) => a === b);
+    handlebars.registerHelper('endsWith', (str, suf) => String(str ?? '').endsWith(String(suf ?? '')));
+    handlebars.registerHelper('includes', (str, sub) =>
+        String(str ?? '').toLowerCase().includes(String(sub ?? '').toLowerCase())
+    );
+    handlebars.registerHelper('isArrayType', (t) => String(t ?? '').endsWith('[]'));
+    handlebars.registerHelper('isRecord', (t) => String(t ?? '').startsWith('Record<'));
+
+// logical helpers
+    handlebars.registerHelper('or', (...args) => {
+        const opts = args.pop();                 // آخرین آرگومان گزینه‌های Handlebars است
+        return args.some(Boolean);
+    });
+    handlebars.registerHelper('and', (...args) => {
+        const opts = args.pop();
+        return args.every(Boolean);
+    });
+    handlebars.registerHelper('not', (v) => !v);
+
+
     const collection = loadCollection();
     const entities = [];
 
@@ -143,7 +186,27 @@ function main() {
             lowerPlural: entitiesName,
             upperPlural: ENTITIES_UPPER,
             ENTITY_UPPER,
+            Entities,
+            entities: entitiesName
         });
+
+        for (const e of entities) {
+            const keys = {
+                [`menu.basic.${e.lower}`]: e.lower,
+                [`${e.lower}.title`]: e.lower,
+                [`${e.lower}.add`]: `Add ${e.lower}`,
+                [`${e.lower}.form.title`]: e.lower,
+                [`${e.lower}.actions.edit`]: "edit",
+                [`${e.lower}.actions.delete`]: "delete",
+                [`${e.lower}.create`]: "create",
+                [`${e.lower}.confirm_delete`]: "Confirm delete",
+            };
+
+            mergeJson(i18nEnFile, keys);
+
+            const faKeys = Object.fromEntries(Object.entries(keys).map(([k, v]) => [k, v]));
+            mergeJson(i18nFaFile, faKeys);
+        }
 
         const context = {
             Entity,
@@ -182,6 +245,14 @@ function main() {
     // generate routes.ts
     const routesContent = renderTemplate("routes.hbs", { entities });
     writeFile(ROUTES_FILE, routesContent);
+
+    // generate app-sidebar.tsx
+    const sidebarContent = renderTemplate("app-sidebar.hbs", { entities });
+    writeFile(SIDEBAR_FILE, sidebarContent);
+
+    // generate app-sidebar.tsx
+    const pagesContent = renderTemplate("pages.hbs", { entities });
+    writeFile(PAGES_FILE, pagesContent);
 
     console.log("🎉 Done!");
 }

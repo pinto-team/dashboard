@@ -1,21 +1,32 @@
 export const ROUTES = {
-    ROOT: '/',
+ROOT: '/',
 
-    LOGIN: '/login',
+LOGIN: '/login',
 
-    DASHBOARD: '/dashboard',
+DASHBOARD: '/dashboard',
 
-    // Category
-    BRAND: {
-        LIST: '/brand',
-        NEW: '/brand/new',
-        EDIT: (id = ':id') => `/brand/${id}`,
+    // Product
+    PRODUCT: {
+    LIST: '/products',
+    NEW: '/products/new',
+    EDIT: (id = ':id') => `/products/${id}`,
     },
-
     // Category
     CATEGORY: {
-        LIST: '/categories',
-        NEW: '/categories/new',
-        EDIT: (id = ':id') => `/categories/${id}`,
+    LIST: '/categories',
+    NEW: '/categories/new',
+    EDIT: (id = ':id') => `/categories/${id}`,
+    },
+    // Brand
+    BRAND: {
+    LIST: '/brands',
+    NEW: '/brands/new',
+    EDIT: (id = ':id') => `/brands/${id}`,
+    },
+    // Warehouse
+    WAREHOUSE: {
+    LIST: '/warehouses',
+    NEW: '/warehouses/new',
+    EDIT: (id = ':id') => `/warehouses/${id}`,
     },
 } as const
