@@ -5,13 +5,7 @@ import { createCrudHooks } from '@/shared/api/useCrudQueries'
 import type { CategoryData, CreateCategoryRequest, UpdateCategoryRequest } from './model/types'
 
 // api
-export const categoriesApi = createCrudApi<CategoryData, CreateCategoryRequest, UpdateCategoryRequest>(
-catalogClient,
-API_ROUTES.CATEGORIES.ROOT,
-)
+export const categoriesApi = createCrudApi<CategoryData, CreateCategoryRequest, UpdateCategoryRequest>(catalogClient, API_ROUTES.CATEGORIES.ROOT)
 
 // hooks
-export const categoriesQueries = createCrudHooks<CategoryData, CreateCategoryRequest, UpdateCategoryRequest>(
-'category',
-categoriesApi,
-)
+export const categoriesQueries = createCrudHooks<CategoryData, CreateCategoryRequest, UpdateCategoryRequest>('category', categoriesApi)

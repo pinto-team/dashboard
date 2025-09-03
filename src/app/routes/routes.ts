@@ -6,10 +6,10 @@ export const ROUTES = {
     DASHBOARD: '/dashboard',
 
     // Category
-    Brand: {
-        LIST: '/categories',
-        NEW: '/categories/new',
-        EDIT: (id = ':id') => `/categories/${id}`,
+    BRAND: {
+        LIST: '/brand',
+        NEW: '/brand/new',
+        EDIT: (id = ':id') => `/brand/${id}`,
     },
 
     // Category

@@ -5,13 +5,7 @@ import { createCrudHooks } from '@/shared/api/useCrudQueries'
 import type { BrandData, CreateBrandRequest, UpdateBrandRequest } from './model/types'
 
 // api
-export const brandsApi = createCrudApi<BrandData, CreateBrandRequest, UpdateBrandRequest>(
-    catalogClient,
-    API_ROUTES.BRAND.ROOT,
-)
+export const brandsApi = createCrudApi<BrandData, CreateBrandRequest, UpdateBrandRequest>(catalogClient, API_ROUTES.BRAND.ROOT)
 
 // hooks
-export const brandsQueries = createCrudHooks<BrandData, CreateBrandRequest, UpdateBrandRequest>(
-    'brand',
-    brandsApi,
-)
+export const brandsQueries = createCrudHooks<BrandData, CreateBrandRequest, UpdateBrandRequest>('brand', brandsApi)
