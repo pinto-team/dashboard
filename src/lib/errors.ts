@@ -1,12 +1,12 @@
 import type { AxiosError } from "axios"
 import { toast } from "sonner"
-import { useTranslation } from "react-i18next"
+import { useI18n } from "@/shared/hooks/useI18n"
 
 type ApiFieldError = { field: string; message: string }
 type ApiErrorPayload = { message?: string; errors?: ApiFieldError[] }
 
 export function extractErrorMessage(err: unknown): { title: string; desc?: string } {
-    const { t } = useTranslation()
+    const { t } = useI18n()
     const ax = err as AxiosError<ApiErrorPayload>
     const status = ax?.response?.status
     const backendMsg =
