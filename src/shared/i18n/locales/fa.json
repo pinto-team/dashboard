@@ -122,5 +122,12 @@
   "notFound.message": "صفحه یافت نشد.",
   "notFound.goHome": "بازگشت به خانه",
 
-  "auth.unknownLoginError": "خطای ناشناخته در ورود"
+  "auth.unknownLoginError": "خطای ناشناخته در ورود",
+
+  "brands.details.title": "جزئیات برند",
+  "brands.actions.edit": "ویرایش",
+  "brands.actions.delete": "حذف",
+  "common.more_actions": "گزینه‌های بیشتر",
+
+  "actions.delete": "حذف"
 }

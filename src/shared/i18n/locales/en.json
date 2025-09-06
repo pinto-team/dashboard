@@ -124,5 +124,15 @@
   "notFound.message": "Page not found.",
   "notFound.goHome": "Go Home",
 
-  "auth.unknownLoginError": "Unknown login error"
+  "auth.unknownLoginError": "Unknown login error",
+
+  "brands.details.title": "Brand details",
+  "brands.actions.edit": "Edit",
+  "brands.actions.delete": "Delete",
+  "common.more_actions": "More actions",
+
+
+  "actions.delete": "Delete"
+
+
 }
