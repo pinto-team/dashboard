@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from "react"
 
-import { apiLogin, apiMe, apiRefresh } from '@/features/auth/services/auth.api.ts'
+import { apiLogin, apiMe, apiRefresh } from "@/features/auth/services/auth.api"
 import {
     clearAuthStorage,
     getAccessToken,
@@ -8,72 +8,38 @@ import {
     getRefreshToken,
     setCachedUser,
     setTokens,
-} from '@/features/auth/storage.ts'
-import { AuthUser } from '@/features/auth/types.ts'
-import { HttpError } from '@/lib/http-error.ts'
+} from "@/features/auth/storage"
+import { AuthUser } from "@/features/auth/types"
+import { HttpError } from "@/lib/http-error"
 
-import { AuthContext } from './auth-context'
-
-/**
- * AuthProvider bootstraps auth state from storage and exposes auth context.
- *
- * Behaviors:
- * - On mount, reads tokens and cached user to optimistically set state
- * - Validates the access token by calling `me`; falls back to refresh if needed
- * - Performs a hard logout when validation/refresh fails
- */
+import { AuthContext } from "./auth-context"
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null)
-    const [accessToken, setAT] = useState<string | null>(null)
-    const [refreshToken, setRT] = useState<string | null>(null)
+    const [accessToken, setAccessToken] = useState<string | null>(null)
+    const [refreshToken, setRefreshToken] = useState<string | null>(null)
     const [ready, setReady] = useState(false)
-
-    // bootstrap
-    useEffect(() => {
-        const at = getAccessToken()
-        const rt = getRefreshToken()
-        const cachedUser = getCachedUser<AuthUser>()
-
-        if (at && cachedUser) {
-            setAT(at)
-            setRT(rt)
-            setUser(cachedUser)
-            setReady(true)
-
-            apiMe(at).catch(async () => {
-                if (rt) {
-                    try {
-                        const r = await apiRefresh(rt)
-                        setAT(r.accessToken)
-                        setRT(r.refreshToken)
-                        setTokens(r.accessToken, r.refreshToken)
-                    } catch {
-                        hardLogout()
-                    }
-                } else {
-                    hardLogout()
-                }
-            })
-        } else {
-            setReady(true)
-        }
-    }, [])
 
     /** Clear all auth state and storage */
     function hardLogout() {
         setUser(null)
-        setAT(null)
-        setRT(null)
+        setAccessToken(null)
+        setRefreshToken(null)
         clearAuthStorage()
     }
 
     /** Perform credential login and persist tokens/user */
-    async function login({ username, password }: { username: string; password: string }) {
+    async function login({
+                             username,
+                             password,
+                         }: {
+        username: string
+        password: string
+    }) {
         try {
             const r = await apiLogin(username, password)
-            setAT(r.accessToken)
-            setRT(r.refreshToken)
+            setAccessToken(r.accessToken)
+            setRefreshToken(r.refreshToken)
 
             const u: AuthUser = {
                 id: r.id,
@@ -90,7 +56,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         } catch (err: unknown) {
             if (err instanceof HttpError) throw new Error(err.message)
             if (err instanceof Error) throw err
-            throw new Error('Unknown login error')
+            throw new Error("auth.unknownLoginError")
         }
     }
 
@@ -98,6 +64,44 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     function logout() {
         hardLogout()
     }
+
+    // bootstrap on mount
+    useEffect(() => {
+        let isActive = true
+
+        const at = getAccessToken()
+        const rt = getRefreshToken()
+        const cachedUser = getCachedUser<AuthUser>()
+
+        if (at && cachedUser) {
+            setAccessToken(at)
+            setRefreshToken(rt)
+            setUser(cachedUser)
+            setReady(true)
+
+            apiMe(at).catch(async () => {
+                if (!isActive) return
+                if (rt) {
+                    try {
+                        const r = await apiRefresh(rt)
+                        setAccessToken(r.accessToken)
+                        setRefreshToken(r.refreshToken)
+                        setTokens(r.accessToken, r.refreshToken)
+                    } catch {
+                        hardLogout()
+                    }
+                } else {
+                    hardLogout()
+                }
+            })
+        } else {
+            setReady(true)
+        }
+
+        return () => {
+            isActive = false
+        }
+    }, [])
 
     return (
         <AuthContext.Provider

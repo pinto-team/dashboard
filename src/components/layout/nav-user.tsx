@@ -4,11 +4,10 @@ import {
     IconLogout,
     IconNotification,
     IconUserCircle,
-} from '@tabler/icons-react'
+} from "@tabler/icons-react"
+import { useEffect } from "react"
 
-import { useEffect } from 'react'
-
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,52 +16,48 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu.tsx'
+} from "@/components/ui/dropdown-menu"
 import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
     useSidebar,
-} from '@/components/ui/sidebar.tsx'
-import { useI18n } from '@/shared/hooks/useI18n.ts'
-import { getTextDirection } from '@/shared/i18n/utils.ts'
-import { getInitials } from '@/shared/utils/getInitials.ts'
+} from "@/components/ui/sidebar"
+import { useI18n } from "@/shared/hooks/useI18n"
+import { getTextDirection } from "@/shared/i18n/utils"
+import { getInitials } from "@/shared/utils/getInitials"
 
-export function NavUser({
-    user,
-    onLogout,
-}: {
+type Props = {
     user: {
         name: string
         email: string
         avatar: string
     }
     onLogout?: () => void
-}) {
+}
+
+export function NavUser({ user, onLogout }: Props) {
     const { isMobile } = useSidebar()
     const { t, locale } = useI18n()
 
     // Manage scrollbar compensation
     useEffect(() => {
-        const handleOpen = () => {
-            document.body.classList.add('overflow-hidden')
-        }
-        const handleClose = () => {
-            document.body.classList.remove('overflow-hidden')
-        }
+        const handleOpen = () => document.body.classList.add("overflow-hidden")
+        const handleClose = () => document.body.classList.remove("overflow-hidden")
 
-        // Add event listeners for dropdown open/close
-        const trigger = document.querySelector('[data-radix-dropdown-menu-trigger]')
-        trigger?.addEventListener('click', handleOpen)
-        document.addEventListener('click', (e) => {
+        const trigger = document.querySelector(
+            "[data-radix-dropdown-menu-trigger]"
+        )
+        trigger?.addEventListener("click", handleOpen)
+        document.addEventListener("click", (e) => {
             if (!trigger?.contains(e.target as Node)) {
                 handleClose()
             }
         })
 
         return () => {
-            trigger?.removeEventListener('click', handleOpen)
-            document.removeEventListener('click', handleClose)
+            trigger?.removeEventListener("click", handleOpen)
+            document.removeEventListener("click", handleClose)
             handleClose()
         }
     }, [])
@@ -74,7 +69,7 @@ export function NavUser({
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground flex items-center justify-between"
+                            className="flex items-center justify-between data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="h-8 w-8 rounded-lg">
                                 <AvatarImage src={user.avatar} alt={user.name} />
@@ -84,16 +79,17 @@ export function NavUser({
                             </Avatar>
                             <div className="grid flex-1 text-start text-sm leading-tight">
                                 <span className="truncate font-medium">{user.name}</span>
-                                <span className="text-muted-foreground truncate text-xs">
-                                    {user.email}
-                                </span>
+                                <span className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </span>
                             </div>
                             <IconDotsVertical className="ms-auto size-4 rtl:-scale-x-100" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
+
                     <DropdownMenuContent
-                        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg text-start"
-                        side={isMobile ? 'bottom' : 'right'}
+                        className="min-w-56 rounded-lg text-start"
+                        side={isMobile ? "bottom" : "right"}
                         align="end"
                         sideOffset={4}
                         style={{ direction: getTextDirection(locale) }}
@@ -108,31 +104,38 @@ export function NavUser({
                                 </Avatar>
                                 <div className="grid flex-1 text-start text-sm leading-tight">
                                     <span className="truncate font-medium">{user.name}</span>
-                                    <span className="text-muted-foreground truncate text-xs">
-                                        {user.email}
-                                    </span>
+                                    <span className="truncate text-xs text-muted-foreground">
+                    {user.email}
+                  </span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
+
                         <DropdownMenuSeparator />
+
                         <DropdownMenuGroup>
                             <DropdownMenuItem className="flex items-center gap-x-2">
-                                <IconUserCircle className="w-4 h-4 rtl:-scale-x-100" />
-                                {t('sidebar.account')}
+                                <IconUserCircle className="h-4 w-4 rtl:-scale-x-100" />
+                                {t("sidebar.account")}
                             </DropdownMenuItem>
                             <DropdownMenuItem className="flex items-center gap-x-2">
-                                <IconCreditCard className="w-4 h-4 rtl:-scale-x-100" />
-                                {t('sidebar.billing')}
+                                <IconCreditCard className="h-4 w-4 rtl:-scale-x-100" />
+                                {t("sidebar.billing")}
                             </DropdownMenuItem>
                             <DropdownMenuItem className="flex items-center gap-x-2">
-                                <IconNotification className="w-4 h-4 rtl:-scale-x-100" />
-                                {t('sidebar.notifications')}
+                                <IconNotification className="h-4 w-4 rtl:-scale-x-100" />
+                                {t("sidebar.notifications")}
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
+
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={onLogout} className="flex items-center gap-x-2">
-                            <IconLogout className="w-4 h-4 rtl:-scale-x-100" />
-                            {t('sidebar.signOut')}
+
+                        <DropdownMenuItem
+                            onClick={onLogout}
+                            className="flex items-center gap-x-2"
+                        >
+                            <IconLogout className="h-4 w-4 rtl:-scale-x-100" />
+                            {t("sidebar.signOut")}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

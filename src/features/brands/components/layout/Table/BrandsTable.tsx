@@ -3,8 +3,8 @@ import { JSX } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
-import { ROUTES } from "@/app/routes/routes";
-import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/app/routes/routes.ts";
+import { Button } from "@/components/ui/button.tsx";
 import {
     Table,
     TableBody,
@@ -12,19 +12,16 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { useI18n } from "@/shared/hooks/useI18n";
-import { toAbsoluteUrl } from "@/shared/api/files";
+} from "@/components/ui/table.tsx";
+import { useI18n } from "@/shared/hooks/useI18n.ts";
+import { toAbsoluteUrl } from "@/shared/api/files.ts";
 
-import type { BrandData } from "@/features/brands/model/types";
+import type { BrandData } from "@/features/brands/model/types.ts";
 
 type Props = Readonly<{
     items: ReadonlyArray<BrandData>;
-    /** حذف واقعی (Optimistic) */
     onDelete: (id: string) => void;
-    /** بازگردانی حذف (Restore/Re-create) — در صورت داشتن Undo درون‌جدول استفاده می‌شود */
     onUndoDelete?: (id: string) => void;
-    /** اگر true باشد، UndoBar داخل همین جدول نشان داده می‌شود؛ در غیر این صورت هیچ Undo UIای اینجا رندر نمی‌شود */
     showUndoInline?: boolean;
 }>;
 
@@ -37,7 +34,6 @@ export default function BrandsTable({
     const { t } = useI18n();
     const navigate = useNavigate();
 
-    // فقط وقتی inline Undo می‌خواهیم، state داخلی نگه می‌داریم
     const [pending, setPending] = React.useState<null | { id: string }>(null);
     const UNDO_DURATION = 5000;
 
@@ -46,15 +42,10 @@ export default function BrandsTable({
         [navigate]
     );
 
-    // حذف فوری
     const handleDeleteClick = React.useCallback(
         (id: string) => {
-            onDelete(id); // حذف همین الآن (Optimistic)
-
-            // اگر می‌خواهیم Undo داخل جدول باشد:
-            if (showUndoInline) {
-                setPending({ id });
-            }
+            onDelete(id);
+            if (showUndoInline) setPending({ id });
         },
         [onDelete, showUndoInline]
     );
@@ -66,27 +57,43 @@ export default function BrandsTable({
 
     const handleTimeout = React.useCallback(() => setPending(null), []);
 
+    React.useEffect(() => {
+        if (!pending) return;
+        const id = setTimeout(handleTimeout, UNDO_DURATION);
+        return () => clearTimeout(id);
+    }, [pending, handleTimeout]);
+
     return (
-        <div className="relative overflow-hidden rounded-xl border">
+        <div className="relative overflow-hidden rounded-lg border"> {/* گردی هم‌راستای shadcdn */}
             <Table>
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="w-16">{t("brands.table.logo")}</TableHead>
-                        <TableHead>{t("brands.table.name")}</TableHead>
-                        <TableHead>{t("brands.table.country")}</TableHead>
-                        <TableHead>{t("brands.table.website")}</TableHead>
-                        <TableHead className="w-20 text-right">
+                {/* هدر چسبنده + پس‌زمینه‌ی ملایم + ارتفاع و پدینگ یکنواخت */}
+                <TableHeader className="sticky top-0 z-10 bg-muted/50 backdrop-blur supports-[backdrop-filter]:bg-muted/40">
+                    <TableRow className="h-10">
+                        <TableHead className="w-14 px-3 text-xs font-medium text-muted-foreground">
+                            {t("brands.table.logo")}
+                        </TableHead>
+                        <TableHead className="px-3 text-xs font-medium text-muted-foreground">
+                            {t("brands.table.name")}
+                        </TableHead>
+                        <TableHead className="px-3 text-xs font-medium text-muted-foreground">
+                            {t("brands.table.country")}
+                        </TableHead>
+                        <TableHead className="px-3 text-xs font-medium text-muted-foreground">
+                            {t("brands.table.website")}
+                        </TableHead>
+                        <TableHead className="w-16 px-3 text-right text-xs font-medium text-muted-foreground">
                             {t("brands.table.actions")}
                         </TableHead>
                     </TableRow>
                 </TableHeader>
 
+                {/* تراکم یکنواخت سلول‌ها: py-2.5 + px-3 (روی lg: px-4) */}
                 <TableBody>
                     {items.length === 0 ? (
                         <TableRow>
                             <TableCell
                                 colSpan={5}
-                                className="h-24 text-center text-sm text-muted-foreground"
+                                className="h-24 px-3 text-center text-sm text-muted-foreground"
                             >
                                 {t("common.no_results")}
                             </TableCell>
@@ -95,7 +102,7 @@ export default function BrandsTable({
                         items.map((b) => (
                             <TableRow
                                 key={b.id}
-                                className="cursor-pointer hover:bg-muted/40 focus-visible:bg-muted/40"
+                                className="h-12 cursor-pointer hover:bg-muted/40 focus-visible:bg-muted/40"
                                 onClick={() => goEdit(b.id)}
                                 tabIndex={0}
                                 onKeyDown={(e) => {
@@ -104,41 +111,49 @@ export default function BrandsTable({
                                         goEdit(b.id);
                                     }
                                 }}
-                                aria-label={
-                                    t("brands.actions.edit_aria", { name: b.name }) as string
-                                }
+                                aria-label={t("brands.actions.edit_aria", { name: b.name }) as string}
                                 title={t("brands.actions.edit") as string}
                             >
-                                <TableCell>
+                                {/* لوگو باریک‌تر و منظم */}
+                                <TableCell className="px-3">
                                     {b.logo_url ? (
                                         <img
                                             src={toAbsoluteUrl(b.logo_url)}
                                             alt={t("brands.logo_alt") as string}
-                                            className="h-10 w-10 rounded object-contain"
+                                            className="size-8 rounded object-contain lg:size-9"
                                             loading="lazy"
                                             decoding="async"
                                             onClick={(e) => e.stopPropagation()}
                                         />
                                     ) : (
                                         <div
-                                            className="h-10 w-10 rounded bg-muted"
+                                            className="size-8 rounded bg-muted lg:size-9"
                                             aria-label={t("brands.no_logo") as string}
                                             onClick={(e) => e.stopPropagation()}
                                         />
                                     )}
                                 </TableCell>
 
-                                <TableCell className="font-medium">{b.name}</TableCell>
-                                <TableCell>{b.country ?? "-"}</TableCell>
+                                {/* نام: فونت متوسط + truncate برای ردیف‌های طولانی */}
+                                <TableCell className="max-w-[18rem] px-3 py-2.5 font-medium lg:max-w-[24rem] lg:px-4">
+                                    <span className="block truncate">{b.name}</span>
+                                </TableCell>
 
-                                <TableCell>
+                                {/* کشور: عرض ثابت کوچیک تا لرزش نگیریم */}
+                                <TableCell className="w-40 px-3 py-2.5 lg:px-4">
+                                    {b.country ?? "-"}
+                                </TableCell>
+
+                                {/* وب‌سایت: لینک جمع‌وجور با ellipsis و underline ملایم */}
+                                <TableCell className="px-3 py-2.5 lg:px-4">
                                     {b.website ? (
                                         <a
                                             href={b.website}
                                             target="_blank"
                                             rel="noopener noreferrer external"
-                                            className="text-primary underline underline-offset-2"
+                                            className="block max-w-[22ch] truncate underline-offset-4 hover:underline"
                                             onClick={(e) => e.stopPropagation()}
+                                            title={b.website}
                                         >
                                             {b.website}
                                         </a>
@@ -147,11 +162,12 @@ export default function BrandsTable({
                                     )}
                                 </TableCell>
 
-                                <TableCell className="text-right">
+                                {/* اکشن: دکمه‌ی 32px مثل نمونه‌ی shadcdn */}
+                                <TableCell className="px-3 py-2.5 text-right lg:px-4">
                                     <Button
                                         variant="destructive"
-                                        size="sm"
-                                        className="h-8 w-8 p-0"
+                                        size="icon"
+                                        className="size-8 p-0"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeleteClick(b.id);
@@ -161,7 +177,7 @@ export default function BrandsTable({
                                         }
                                         title={t("brands.actions.delete") as string}
                                     >
-                                        <Trash2 className="h-4 w-4" />
+                                        <Trash2 className="size-4" />
                                     </Button>
                                 </TableCell>
                             </TableRow>
@@ -169,6 +185,20 @@ export default function BrandsTable({
                     )}
                 </TableBody>
             </Table>
+
+            {/* نوار Undo اختیاری (در صورت فعال بودن) */}
+            {showUndoInline && pending && (
+                <div className="pointer-events-auto absolute inset-x-3 bottom-3 z-10 flex items-center justify-between gap-3 rounded-md border bg-background/95 p-3 shadow">
+          <span className="text-sm">
+            {t("common.deleted_temporarily") as string}
+          </span>
+                    <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={handleUndo}>
+                            {t("common.undo") as string}
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -3,7 +3,7 @@ import {
     UseQueryOptions,
     UseQueryResult,
     useQuery as rqUseQuery,
-} from '@tanstack/react-query'
+} from "@tanstack/react-query"
 
 const defaultQueryOptions = {
     staleTime: 5 * 60_000,
@@ -16,7 +16,9 @@ export function useAppQuery<
     TError = unknown,
     TData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
->(options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>): UseQueryResult<TData, TError> {
+>(
+    options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>
+): UseQueryResult<TData, TError> {
     return rqUseQuery({
         ...defaultQueryOptions,
         ...options,

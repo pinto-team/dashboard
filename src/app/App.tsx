@@ -1,19 +1,19 @@
-// app/App.tsx
-import { Toaster } from 'sonner'
+import { Toaster } from "sonner"
+import { Suspense } from "react"
+import { Outlet } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
-import { Suspense } from 'react'
-
-import { Outlet } from 'react-router-dom'
-
-
-
-
+import AppErrorBoundary from "@/components/layout/AppErrorBoundary"
 
 function RouteFallback() {
+    const { t } = useTranslation()
+
     return (
-        <div className="min-h-[50vh] grid place-items-center">
+        <div className="min-h-[50vh] grid place-items-center gap-2">
             <div className="h-8 w-8 rounded-full border-2 border-current border-t-transparent animate-spin" />
-            <span className="sr-only">Loading route…</span>
+            <span className="text-sm text-muted-foreground">
+                {t("app.loading_route")}
+            </span>
         </div>
     )
 }
@@ -21,7 +21,6 @@ function RouteFallback() {
 export default function AppRoot() {
     return (
         <div className="scroll-container">
-            {/* Snackbar container */}
             <Toaster
                 position="bottom-center"
                 richColors
@@ -29,9 +28,11 @@ export default function AppRoot() {
                 toastOptions={{ duration: 5000 }}
             />
             <div className="content-wrapper">
-                <Suspense fallback={<RouteFallback />}>
-                    <Outlet />
-                </Suspense>
+                <AppErrorBoundary>
+                    <Suspense fallback={<RouteFallback />}>
+                        <Outlet />
+                    </Suspense>
+                </AppErrorBoundary>
             </div>
         </div>
     )
