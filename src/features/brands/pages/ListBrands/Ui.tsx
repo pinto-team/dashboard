@@ -2,9 +2,6 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import Pagination, { PaginationProps } from "@/features/brands/components/ui/Pagination"
-import type { BrandData } from "@/features/brands/model/types"
-import BrandsTable from "@/features/brands/components/layout/Table/BrandsTable"
 import { Search } from "lucide-react"
 
 type Props = {
@@ -15,11 +12,9 @@ type Props = {
     query: string
     onQueryChange: (v: string) => void
     onAdd: () => void
-    items: BrandData[]
-    onDelete: (id: string) => void
-    pagination: Omit<PaginationProps, "labels">
     isFetching?: boolean
-    labels: PaginationProps["labels"]
+    children: React.ReactNode
+    pagination?: React.ReactNode
 }
 
 export default function BrandsPageUI({
@@ -30,11 +25,9 @@ export default function BrandsPageUI({
                                          query,
                                          onQueryChange,
                                          onAdd,
-                                         items,
-                                         onDelete,
-                                         pagination,
                                          isFetching = false,
-                                         labels,
+                                         children,
+                                         pagination,
                                      }: Props) {
     return (
         <div className="flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6">
@@ -71,13 +64,11 @@ export default function BrandsPageUI({
             <div className="px-4 lg:px-6">
                 <div className={isFetching ? "relative" : ""}>
                     {isFetching && <div className="absolute inset-0 rounded-lg bg-background/40" />}
-                    <BrandsTable items={items} onDelete={onDelete} />
+                    {children}
                 </div>
             </div>
 
-            <div className="px-4 lg:px-6">
-                <Pagination {...pagination} disabled={isFetching} labels={labels} />
-            </div>
+            {pagination && <div className="px-4 lg:px-6">{pagination}</div>}
         </div>
     )
 }
