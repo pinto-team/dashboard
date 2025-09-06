@@ -18,6 +18,7 @@ import {
 import { useI18n } from "@/shared/hooks/useI18n.ts";
 import { toAbsoluteUrl } from "@/shared/api/files.ts";
 import type { BrandData } from "@/features/brands/model/types.ts";
+import { convertDigitsByLocale } from "@/shared/i18n/numbers.ts";
 
 type Props = Readonly<{
     items: ReadonlyArray<BrandData>;
@@ -29,7 +30,7 @@ type Props = Readonly<{
 export default function BrandsTable({
                                         items, onDelete, onUndoDelete, showUndoInline = false,
                                     }: Props): JSX.Element {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const navigate = useNavigate();
 
     const goDetail = React.useCallback(
@@ -105,11 +106,11 @@ export default function BrandsTable({
                                 </TableCell>
 
                                 <TableCell className="max-w-[18rem] px-3 py-2.5 font-medium lg:max-w-[24rem] lg:px-4">
-                                    <span className="block truncate">{b.name}</span>
+                                    <span className="block truncate">{convertDigitsByLocale(b.name, locale)}</span>
                                 </TableCell>
 
                                 <TableCell className="w-40 px-3 py-2.5 lg:px-4">
-                                    {b.country ?? "-"}
+                                    {convertDigitsByLocale(b.country ?? "-", locale)}
                                 </TableCell>
 
                                 <TableCell className="px-3 py-2.5 lg:px-4">
@@ -120,9 +121,9 @@ export default function BrandsTable({
                                             rel="noopener noreferrer external"
                                             className="block max-w-[22ch] truncate underline-offset-4 hover:underline"
                                             onClick={(e) => e.stopPropagation()}
-                                            title={b.website}
+                                            title={convertDigitsByLocale(b.website, locale)}
                                         >
-                                            {b.website}
+                                            {convertDigitsByLocale(b.website, locale)}
                                         </a>
                                     ) : ("-")}
                                 </TableCell>
