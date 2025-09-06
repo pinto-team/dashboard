@@ -1,12 +1,12 @@
 import { Toaster } from "sonner"
 import { Suspense } from "react"
 import { Outlet } from "react-router-dom"
-import { useTranslation } from "react-i18next"
+import { useI18n } from "@/shared/hooks/useI18n"
 
 import AppErrorBoundary from "@/components/layout/AppErrorBoundary"
 
 function RouteFallback() {
-    const { t } = useTranslation()
+    const { t } = useI18n()
 
     return (
         <div className="min-h-[50vh] grid place-items-center gap-2">

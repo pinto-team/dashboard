@@ -7,13 +7,13 @@ import LanguageToggle from '@/components/layout/LanguageToggle.tsx'
 import ThemeToggle from '@/components/layout/ThemeToggle.tsx'
 import LoginForm, { LoginFormValues } from '@/features/auth/components/LoginForm'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useTranslation } from '@/shared/i18n/useTranslation'
+import { useI18n } from '@/shared/hooks/useI18n'
 
 type FromState = { from?: { pathname?: string } }
 
 export default function LoginPage() {
     const { login } = useAuth()
-    const { t } = useTranslation()
+    const { t } = useI18n()
     const nav = useNavigate()
     const loc = useLocation()
     const state = loc.state as FromState | undefined
