@@ -1,7 +1,5 @@
 import * as React from "react"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/features/sidebar/app-sidebar"
-import { SiteHeader } from "@/components/layout/site-header"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 import { BrandsEditBodySkeleton } from "./Skeletons"
 import ErrorFallback from "@/components/layout/ErrorFallback"
 import EditBrandUI from "./Ui"
@@ -36,20 +34,5 @@ export default function EditBrandPage() {
         )
     }
 
-    return (
-        <SidebarProvider
-            style={
-                {
-                    "--sidebar-width": "calc(var(--spacing)*72)",
-                    "--header-height": "calc(var(--spacing)*12)",
-                } as React.CSSProperties
-            }
-        >
-            <AppSidebar variant="inset" />
-            <SidebarInset>
-                <SiteHeader />
-                {renderContent()}
-            </SidebarInset>
-        </SidebarProvider>
-    )
+    return <DashboardLayout>{renderContent()}</DashboardLayout>
 }
