@@ -66,19 +66,12 @@ export default function BrandsTable({
                 </TableHeader>
 
                 <TableBody>
-                    {items.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={5} className="h-24 px-3 text-center text-sm text-muted-foreground">
-                                {t("common.no_results")}
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        items.map((b) => (
-                            <TableRow
-                                key={b.id}
-                                className="h-12 cursor-pointer hover:bg-muted/40 focus-visible:bg-muted/40"
-                                onClick={() => goDetail(b.id)}
-                                tabIndex={0}
+                    {items.map((b) => (
+                        <TableRow
+                            key={b.id}
+                            className="h-12 cursor-pointer hover:bg-muted/40 focus-visible:bg-muted/40"
+                            onClick={() => goDetail(b.id)}
+                            tabIndex={0}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter" || e.key === " ") {
                                         e.preventDefault();
@@ -158,8 +151,7 @@ export default function BrandsTable({
                                     </DropdownMenu>
                                 </TableCell>
                             </TableRow>
-                        ))
-                    )}
+                        ))}
                 </TableBody>
             </Table>
         </div>
