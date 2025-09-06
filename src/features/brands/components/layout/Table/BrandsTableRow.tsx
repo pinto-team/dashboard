@@ -10,11 +10,12 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import type { BrandData } from "@/features/brands/model/types";
+import { convertDigitsByLocale } from "@/shared/i18n/numbers";
 
 type Props = { brand: BrandData; onDelete: (id: string) => void; };
 
 export default function BrandsTableRow({ brand, onDelete }: Props) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const navigate = useNavigate();
 
     const goDetail = () => navigate(ROUTES.BRAND.DETAIL(brand.id));
@@ -42,8 +43,8 @@ export default function BrandsTableRow({ brand, onDelete }: Props) {
                 ) : <div className="h-10 w-10 rounded bg-muted" onClick={(e)=>e.stopPropagation()} />}
             </TableCell>
 
-            <TableCell className="font-medium">{brand.name}</TableCell>
-            <TableCell>{brand.country ?? "-"}</TableCell>
+            <TableCell className="font-medium">{convertDigitsByLocale(brand.name, locale)}</TableCell>
+            <TableCell>{convertDigitsByLocale(brand.country ?? "-", locale)}</TableCell>
             <TableCell>
                 {brand.website ? (
                     <a
@@ -52,8 +53,9 @@ export default function BrandsTableRow({ brand, onDelete }: Props) {
                         rel="noopener noreferrer external"
                         className="text-primary underline underline-offset-2"
                         onClick={(e) => e.stopPropagation()}
+                        title={convertDigitsByLocale(brand.website, locale)}
                     >
-                        {brand.website}
+                        {convertDigitsByLocale(brand.website, locale)}
                     </a>
                 ) : ("-")}
             </TableCell>

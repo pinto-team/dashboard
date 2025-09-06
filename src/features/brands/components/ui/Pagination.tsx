@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { useI18n } from "@/shared/hooks/useI18n"
+import { convertDigitsByLocale } from "@/shared/i18n/numbers"
 
 export type PaginationProps = {
     page: number
@@ -57,6 +59,8 @@ export default function Pagination({
                                        onPageSizeChange,
                                    }: PaginationProps) {
     const isRTL = useIsRTL()
+    const { locale } = useI18n()
+    const d = React.useCallback((v: number | string) => convertDigitsByLocale(v, locale), [locale])
 
     const totalPages = Math.max(0, pages)
     const currentPage = totalPages === 0 ? 0 : Math.min(page + 1, totalPages)
@@ -73,16 +77,16 @@ export default function Pagination({
                         </Label>
                         <Select
                             value={`${pageSize}`}
-                            onValueChange={(v) => onPageSizeChange?.(Number(v))}
+                            onValueChange={(v: string) => onPageSizeChange?.(Number(v))}
                             disabled={allDisabled}
                         >
                             <SelectTrigger id="rows-per-page" size="sm" className="w-20">
-                                <SelectValue placeholder={pageSize} />
+                                <SelectValue placeholder={d(pageSize ?? "")} />
                             </SelectTrigger>
                             <SelectContent side="top">
                                 {pageSizeOptions.map((ps) => (
                                     <SelectItem key={ps} value={`${ps}`}>
-                                        {ps}
+                                        {d(ps)}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -93,7 +97,7 @@ export default function Pagination({
 
             <div className="flex items-center gap-6">
                 <div className="text-sm font-medium" aria-live="polite">
-                    {labels.page} {currentPage} {labels.of} {totalPages}
+                    {labels.page} {d(currentPage)} {labels.of} {d(totalPages)}
                 </div>
 
                 <div className="flex items-center gap-2">

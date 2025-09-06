@@ -14,7 +14,7 @@ export function useBrandsPageContainer() {
     const navigate = useNavigate()
 
     const [page, setPage] = useState(0)
-    const [pageSize, setPageSize] = useState(12)
+    const [pageSize, setPageSize] = useState(7)
     const [query, setQuery] = useState("")
     const debouncedQuery = useDebounced(query, 450)
 
