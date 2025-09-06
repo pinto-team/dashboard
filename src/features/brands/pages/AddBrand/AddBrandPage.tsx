@@ -5,12 +5,10 @@ import { JSX } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { ROUTES } from "@/app/routes/routes"
-import { SiteHeader } from "@/components/layout/site-header"
 import { Button } from "@/components/ui/button"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 import BrandForm from "@/features/brands/components/layout/Form/BrandForm"
 import type { CreateBrandRequest } from "@/features/brands/model/types"
-import { AppSidebar } from "@/features/sidebar/app-sidebar"
 import { useI18n } from "@/shared/hooks/useI18n"
 import { isRTLLocale } from "@/shared/i18n/utils"
 import { brandsQueries } from "@/features/brands"
@@ -50,54 +48,43 @@ export default function AddBrandPage(): JSX.Element {
     }
 
     return (
-        <SidebarProvider
-            style={
-                {
-                    "--sidebar-width": "calc(var(--spacing)*72)",
-                    "--header-height": "calc(var(--spacing)*12)",
-                } as React.CSSProperties
-            }
-        >
-            <AppSidebar variant="inset" />
-            <SidebarInset>
-                <SiteHeader />
-                <div className="flex flex-1 flex-col gap-4 p-6 md:gap-6 md:p-8 lg:p-10">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                className="shadow-none"
-                                onClick={() => navigate(-1)}
-                                aria-label={t("common.back")}
-                                title={t("common.back")}
-                            >
-                                {rtl ? (
-                                    <ArrowRight className="h-4 w-4" />
-                                ) : (
-                                    <ArrowLeft className="h-4 w-4" />
-                                )}
-                            </Button>
-                            <h1 className="text-2xl font-bold tracking-tight">
-                                {t("brands.add")}
-                            </h1>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Button type="submit" form={FORM_ID} disabled={createMutation.isPending}>
-                                {createMutation.isPending ? t("common.saving") : t("common.save")}
-                            </Button>
-                        </div>
+        <DashboardLayout>
+            <div className="flex flex-1 flex-col gap-4 p-6 md:gap-6 md:p-8 lg:p-10">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="shadow-none"
+                            onClick={() => navigate(-1)}
+                            aria-label={t("common.back")}
+                            title={t("common.back")}
+                        >
+                            {rtl ? (
+                                <ArrowRight className="h-4 w-4" />
+                            ) : (
+                                <ArrowLeft className="h-4 w-4" />
+                            )}
+                        </Button>
+                        <h1 className="text-2xl font-bold tracking-tight">
+                            {t("brands.add")}
+                        </h1>
                     </div>
 
-                    <BrandForm
-                        formId={FORM_ID}
-                        onSubmit={handleSubmit}
-                        submitting={createMutation.isPending}
-                        apiErrors={apiErrors}
-                    />
+                    <div className="flex items-center gap-2">
+                        <Button type="submit" form={FORM_ID} disabled={createMutation.isPending}>
+                            {createMutation.isPending ? t("common.saving") : t("common.save")}
+                        </Button>
+                    </div>
                 </div>
-            </SidebarInset>
-        </SidebarProvider>
+
+                <BrandForm
+                    formId={FORM_ID}
+                    onSubmit={handleSubmit}
+                    submitting={createMutation.isPending}
+                    apiErrors={apiErrors}
+                />
+            </div>
+        </DashboardLayout>
     )
 }
