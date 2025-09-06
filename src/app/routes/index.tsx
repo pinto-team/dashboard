@@ -16,7 +16,7 @@ import AddCategoryPage from '@/features/categories/pages/AddCategoryPage'
 import EditCategoryPage from '@/features/categories/pages/EditCategoryPage'
 import BrandsPage from '@/features/brands/pages/ListBrands'
 import AddBrandPage from '@/features/brands/pages/AddBrand/AddBrandPage.tsx'
-import EditBrandPage from '@/features/brands/pages/EditBrand/EditBrandPage.tsx'
+import EditBrandPage from '@/features/brands/pages/EditBrand'
 
 // 👇 اضافه کنید
 import DetailBrandPage from '@/features/brands/pages/DetailBrand/DetailBrandPage'
