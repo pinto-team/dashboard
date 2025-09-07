@@ -41,6 +41,12 @@ export default function CategoriesTable({ items, onDelete }: Props): JSX.Element
         [navigate],
     )
 
+    const getParentName = React.useCallback(
+        (parentId?: string | null) =>
+            items.find((x) => x.id === parentId)?.name ?? '-',
+        [items],
+    )
+
     return (
         <div className="relative overflow-hidden rounded-lg border">
             <Table>
@@ -75,7 +81,7 @@ export default function CategoriesTable({ items, onDelete }: Props): JSX.Element
                                 {c.name}
                             </TableCell>
                             <TableCell className="px-3 py-2.5">
-                                {c.parent_id ?? '-'}
+                                {getParentName(c.parent_id)}
                             </TableCell>
                             <TableCell className="px-3 py-2.5 text-right">
                                 <DropdownMenu>
