@@ -12,4 +12,11 @@ export const ROUTES = {
         DETAIL: (id = ':id') => `/brands/${id}`,
         EDIT: (id = ':id') => `/brands/${id}/edit`,
     },
+    // Category
+    CATEGORY: {
+        LIST: '/categories',
+        NEW: '/categories/new',
+        DETAIL: (id = ':id') => `/categories/${id}`,
+        EDIT: (id = ':id') => `/categories/${id}/edit`,
+    },
 } as const

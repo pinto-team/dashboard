@@ -25,6 +25,7 @@
 
   "menu.basic": "پایه",
   "menu.basic.brand": "برندها",
+  "menu.basic.category": "دسته‌ها",
 
   "user.guest": "مهمان",
 
@@ -36,6 +37,14 @@
   "brands.title": "برندها",
   "brands.create": "ایجاد برند",
   "brands.search_placeholder": "جستجوی برند...",
+
+  "categories.saved_success": "دسته با موفقیت ذخیره شد",
+  "categories.add": "افزودن دسته",
+  "categories.edit": "ویرایش دسته",
+  "categories.deleted": "دسته حذف شد",
+  "categories.title": "دسته‌ها",
+  "categories.create": "افزودن دسته",
+  "categories.search_placeholder": "جستجوی دسته...",
 
   "common.error": "مشکلی پیش آمد",
   "common.back": "بازگشت",
@@ -73,6 +82,16 @@
   "brands.form.logo": "لوگو",
   "brands.form.logo_help": "لوگوی برند را بارگذاری کنید (ترجیحاً مربع باشد)",
 
+  "categories.form.title": "اطلاعات دسته",
+  "categories.form.name": "نام",
+  "categories.form.name_ph": "نام دسته را وارد کنید",
+  "categories.form.description": "توضیحات",
+  "categories.form.description_ph": "توضیحات را وارد کنید",
+  "categories.form.parent_id": "شناسه والد",
+  "categories.form.parent_id_ph": "شناسه دسته والد را وارد کنید",
+  "categories.form.image_url": "آدرس تصویر",
+  "categories.form.image_url_ph": "آدرس تصویر را وارد کنید",
+
   "validation.required": "این فیلد الزامی است",
   "validation.min_length": "حداقل باید {n} کاراکتر باشد",
   "validation.max_length": "حداکثر باید {n} کاراکتر باشد",
@@ -83,6 +102,14 @@
   "brands.table.country": "کشور",
   "brands.table.website": "وب‌سایت",
   "brands.table.actions": "عملیات",
+
+  "categories.table.name": "نام",
+  "categories.table.parent": "والد",
+  "categories.table.actions": "عملیات",
+
+  "categories.actions.edit": "ویرایش",
+  "categories.actions.delete": "حذف",
+  "categories.actions.delete_confirm": "آیا از حذف این دسته مطمئن هستید؟ این عمل قابل بازگشت نیست.",
 
   "uploader.errors.type_image_only": "فقط فایل‌های تصویری مجاز هستند",
   "uploader.errors.max_size": "حداکثر حجم فایل {size} مگابایت است",

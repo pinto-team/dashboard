@@ -21,6 +21,9 @@ export const API_ROUTES = {
     BRANDS: {
         ROOT: '/brands',
     },
+    CATEGORIES: {
+        ROOT: '/categories',
+    },
 } as const
 
 export type ApiRoute = typeof API_ROUTES
