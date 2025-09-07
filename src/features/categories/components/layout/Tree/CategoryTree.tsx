@@ -147,10 +147,10 @@ const CategoryTree = React.forwardRef<CategoryTreeHandle, Props>(function Catego
                             node={node}
                             depth={0}
                             expanded={expanded[node.id] ?? true}
-                            setExpanded={(v) => setExp(node.id, v)}
-                            onAddChild={() => onAddChild(node.id)}
-                            onEdit={() => onEdit(node.id)}
-                            onDelete={() => onDelete(node.id)}
+                            setExpanded={setExp}
+                            onAddChild={onAddChild}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
                             searchQuery={searchQuery}
                             expandedState={expanded}
                         />
