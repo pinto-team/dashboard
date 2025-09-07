@@ -7,11 +7,11 @@ import LoginPage from '@/features/auth/pages/LoginPage'
 import DashboardPage from '@/features/dashboard/pages/DashboardPage'
 import NotFound from './NotFound'
 import ProtectedRoute from './ProtectedRoute'
-import BrandsPage from '@/features/brands/pages/ListBrands'
-import AddBrandPage from '@/features/brands/pages/AddBrand/AddBrandPage.tsx'
+import ListBrandsPage from '@/features/brands/pages/ListBrands'
+import AddBrandPage from '@/features/brands/pages/AddBrand'
 import EditBrandPage from '@/features/brands/pages/EditBrand'
 
-import DetailBrandPage from '@/features/brands/pages/DetailBrand/DetailBrandPage'
+import DetailBrandPage from '@/features/brands/pages/DetailBrand'
 
 export const router = createBrowserRouter([
     {
@@ -24,7 +24,7 @@ export const router = createBrowserRouter([
                     { index: true, element: <DashboardPage /> },
                     { path: ROUTES.DASHBOARD, element: <DashboardPage /> },
 
-                    { path: ROUTES.BRAND.LIST, element: <BrandsPage /> },
+                    { path: ROUTES.BRAND.LIST, element: <ListBrandsPage /> },
                     { path: ROUTES.BRAND.NEW, element: <AddBrandPage /> },
                     { path: ROUTES.BRAND.DETAIL(), element: <DetailBrandPage /> },
                     { path: ROUTES.BRAND.EDIT(), element: <EditBrandPage /> },

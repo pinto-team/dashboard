@@ -8,7 +8,7 @@ import BrandsTable from "@/features/brands/components/layout/Table/BrandsTable"
 import Pagination from "@/features/brands/components/ui/Pagination"
 import ErrorFallback from "@/components/layout/ErrorFallback"
 
-export default function BrandsPage() {
+export default function ListBrandsPage() {
     const {
         nav,
         i18n: { t },
