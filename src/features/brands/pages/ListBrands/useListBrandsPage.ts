@@ -9,7 +9,7 @@ import useDebounced from "@/shared/hooks/useDebounced"
 import { useI18n } from "@/shared/hooks/useI18n"
 import type { PaginationProps } from "@/features/brands/components/ui/Pagination"
 
-export function useBrandsPageContainer() {
+export function useListBrandsPage() {
     const { t } = useI18n()
     const navigate = useNavigate()
 
