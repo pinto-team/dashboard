@@ -24,10 +24,7 @@
   "app.title": "Dashboard",
 
   "menu.basic": "Basic",
-  "menu.basic.product": "Products",
-  "menu.basic.category": "Categories",
   "menu.basic.brand": "Brands",
-  "menu.basic.warehouse": "Warehouses",
 
   "user.guest": "Guest",
 
