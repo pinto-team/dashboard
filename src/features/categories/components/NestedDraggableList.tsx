@@ -1,12 +1,15 @@
-import { ChevronDown, ChevronRight, GripVertical, Plus, Search, Trash2 } from 'lucide-react'
-
 import * as React from 'react'
-
+import { ChevronDown, ChevronRight, GripVertical, Plus, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
+import { categoriesApiService } from '@/features/categories/services/categories.api'
+import type { CategoryData } from '@/features/categories/model/types'
 
+type UUID = string
 
+// ---------- i18n سبک نمونه‌ی خودت ----------
 const useT = () => {
     const dict: Record<string, string> = {
         'categories.title': 'دسته‌بندی‌ها',
@@ -18,172 +21,241 @@ const useT = () => {
     return (k: string, opt?: any) => (dict[k] || k).replace('{{count}}', String(opt?.count ?? ''))
 }
 
+// ---------- نوع درخت UI (گرافیکی) ----------
 export type CategoryNode = {
-    id: string
+    id: UUID
     name: string
     expanded?: boolean
     children: CategoryNode[]
 }
 
-const initialData: CategoryNode[] = [
-    {
-        id: '1',
-        name: 'دسته‌بندی اول',
-        expanded: true,
-        children: [
-            { id: '1-1', name: 'زیردسته ۱.۱', children: [] },
-            { id: '1-2', name: 'زیردسته ۱.۲', children: [] },
-        ],
-    },
-    {
-        id: '2',
-        name: 'دسته‌بندی دوم',
-        expanded: true,
-        children: [
-            { id: '2-1', name: 'زیردسته ۲.۱', children: [] },
-            {
-                id: '2-2',
-                name: 'زیردسته ۲.۲',
-                expanded: true,
-                children: [{ id: '2-2-1', name: 'زیردسته ۲.۲.۱', children: [] }],
-            },
-        ],
-    },
-    {
-        id: '3',
-        name: 'دسته‌بندی سوم',
-        expanded: false,
-        children: [],
-    },
-]
+// کمک: مپ دیتای API → نود UI
+const toNode = (c: CategoryData): CategoryNode => ({
+    id: c.id,
+    name: c.name,
+    expanded: false,
+    children: [],
+})
 
-function NestedDraggableList({
-    searchQuery,
-    onAddRoot,
-    onCountChange,
-}: {
+// ---------- کامپوننت ----------
+export default function NestedDraggableList({
+                                                searchQuery,
+                                                onAddRoot,
+                                                onCountChange,
+                                            }: {
     searchQuery: string
     onAddRoot?: () => void
     onCountChange?: (count: number) => void
 }) {
-    const [categories, setCategories] = React.useState<CategoryNode[]>(initialData)
-    const [draggedItem, setDraggedItem] = React.useState<{
-        item: CategoryNode
-        parentId: string | null
-    } | null>(null)
-    const [dragOverItem, setDragOverItem] = React.useState<{
-        item: CategoryNode
-        parentId: string | null
-    } | null>(null)
+    const [categories, setCategories] = React.useState<CategoryNode[]>([])
+    const [draggedItem, setDraggedItem] = React.useState<{ item: CategoryNode; parentId: UUID | null } | null>(null)
+    const [dragOverItem, setDragOverItem] = React.useState<{ item: CategoryNode; parentId: UUID | null } | null>(null)
+    const [loadingRoot, setLoadingRoot] = React.useState(false)
 
+    // ---------- بارگذاری ریشه ----------
+    const loadChildren = React.useCallback(async (parentId: UUID | null) => {
+        const res = await categoriesApiService.list({ parent_id: parentId ?? null, page: 1, limit: 100 })
+        const list = res.data.data // already sorted asc by server
+        return list.map(toNode)
+    }, [])
+
+    const loadRoot = React.useCallback(async () => {
+        setLoadingRoot(true)
+        try {
+            const nodes = await loadChildren(null)
+            setCategories(nodes)
+        } catch (e: any) {
+            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در بارگذاری دسته‌ها')
+        } finally {
+            setLoadingRoot(false)
+        }
+    }, [loadChildren])
+
+    React.useEffect(() => {
+        loadRoot()
+    }, [loadRoot])
+
+    // ---------- شمارش کل نودها ----------
     const countNodes = React.useCallback(
-        (nodes: CategoryNode[]): number =>
-            nodes.reduce((acc, n) => acc + 1 + countNodes(n.children || []), 0),
+        (nodes: CategoryNode[]): number => nodes.reduce((acc, n) => acc + 1 + countNodes(n.children || []), 0),
         [],
     )
-
     React.useEffect(() => {
         onCountChange?.(countNodes(categories))
     }, [categories, countNodes, onCountChange])
 
-    const addCategory = () => {
-        const newId = Date.now().toString()
-        setCategories((prev) => [
-            ...prev,
-            { id: newId, name: `دسته‌بندی جدید ${prev.length + 1}`, expanded: true, children: [] },
-        ])
-        onAddRoot?.()
-    }
-
-    const addSubCategory = (parentId: string) => {
-        const add = (items: CategoryNode[]): boolean => {
-            for (const it of items) {
-                if (it.id === parentId) {
-                    const newId = `${parentId}-${Date.now()}`
-                    it.children = it.children || []
-                    it.children.push({ id: newId, name: 'زیردسته جدید', children: [] })
-                    it.expanded = true
-                    return true
-                }
-                if (it.children && add(it.children)) return true
+    // ---------- ابزارهای دستکاری درخت ----------
+    const findAndUpdate = (
+        nodes: CategoryNode[],
+        id: UUID,
+        updater?: (n: CategoryNode) => void,
+    ): CategoryNode | null => {
+        for (const n of nodes) {
+            if (n.id === id) {
+                if (updater) updater(n)
+                return n
             }
-            return false
+            if (n.children?.length) {
+                const hit = findAndUpdate(n.children, id, updater)
+                if (hit) return hit
+            }
         }
-        const next = [...categories]
-        add(next)
-        setCategories(next)
+        return null
     }
 
-    const deleteCategory = (id: string, parentId: string | null = null) => {
-        const remove = (items: CategoryNode[], currentParent: string | null): boolean => {
-            if (currentParent === parentId) {
-                const index = items.findIndex((i) => i.id === id)
-                if (index !== -1) {
-                    items.splice(index, 1)
-                    return true
-                }
-            }
-            for (const it of items) {
-                if (it.children && remove(it.children, it.id)) return true
-            }
-            return false
+
+    const findAndGetChildrenRef = (
+        nodes: CategoryNode[],
+        parentId: UUID | null,
+    ): CategoryNode[] | null => {
+        if (parentId === null) return nodes
+        for (const n of nodes) {
+            if (n.id === parentId) return n.children
+            const deeper = findAndGetChildrenRef(n.children || [], parentId)
+            if (deeper) return deeper
         }
-        const next = [...categories]
-        remove(next, null)
-        setCategories(next)
+        return null
     }
 
-    const toggleExpand = (id: string) => {
-        const toggle = (items: CategoryNode[]): boolean => {
-            for (const it of items) {
-                if (it.id === id) {
-                    it.expanded = !it.expanded
-                    return true
-                }
-                if (it.children && toggle(it.children)) return true
-            }
-            return false
+    const deepClone = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj))
+
+    // ---------- افزودن ----------
+    const addCategory = async () => {
+        try {
+            const order = categories.length
+            const res = await categoriesApiService.create({ name: `دسته‌بندی جدید ${order + 1}`, parent_id: null, order })
+            const node = toNode(res.data.data)
+            setCategories((prev) => [...prev, node])
+            onAddRoot?.()
+            toast.success('ایجاد شد')
+        } catch (e: any) {
+            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در ایجاد')
         }
-        const next = [...categories]
-        toggle(next)
-        setCategories(next)
     }
 
-    const handleDragStart = (
-        e: React.DragEvent<HTMLDivElement>,
-        item: CategoryNode,
-        parentId: string | null = null,
-    ) => {
+    const addSubCategory = async (parentId: UUID) => {
+        try {
+            // اگر لیست فرزندها هنوز لود نشده، اول لود کن
+            let next = deepClone(categories)
+            const parentChildren = findAndGetChildrenRef(next, parentId)
+            if (parentChildren && parentChildren.length === 0) {
+                const fetched = await loadChildren(parentId)
+                findAndUpdate(next, parentId, (p) => (p.children = fetched))
+            }
+            // ایجاد
+            const parentChildrenAfter = findAndGetChildrenRef(next, parentId)!
+            const order = parentChildrenAfter.length
+            const res = await categoriesApiService.create({ name: 'زیردسته جدید', parent_id: parentId, order })
+            parentChildrenAfter.push(toNode(res.data.data))
+            findAndUpdate(next, parentId, (p) => (p.expanded = true))
+            setCategories(next)
+            toast.success('زیردسته اضافه شد')
+        } catch (e: any) {
+            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در ایجاد زیردسته')
+        }
+    }
+
+    // ---------- حذف ----------
+    const deleteCategory = async (id: UUID, parentId: UUID | null = null) => {
+        const prev = categories
+        try {
+            await categoriesApiService.remove(id)
+            const next = deepClone(prev)
+            const remove = (items: CategoryNode[], currentParent: UUID | null): boolean => {
+                if (currentParent === parentId) {
+                    const index = items.findIndex((i) => i.id === id)
+                    if (index !== -1) {
+                        items.splice(index, 1)
+                        return true
+                    }
+                }
+                for (const it of items) {
+                    if (it.children && remove(it.children, it.id)) return true
+                }
+                return false
+            }
+            remove(next, null)
+            setCategories(next)
+            toast.success('حذف شد')
+        } catch (e: any) {
+            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در حذف')
+        }
+    }
+
+    // ---------- Expand (با lazy-load فرزندها) ----------
+// ---------- Expand (با lazy-load فرزندها) ----------
+    const toggleExpand = async (id: UUID) => {
+        // مرحله ۱: toggle و ست‌کردن state (بدون بارگیری)
+        const next = deepClone(categories)
+        const target = findAndUpdate(next, id, (n) => {
+            n.expanded = !n.expanded
+        })
+        setCategories(next)
+
+        // اگر پیدا نشد یا بسته شد، کاری نکن
+        if (!target || !target.expanded) return
+
+        // اگر قبلاً فرزندها لود شده‌اند، نیاز به درخواست نیست
+        if (target.children && target.children.length > 0) return
+
+        // مرحله ۲: بارگیری فرزندها و به‌روزرسانی state روی نسخه‌ی تازه
+        try {
+            const children = await loadChildren(target.id)
+            setCategories((prev) => {
+                const copy = deepClone(prev)
+                const t = findAndUpdate(copy, id)
+                if (t) {
+                    t.children = children
+                    t.expanded = true // باز بماند
+                }
+                return copy
+            })
+        } catch (e: any) {
+            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در بارگذاری زیردسته‌ها')
+        }
+    }
+
+    // ---------- Drag helpers ----------
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: CategoryNode, parentId: UUID | null = null) => {
         setDraggedItem({ item, parentId })
         e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('text/plain', item.id) // Firefox
     }
-
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = 'move'
     }
-
-    const handleDragEnter = (
-        e: React.DragEvent,
-        item: CategoryNode,
-        parentId: string | null = null,
-    ) => {
+    const handleDragEnter = (e: React.DragEvent, item: CategoryNode, parentId: UUID | null = null) => {
         e.preventDefault()
         setDragOverItem({ item, parentId })
     }
 
-    const handleDrop = (
-        e: React.DragEvent,
-        targetItem: CategoryNode,
-        targetParentId: string | null = null,
-    ) => {
+    // جابه‌جایی «بین خواهر-برادرها» (قبل از target)
+    const handleDrop = async (e: React.DragEvent, targetItem: CategoryNode, targetParentId: UUID | null = null) => {
         e.preventDefault()
         e.stopPropagation()
         if (!draggedItem || draggedItem.item.id === targetItem.id) return
 
-        const newCategories: CategoryNode[] = JSON.parse(JSON.stringify(categories))
+        // محاسبه‌ی insertIndex با فیکس off-by-one
+        const current = deepClone(categories)
 
-        const removeItem = (items: CategoryNode[], parentId: string | null): boolean => {
+        // آرایه‌ی مقصد قبل از حذف
+        const targetSiblings = findAndGetChildrenRef(current, targetParentId)!
+        const targetIndexBefore = targetSiblings.findIndex((i) => i.id === targetItem.id)
+
+        // آرایه‌ی مبدا برای محاسبه‌ی draggedIndex
+        const sourceSiblings = findAndGetChildrenRef(current, draggedItem.parentId)!
+        const draggedIndexBefore = sourceSiblings.findIndex((i) => i.id === draggedItem.item.id)
+
+        let insertIndex = targetIndexBefore
+        if (draggedItem.parentId === targetParentId && draggedIndexBefore < targetIndexBefore) {
+            insertIndex = Math.max(0, targetIndexBefore - 1)
+        }
+
+        // optimistic update محلی
+        const optimistic = deepClone(current)
+        // 1) remove از مبدا
+        const removeItem = (items: CategoryNode[], parentId: UUID | null): boolean => {
             if (parentId === draggedItem.parentId) {
                 const index = items.findIndex((i) => i.id === draggedItem.item.id)
                 if (index !== -1) {
@@ -196,36 +268,61 @@ function NestedDraggableList({
             }
             return false
         }
-
-        const addItem = (items: CategoryNode[], parentId: string | null): boolean => {
+        removeItem(optimistic, null)
+        // 2) insert در مقصد با index محاسبه‌شده
+        const insertAt = (items: CategoryNode[], parentId: UUID | null): boolean => {
             if (parentId === targetParentId) {
-                const idx = items.findIndex((i) => i.id === targetItem.id)
-                if (idx !== -1) {
-                    items.splice(idx, 0, draggedItem.item)
-                    return true
-                }
+                items.splice(insertIndex, 0, draggedItem.item)
+                return true
             }
             for (const it of items) {
-                if (it.children && addItem(it.children, it.id)) return true
+                if (it.children && insertAt(it.children, it.id)) return true
             }
             return false
         }
-
-        removeItem(newCategories, null)
-        addItem(newCategories, null)
-        setCategories(newCategories)
+        insertAt(optimistic, null)
+        setCategories(optimistic)
         setDraggedItem(null)
         setDragOverItem(null)
+
+        // API: parent_id و order جدید
+        try {
+            await categoriesApiService.update(draggedItem.item.id, {
+                parent_id: targetParentId ?? null,
+                order: insertIndex,
+            })
+            toast.success('ترتیب به‌روزرسانی شد')
+        } catch (err: any) {
+            // rollback
+            setCategories(current)
+            toast.error(err?.response?.data?.detail?.[0]?.msg || 'خطا در جابه‌جایی')
+        }
     }
 
-    const handleDropAsChild = (e: React.DragEvent, parentItem: CategoryNode) => {
+    // جابه‌جایی «به‌عنوان فرزند» (append به انتهای فرزندهای parentItem)
+    const handleDropAsChild = async (e: React.DragEvent, parentItem: CategoryNode) => {
         e.preventDefault()
         e.stopPropagation()
         if (!draggedItem || draggedItem.item.id === parentItem.id) return
 
-        const newCategories: CategoryNode[] = JSON.parse(JSON.stringify(categories))
+        const current = deepClone(categories)
 
-        const removeItem = (items: CategoryNode[], parentId: string | null): boolean => {
+        // اگر فرزندها هنوز لود نشده، اول بگیر
+        let working = deepClone(current)
+        const parentChildrenRef = findAndGetChildrenRef(working, parentItem.id)
+        if (parentChildrenRef && parentChildrenRef.length === 0) {
+            try {
+                const fetched = await loadChildren(parentItem.id)
+                findAndUpdate(working, parentItem.id, (p) => (p.children = fetched))
+            } catch (e: any) {
+                toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در بارگذاری زیردسته‌ها')
+                return
+            }
+        }
+
+        // optimistic
+        const optimistic = deepClone(working)
+        const removeItem = (items: CategoryNode[], parentId: UUID | null): boolean => {
             if (parentId === draggedItem.parentId) {
                 const index = items.findIndex((i) => i.id === draggedItem.item.id)
                 if (index !== -1) {
@@ -238,34 +335,33 @@ function NestedDraggableList({
             }
             return false
         }
+        removeItem(optimistic, null)
 
-        const addAsChild = (items: CategoryNode[]): boolean => {
-            const parent = items.find((i) => i.id === parentItem.id)
-            if (parent) {
-                parent.children = parent.children || []
-                parent.children.push(draggedItem.item)
-                parent.expanded = true
-                return true
-            }
-            for (const it of items) {
-                if (it.children && addAsChild(it.children)) return true
-            }
-            return false
-        }
+        // index = انتهای لیست فرزندان
+        const childrenArr = findAndGetChildrenRef(optimistic, parentItem.id)!
+        const newIndex = childrenArr.length
+        childrenArr.push(draggedItem.item)
+        findAndUpdate(optimistic, parentItem.id, (p) => (p.expanded = true))
 
-        removeItem(newCategories, null)
-        addAsChild(newCategories)
-        setCategories(newCategories)
+        setCategories(optimistic)
         setDraggedItem(null)
         setDragOverItem(null)
+
+        try {
+            await categoriesApiService.update(draggedItem.item.id, {
+                parent_id: parentItem.id,
+                order: newIndex,
+            })
+            toast.success('انتقال انجام شد')
+        } catch (err: any) {
+            setCategories(current)
+            toast.error(err?.response?.data?.detail?.[0]?.msg || 'خطا در انتقال')
+        }
     }
 
-    const renderCategory = (
-        item: CategoryNode,
-        level = 0,
-        parentId: string | null = null,
-    ): React.ReactNode => {
-        const hasChildren = item.children && item.children.length > 0
+    // ---------- رندر یک آیتم ----------
+    const renderCategory = (item: CategoryNode, level = 0, parentId: UUID | null = null): React.ReactNode => {
+        const hasChildren = item.children && item.children.length > 0 // توجه: بعد از expand اول درست می‌شود
         const isBeingDragged = draggedItem?.item.id === item.id
         const isDragOver = dragOverItem?.item.id === item.id
 
@@ -287,25 +383,24 @@ function NestedDraggableList({
                     style={{ marginRight: `${level * 32}px` }}
                 >
                     <GripVertical className="w-4 h-4 text-gray-400" />
-                    {hasChildren && (
-                        <button
-                            onClick={() => toggleExpand(item.id)}
-                            className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
-                        >
-                            {item.expanded ? (
-                                <ChevronDown className="w-4 h-4" />
-                            ) : (
-                                <ChevronRight className="w-4 h-4" />
-                            )}
-                        </button>
-                    )}
+                    {/* نکته: برای اجازه‌ی expand اولیه، دکمه را همیشه نشان می‌دهیم */}
+                    <button
+                        onClick={() => toggleExpand(item.id)}
+                        className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                        title={item.expanded ? 'بستن' : 'باز کردن'}
+                    >
+                        {item.expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </button>
+
                     <span className="flex-1 text-sm font-medium">{item.name}</span>
+
                     <div className="flex gap-1">
                         <Button
                             size="sm"
                             variant="ghost"
                             className="h-7 w-7 p-0"
                             onClick={() => addSubCategory(item.id)}
+                            title="افزودن زیردسته"
                         >
                             <Plus className="w-3 h-3" />
                         </Button>
@@ -314,17 +409,15 @@ function NestedDraggableList({
                             variant="ghost"
                             className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
                             onClick={() => deleteCategory(item.id, parentId)}
+                            title="حذف"
                         >
                             <Trash2 className="w-3 h-3" />
                         </Button>
                     </div>
                 </div>
-                {hasChildren && item.expanded && (
-                    <div
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDropAsChild(e, item)}
-                        className="mt-1 min-h-[20px]"
-                    >
+
+                {item.expanded && (
+                    <div onDragOver={handleDragOver} onDrop={(e) => handleDropAsChild(e, item)} className="mt-1 min-h-[20px]">
                         {item.children.map((child) => renderCategory(child, level + 1, item.id))}
                     </div>
                 )}
@@ -332,7 +425,7 @@ function NestedDraggableList({
         )
     }
 
-    // فیلتر روی نام‌ها (والدهایی که فرزند مچ دارند حفظ می‌شوند)
+    // ---------- فیلتر نمایش ----------
     const filtered = React.useMemo(() => {
         const q = searchQuery.trim()
         if (!q) return categories
@@ -352,81 +445,46 @@ function NestedDraggableList({
 
     return (
         <Card className="w-full max-w-2xl mx-auto p-6" dir="rtl">
+            {/* سرچ و اکشن‌ها (مثل نمونه‌ی خودت) */}
+            <div className="flex items-center justify-between mb-4">
+                <div className="relative">
+                    <Search
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-4 text-muted-foreground [inset-inline-start:0.625rem]"
+                    />
+                    <Input
+                        value={searchQuery}
+                        readOnly
+                        placeholder="جستجوی دسته‌بندی..."
+                        aria-label="جستجوی دسته‌بندی..."
+                        className="w-72 [padding-inline-start:2rem] opacity-80"
+                        title="کنترل سرچ در والد مدیریت می‌شود"
+                    />
+                </div>
+                <Button onClick={addCategory} id="add-root-from-body">ایجاد دسته‌بندی</Button>
+            </div>
+
+            {/* لیست */}
             <div className="space-y-2">
-                {filtered.length === 0 ? (
+                {loadingRoot ? (
+                    <div className="text-center py-8 text-gray-500">در حال بارگذاری…</div>
+                ) : filtered.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">هیچ دسته‌بندی وجود ندارد</div>
                 ) : (
                     filtered.map((cat) => renderCategory(cat))
                 )}
             </div>
+
             <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-                💡 راهنما: آیتم‌ها را بکشید و رها کنید تا جابجا شوند. برای تبدیل به زیردسته، روی
-                دسته مورد نظر رها کنید.
+                💡 راهنما: آیتم‌ها را بکشید و رها کنید تا جابجا شوند. برای تبدیل به زیردسته، روی دستهٔ مورد نظر رها کنید.
             </div>
-            {/* دکمه ایجاد ریشه (اختیاری در بدنه) */}
+
+            {/* دکمه ایجاد ریشه (همانند نمونه) */}
             <div className="mt-4 flex justify-center">
                 <Button variant="secondary" onClick={addCategory}>
                     <Plus className="w-4 h-4 ml-2" /> افزودن دسته‌بندی ریشه
                 </Button>
             </div>
         </Card>
-    )
-}
-
-export default function CategorySamplePage() {
-    const t = useT()
-    const [query, setQuery] = React.useState('')
-    const [count, setCount] = React.useState(0)
-
-    const subtitle = count > 0 ? t('common.showing_count', { count }) : t('common.search_hint')
-
-    const handleCreate = () => {
-        const addBtn = document.getElementById('add-root-from-body')
-        addBtn?.dispatchEvent(new Event('click', { bubbles: true }))
-    }
-
-    return (
-        <div className="flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6" dir="rtl">
-            <div className="flex items-center justify-between px-4 lg:px-6">
-                <div className="flex flex-col">
-                    <h1 className="text-2xl font-bold">{t('categories.title')}</h1>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Search
-                            aria-hidden="true"
-                            className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-4 text-muted-foreground [inset-inline-start:0.625rem]"
-                        />
-                        <Input
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder={t('categories.search_placeholder')}
-                            aria-label={t('categories.search_placeholder')}
-                            className="w-72 [padding-inline-start:2rem]"
-                        />
-                    </div>
-
-                    {/* دکمه ایجاد: در پروژه واقعی به مسیر ساخت کتگوری هدایت کنید */}
-                    <Button onClick={handleCreate}>{t('categories.create')}</Button>
-                </div>
-            </div>
-
-            {subtitle && (
-                <div className="px-4 lg:px-6 -mt-2">
-                    <p className="text-sm text-muted-foreground">{subtitle}</p>
-                </div>
-            )}
-
-            <div className="px-4 lg:px-6">
-                <NestedDraggableList
-                    searchQuery={query}
-                    onCountChange={setCount}
-                    onAddRoot={() => {
-                        /* قابل استفاده برای تلماتیک/آنالیتیکس */
-                    }}
-                />
-            </div>
-        </div>
     )
 }

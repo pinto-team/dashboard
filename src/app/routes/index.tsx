@@ -34,9 +34,7 @@ export const router = createBrowserRouter([
                     { path: ROUTES.BRAND.EDIT(), element: <EditBrandPage /> },
 
                     { path: ROUTES.CATEGORY.LIST, element: <ListCategoriesPage /> },
-                    { path: ROUTES.CATEGORY.NEW, element: <AddCategoryPage /> },
-                    { path: ROUTES.CATEGORY.DETAIL(), element: <DetailCategoryPage /> },
-                    { path: ROUTES.CATEGORY.EDIT(), element: <EditCategoryPage /> },
+
                 ],
             },
             { path: ROUTES.LOGIN, element: <LoginPage /> },

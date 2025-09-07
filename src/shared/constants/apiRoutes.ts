@@ -23,6 +23,9 @@ export const API_ROUTES = {
     },
     CATEGORIES: {
         ROOT: '/categories',
+        BY_ID: (id: string | number) => `/categories/${id}`,
+
+
     },
 } as const
 
