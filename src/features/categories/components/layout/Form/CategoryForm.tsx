@@ -90,7 +90,6 @@ export default function CategoryForm({
 
     const parentListParams = React.useMemo(() => ({ page: 1, limit: 100 }), [])
     const parentsQuery = categoriesQueries.useList(parentListParams)
-
     return (
         <FormProvider {...form}>
             <form
