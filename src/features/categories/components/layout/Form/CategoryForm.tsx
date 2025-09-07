@@ -149,7 +149,9 @@ export default function CategoryForm({
                                 <Select
                                     value={form.watch('parent_id') || ''}
                                     onValueChange={(val) =>
-                                        form.setValue('parent_id', val, { shouldDirty: true })
+                                        form.setValue('parent_id', val === 'none' ? '' : val, {
+                                            shouldDirty: true,
+                                        })
                                     }
                                 >
                                     <SelectTrigger id="category-parent" className="w-full">
@@ -158,7 +160,7 @@ export default function CategoryForm({
                                         />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">
+                                        <SelectItem value="none">
                                             {t('categories.form.parent_none')}
                                         </SelectItem>
                                         {parentsQuery.data?.data.map((p) => (
