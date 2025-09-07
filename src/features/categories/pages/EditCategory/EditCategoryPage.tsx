@@ -79,7 +79,7 @@ export default function EditCategoryPage() {
         name: detailQuery.data.data.name,
         description: detailQuery.data.data.description || '',
         parent_id: detailQuery.data.data.parent_id || '',
-        image_url: detailQuery.data.data.image_url || '',
+        image_id: detailQuery.data.data.image_id || '',
     }
 
     return (
@@ -119,6 +119,7 @@ export default function EditCategoryPage() {
                     submitting={updateMutation.isPending}
                     defaultValues={defaults}
                     apiErrors={apiErrors}
+                    initialImageUrl={detailQuery.data.data.image_url}
                 />
             </div>
         </DashboardLayout>

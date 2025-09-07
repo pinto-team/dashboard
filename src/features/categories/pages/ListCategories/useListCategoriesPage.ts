@@ -64,7 +64,7 @@ export function useListCategoriesPage() {
                                     name: toDelete.name,
                                     description: toDelete.description || '',
                                     parent_id: toDelete.parent_id || '',
-                                    image_url: toDelete.image_url || '',
+                                    image_id: toDelete.image_id || '',
                                 }
                                 createMutation.mutate(payload, {
                                     onSuccess: () => {

@@ -8,6 +8,7 @@ import { isRTLLocale } from '@/shared/i18n/utils'
 import { categoriesQueries } from '@/features/categories'
 import ErrorFallback from '@/components/layout/ErrorFallback'
 import { ROUTES } from '@/app/routes/routes'
+import { toAbsoluteUrl } from '@/shared/api/files'
 
 export default function DetailCategoryPage() {
     const { id } = useParams<{ id: string }>()
@@ -16,6 +17,7 @@ export default function DetailCategoryPage() {
     const rtl = isRTLLocale(locale)
 
     const detailQuery = categoriesQueries.useDetail(id!)
+    const parentQuery = categoriesQueries.useDetail(detailQuery.data?.data.parent_id ?? '')
 
     if (detailQuery.isLoading) {
         return (
@@ -62,19 +64,16 @@ export default function DetailCategoryPage() {
                     </div>
                     <div>
                         <span className="font-semibold">{t('categories.form.parent_id')}: </span>
-                        <span>{c.parent_id || '-'}</span>
+                        <span>{parentQuery.data?.data.name || '-'}</span>
                     </div>
                     <div>
-                        <span className="font-semibold">{t('categories.form.image_url')}: </span>
+                        <span className="font-semibold">{t('categories.form.image')}: </span>
                         {c.image_url ? (
-                            <a
-                                href={c.image_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary underline"
-                            >
-                                {c.image_url}
-                            </a>
+                            <img
+                                src={toAbsoluteUrl(c.image_url)}
+                                alt={c.name}
+                                className="mt-2 h-32 w-32 rounded-md object-contain border"
+                            />
                         ) : (
                             <span>-</span>
                         )}
