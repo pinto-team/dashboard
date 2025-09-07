@@ -14,25 +14,34 @@ type Props = {
     node: Category;
     depth: number;
     expanded: boolean;
-    setExpanded: (v: boolean) => void;
-    onAddChild: () => void;
-    onEdit: () => void;
-    onDelete: () => void;
+    /**
+     * Sets the expanded state for a node by id. We pass this down so that
+     * nested nodes can update their own expanded state without wrapping
+     * callbacks for every level.
+     */
+    setExpanded: (id: string, v: boolean) => void;
+    /** Called with the current node id when user requests to add a child */
+    onAddChild: (parentId: string) => void;
+    /** Called with the current node id when user wants to edit */
+    onEdit: (id: string) => void;
+    /** Called with the current node id when user wants to delete */
+    onDelete: (id: string) => void;
     searchQuery?: string;
+    /** Map of expanded states for quick lookup */
     expandedState: Record<string, boolean>;
 };
 
 export default function CategoryNode({
-                                         node,
-                                         depth,
-                                         expanded,
-                                         setExpanded,
-                                         onAddChild,
-                                         onEdit,
-                                         onDelete,
-                                         searchQuery,
-                                         expandedState,
-                                     }: Props) {
+    node,
+    depth,
+    expanded,
+    setExpanded,
+    onAddChild,
+    onEdit,
+    onDelete,
+    searchQuery,
+    expandedState,
+}: Props) {
     const hasChildren = !!node.children?.length;
 
     const highlightName = React.useMemo(() => {
@@ -72,7 +81,7 @@ export default function CategoryNode({
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => setExpanded(!expanded)}
+                            onClick={() => setExpanded(node.id, !expanded)}
                             aria-label="toggle"
                         >
                             {expanded ? (
@@ -101,13 +110,15 @@ export default function CategoryNode({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={onAddChild}>
+                            <DropdownMenuItem onClick={() => onAddChild(node.id)}>
                                 افزودن زیر‌دسته
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={onEdit}>ویرایش</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onEdit(node.id)}>
+                                ویرایش
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="text-destructive"
-                                onClick={onDelete}
+                                onClick={() => onDelete(node.id)}
                             >
                                 حذف
                             </DropdownMenuItem>
@@ -124,8 +135,8 @@ export default function CategoryNode({
                             key={child.id}
                             node={child}
                             depth={depth + 1}
-                            expanded={expandedState[child.id] ?? true}
-                            setExpanded={() => {}}
+                            expanded={expandedState[child.id] ?? false}
+                            setExpanded={setExpanded}
                             onAddChild={onAddChild}
                             onEdit={onEdit}
                             onDelete={onDelete}
