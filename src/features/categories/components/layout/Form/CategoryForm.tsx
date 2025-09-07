@@ -1,40 +1,40 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import * as React from 'react'
-import { FormProvider, useForm } from 'react-hook-form'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.tsx'
-import { Input } from '@/components/ui/input.tsx'
-import { Label } from '@/components/ui/label.tsx'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import * as React from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Label } from '@/components/ui/label.tsx';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select.tsx'
-import { useI18n } from '@/shared/hooks/useI18n.ts'
-import type { CreateCategoryRequest } from '@/features/categories/model/types'
-import { categoriesQueries } from '@/features/categories'
-import CategoryImageField from './CategoryImageField.tsx'
+} from '@/components/ui/select.tsx';
+import { useI18n } from '@/shared/hooks/useI18n.ts';
+import type { CreateCategoryRequest } from '@/features/categories/model/types';
+import { categoriesQueries } from '@/features/categories';
+import CategoryImageField from './CategoryImageField.tsx';
 
 type Props = Readonly<{
-    defaultValues?: Partial<CreateCategoryRequest>
-    onSubmit: (data: CreateCategoryRequest) => void
-    submitting?: boolean
-    formId?: string
-    apiErrors?: ReadonlyArray<{ field: string; message: string }>
-    initialImageUrl?: string | null
-}>
+    defaultValues?: Partial<CreateCategoryRequest>;
+    onSubmit: (data: CreateCategoryRequest) => void;
+    submitting?: boolean;
+    formId?: string;
+    apiErrors?: ReadonlyArray<{ field: string; message: string }>;
+    initialImageUrl?: string | null;
+}>;
 
 export default function CategoryForm({
-    defaultValues,
-    onSubmit,
-    submitting = false,
-    formId = 'category-form',
-    apiErrors,
-    initialImageUrl,
-}: Props) {
-    const { t } = useI18n()
+                                         defaultValues,
+                                         onSubmit,
+                                         submitting = false,
+                                         formId = 'category-form',
+                                         apiErrors,
+                                         initialImageUrl,
+                                     }: Props) {
+    const { t } = useI18n();
 
     const schema = React.useMemo(
         () =>
@@ -45,13 +45,14 @@ export default function CategoryForm({
                     .min(1, t('validation.required'))
                     .max(120, t('validation.max_length', { n: 120 })),
                 description: z
-                    .union([z.string().max(500, t('validation.max_length', { n: 500 })), z.literal('')])
+                    .union([z.string().max(500, t('validation.max_length', { n: 500 })), z.literal(''), z.null()])
                     .optional(),
-                parent_id: z.union([z.string(), z.literal('')]).optional(),
-                image_id: z.union([z.string(), z.literal('')]).optional(),
+                parent_id: z.union([z.string(), z.literal(''), z.null()]).optional(),
+                image_id: z.union([z.string(), z.literal(''), z.null()]).optional(),
+                image_url: z.union([z.string(), z.literal(''), z.null()]).optional(),
             }),
         [t],
-    )
+    );
 
     const form = useForm<CreateCategoryRequest>({
         resolver: zodResolver(schema),
@@ -60,12 +61,13 @@ export default function CategoryForm({
             description: '',
             parent_id: '',
             image_id: '',
+            image_url: '',
             ...defaultValues,
         },
         mode: 'onBlur',
-    })
+    });
 
-    const { handleSubmit, reset, setError } = form
+    const { handleSubmit, reset, setError } = form;
 
     React.useEffect(() => {
         if (defaultValues) {
@@ -74,22 +76,23 @@ export default function CategoryForm({
                 description: defaultValues.description ?? '',
                 parent_id: defaultValues.parent_id ?? '',
                 image_id: defaultValues.image_id ?? '',
-            })
+                image_url: initialImageUrl ?? '',
+            });
         }
-    }, [defaultValues, reset])
+    }, [defaultValues, initialImageUrl, reset]);
 
     React.useEffect(() => {
-        if (!apiErrors || apiErrors.length === 0) return
+        if (!apiErrors || apiErrors.length === 0) return;
         apiErrors.forEach((err) => {
-            const path = err.field?.split('.')?.pop() ?? err.field
-            if (path === 'name' || path === 'description' || path === 'parent_id' || path === 'image_id') {
-                setError(path as keyof CreateCategoryRequest, { type: 'server', message: err.message })
+            const path = err.field?.split('.')?.pop() ?? err.field;
+            if (path === 'name' || path === 'description' || path === 'parent_id' || path === 'image_id' || path === 'image_url') {
+                setError(path as keyof CreateCategoryRequest, { type: 'server', message: err.message });
             }
-        })
-    }, [apiErrors, setError])
+        });
+    }, [apiErrors, setError]);
 
-    const parentListParams = React.useMemo(() => ({ page: 1, limit: 100 }), [])
-    const parentsQuery = categoriesQueries.useList(parentListParams)
+    const parentListParams = React.useMemo(() => ({ page: 1, limit: 100 }), []);
+    const parentsQuery = categoriesQueries.useList(parentListParams);
     return (
         <FormProvider {...form}>
             <form
@@ -99,11 +102,12 @@ export default function CategoryForm({
                 onSubmit={handleSubmit((values) => {
                     const cleaned: CreateCategoryRequest = {
                         name: values.name.trim(),
-                        description: values.description?.trim() || '',
-                        parent_id: values.parent_id?.trim() || '',
-                        image_id: values.image_id?.trim() || '',
-                    }
-                    onSubmit(cleaned)
+                        description: values.description?.trim() || null,
+                        parent_id: values.parent_id?.trim() || null,
+                        image_id: values.image_id?.trim() || null,
+                        image_url: values.image_url?.trim() || null,
+                    };
+                    onSubmit(cleaned);
                 })}
             >
                 <Card className="overflow-hidden shadow-sm">
@@ -182,5 +186,5 @@ export default function CategoryForm({
                 </Card>
             </form>
         </FormProvider>
-    )
+    );
 }

@@ -1,78 +1,82 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { toast } from 'sonner'
-import * as React from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
+import * as React from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ROUTES } from '@/app/routes/routes';
+import { Button } from '@/components/ui/button';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import CategoryForm from '@/features/categories/components/layout/Form/CategoryForm';
+import type { CreateCategoryRequest, UpdateCategoryRequest } from '@/features/categories/model/types';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { isRTLLocale } from '@/shared/i18n/utils';
+import { categoriesQueries } from '@/features/categories';
+import ErrorFallback from '@/components/layout/ErrorFallback';
 
-import { ROUTES } from '@/app/routes/routes'
-import { Button } from '@/components/ui/button'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import CategoryForm from '@/features/categories/components/layout/Form/CategoryForm'
-import type { CreateCategoryRequest, UpdateCategoryRequest } from '@/features/categories/model/types'
-import { useI18n } from '@/shared/hooks/useI18n'
-import { isRTLLocale } from '@/shared/i18n/utils'
-import { categoriesQueries } from '@/features/categories'
-import ErrorFallback from '@/components/layout/ErrorFallback'
-
-const FORM_ID = 'category-form'
+const FORM_ID = 'category-form';
 
 export default function EditCategoryPage() {
-    const { id } = useParams<{ id: string }>()
-    const navigate = useNavigate()
-    const { t, locale } = useI18n()
-    const rtl = isRTLLocale(locale)
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const { t, locale } = useI18n();
+    const rtl = isRTLLocale(locale);
 
-    const detailQuery = categoriesQueries.useDetail(id!)
-    const updateMutation = categoriesQueries.useUpdate()
-    const deleteMutation = categoriesQueries.useDelete()
-    const [apiErrors, setApiErrors] = React.useState<ReadonlyArray<{ field: string; message: string }>>([])
+    const detailQuery = categoriesQueries.useDetail(id!);
+    const updateMutation = categoriesQueries.useUpdate();
+    const deleteMutation = categoriesQueries.useDelete();
+    const [apiErrors, setApiErrors] = React.useState<ReadonlyArray<{ field: string; message: string }>>([]);
 
     const handleSubmit = (values: CreateCategoryRequest) => {
-        if (!id) return
-        setApiErrors([])
-        const payload: UpdateCategoryRequest = values
+        if (!id) return;
+        setApiErrors([]);
+        const payload: UpdateCategoryRequest = {
+            name: values.name,
+            description: values.description,
+            parent_id: values.parent_id,
+            image_id: values.image_id,
+        };
         updateMutation.mutate({ id, payload }, {
             onSuccess: () => {
-                toast.success(t('categories.saved_success'))
-                navigate(ROUTES.CATEGORY.LIST)
+                toast.success(t('categories.saved_success'));
+                navigate(ROUTES.CATEGORY.LIST);
             },
             onError: (err) => {
                 const resp = (err as { response?: { data?: unknown } }).response?.data as
                     | { code?: number; errors?: Array<{ field: string; message: string }> }
-                    | undefined
+                    | undefined;
                 if (resp?.code === 422 && Array.isArray(resp.errors)) {
-                    setApiErrors(resp.errors)
+                    setApiErrors(resp.errors);
                 } else {
-                    toast.error(t('common.error'))
+                    toast.error(t('common.error'));
                 }
             },
-        })
-    }
+        });
+    };
 
     const handleDelete = () => {
-        if (!id) return
-        if (!window.confirm(t('categories.actions.delete_confirm') as string)) return
+        if (!id) return;
+        if (!window.confirm(t('categories.actions.delete_confirm') as string)) return;
         deleteMutation.mutate(id, {
             onSuccess: () => {
-                toast.success(t('categories.deleted'))
-                navigate(ROUTES.CATEGORY.LIST)
+                toast.success(t('categories.deleted'));
+                navigate(ROUTES.CATEGORY.LIST);
             },
             onError: () => toast.error(t('common.error')),
-        })
-    }
+        });
+    };
 
     if (detailQuery.isLoading) {
         return (
             <DashboardLayout>
                 <div className="p-6">{t('common.loading')}</div>
             </DashboardLayout>
-        )
+        );
     }
     if (detailQuery.isError || !detailQuery.data) {
         return (
             <DashboardLayout>
                 <ErrorFallback error={detailQuery.error} onRetry={() => detailQuery.refetch()} />
             </DashboardLayout>
-        )
+        );
     }
 
     const defaults: CreateCategoryRequest = {
@@ -80,7 +84,8 @@ export default function EditCategoryPage() {
         description: detailQuery.data.data.description || '',
         parent_id: detailQuery.data.data.parent_id || '',
         image_id: detailQuery.data.data.image_id || '',
-    }
+        image_url: detailQuery.data.data.image_url || '',
+    };
 
     return (
         <DashboardLayout>
@@ -119,9 +124,9 @@ export default function EditCategoryPage() {
                     submitting={updateMutation.isPending}
                     defaultValues={defaults}
                     apiErrors={apiErrors}
-                    initialImageUrl={detailQuery.data.data.image_url}
+                    initialImageUrl={detailQuery.data.data.image_url || ''}
                 />
             </div>
         </DashboardLayout>
-    )
+    );
 }

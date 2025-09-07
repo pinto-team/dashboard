@@ -1,4 +1,3 @@
-// features/categories/model/types.ts
 import type { ApiResponse } from "@/shared/api/types";
 
 //
@@ -19,8 +18,9 @@ export interface CategoryData {
 export interface CreateCategoryRequest {
     name: string;
     description?: string | null;
-    parent_id?: string | null; // null = ریشه
+    parent_id?: string | null;
     image_id?: string | null;
+    image_url?: string | null;
 }
 
 export type UpdateCategoryRequest = Partial<CreateCategoryRequest>;
@@ -41,8 +41,8 @@ export interface Category {
     parentId: string | null;
     createdAt: string;
     updatedAt: string;
-    children?: Category[]; // برای نمایش درخت
-    sort?: number | null;  // اگر ترتیب نیاز داشتی
+    children?: Category[];
+    sort?: number | null;
 }
 
 //
@@ -66,11 +66,13 @@ export const mapToCreate = (c: {
     description?: string | null;
     parentId?: string | null;
     imageId?: string | null;
+    imageUrl?: string | null;
 }): CreateCategoryRequest => ({
     name: c.name,
     description: c.description ?? undefined,
     parent_id: c.parentId ?? undefined,
     image_id: c.imageId ?? undefined,
+    image_url: c.imageUrl ?? undefined,
 });
 
 export const mapToUpdate = (c: {
@@ -78,9 +80,11 @@ export const mapToUpdate = (c: {
     description?: string | null;
     parentId?: string | null;
     imageId?: string | null;
+    imageUrl?: string | null;
 }): UpdateCategoryRequest => ({
     ...(c.name !== undefined ? { name: c.name } : {}),
     ...(c.description !== undefined ? { description: c.description } : {}),
     ...(c.parentId !== undefined ? { parent_id: c.parentId } : {}),
     ...(c.imageId !== undefined ? { image_id: c.imageId } : {}),
+    ...(c.imageUrl !== undefined ? { image_url: c.imageUrl } : {}),
 });
