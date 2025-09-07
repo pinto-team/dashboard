@@ -1,120 +1,105 @@
-import { useMemo, useState, useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
-import { categoriesQueries } from '@/features/categories'
-import type { CategoryData, CreateCategoryRequest } from '@/features/categories/model/types'
-import { ROUTES } from '@/app/routes/routes'
-import useDebounced from '@/shared/hooks/useDebounced'
-import { useI18n } from '@/shared/hooks/useI18n'
-import type { PaginationProps } from '@/features/categories/components/ui/Pagination'
+import { categoriesQueries } from "@/features/categories";
+import type {
+    CategoryData,
+    CreateCategoryRequest,
+} from "@/features/categories/model/types";
+import { mapFromServer } from "@/features/categories/model/types";
+import type { Category } from "@/features/categories/model/types";
+import { ROUTES } from "@/app/routes/routes";
+import useDebounced from "@/shared/hooks/useDebounced";
+import { useI18n } from "@/shared/hooks/useI18n";
 
 export function useListCategoriesPage() {
-    const { t } = useI18n()
-    const navigate = useNavigate()
+    const { t } = useI18n();
+    const navigate = useNavigate();
 
-    const [page, setPage] = useState(0)
-    const [pageSize, setPageSize] = useState(10)
-    const [query, setQuery] = useState('')
-    const debouncedQuery = useDebounced(query, 450)
+    // هنوز پارامترهای صفحه‌بندی را نگه می‌داریم تا API همان رفتار قبلی را داشته باشد
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(50); // پیش‌فرض بزرگ‌تر چون درخت pagination ندارد
+    const [query, setQuery] = useState("");
+    const debouncedQuery = useDebounced(query, 450);
 
     const listParams = useMemo(
         () => ({ page: page + 1, limit: pageSize, name: debouncedQuery }),
-        [page, pageSize, debouncedQuery],
-    )
+        [page, pageSize, debouncedQuery]
+    );
 
     const { data, isLoading, isFetching, isError, error, refetch } =
-        categoriesQueries.useList(listParams)
+        categoriesQueries.useList(listParams);
 
-    const items: CategoryData[] = data?.data ?? []
-    const pagination = data?.meta?.pagination
-    const total = pagination?.total ?? items.length
-    const totalPagesFromApi = pagination?.total_pages
+    // داده خام از سرور
+    const serverItems: CategoryData[] = data?.data ?? [];
+    const pagination = data?.meta?.pagination;
 
-    const totalPages = useMemo(
-        () => Math.max(1, totalPagesFromApi ?? Math.ceil(total / pageSize)),
-        [totalPagesFromApi, total, pageSize],
-    )
+    // مپ به مدل کلاینت برای مصرف در درخت
+    const items: Category[] = useMemo(
+        () => serverItems.map(mapFromServer),
+        [serverItems]
+    );
 
-    const hasPrev = pagination?.has_previous ?? page > 0
-    const hasNext = pagination?.has_next ?? page + 1 < totalPages
+    const total = pagination?.total ?? serverItems.length;
 
+    // اگر query/pageSize عوض شد، صفحه را به ۰ برگردان (فقط برای API)
     useEffect(() => {
-        setPage(0)
-    }, [debouncedQuery, pageSize])
+        setPage(0);
+    }, [debouncedQuery, pageSize]);
 
-    useEffect(() => {
-        setPage((p) => Math.min(p, Math.max(0, totalPages - 1)))
-    }, [totalPages])
-
-    const deleteMutation = categoriesQueries.useDelete()
-    const createMutation = categoriesQueries.useCreate()
+    // حذف
+    const deleteMutation = categoriesQueries.useDelete();
+    const createMutation = categoriesQueries.useCreate();
 
     const handleDelete = useCallback(
         (id: string) => {
-            const toDelete = items.find((x) => x.id === id) || null
+            const toDelete = serverItems.find((x) => x.id === id) || null;
             deleteMutation.mutate(id, {
                 onSuccess: () => {
-                    toast(t('categories.deleted'), {
+                    toast(t("categories.deleted"), {
                         action: {
-                            label: t('common.undo'),
+                            label: t("common.undo"),
                             onClick: () => {
-                                if (!toDelete) return
+                                if (!toDelete) return;
                                 const payload: CreateCategoryRequest = {
                                     name: toDelete.name,
-                                    description: toDelete.description || '',
-                                    parent_id: toDelete.parent_id || '',
-                                    image_id: toDelete.image_id || '',
-                                }
+                                    // از undefined/null استفاده می‌کنیم نه رشته خالی
+                                    description: toDelete.description ?? undefined,
+                                    parent_id: toDelete.parent_id ?? undefined,
+                                    image_id: toDelete.image_id ?? undefined,
+                                };
                                 createMutation.mutate(payload, {
                                     onSuccess: () => {
-                                        toast.success(t('common.restored'))
-                                        void refetch()
+                                        toast.success(t("common.restored"));
+                                        void refetch();
                                     },
-                                    onError: () => toast.error(t('common.error')),
-                                })
+                                    onError: () => toast.error(t("common.error")),
+                                });
                             },
                         },
-                    })
-                    void refetch()
+                    });
+                    void refetch();
                 },
                 onError: () => {
-                    toast.error(t('common.error'))
+                    toast.error(t("common.error"));
                 },
-            })
+            });
         },
-        [createMutation, deleteMutation, items, refetch, t],
-    )
+        [createMutation, deleteMutation, refetch, serverItems, t]
+    );
 
-    const goFirst = useCallback(() => setPage(0), [])
-    const goPrev = useCallback(() => setPage((p) => Math.max(0, p - 1)), [])
-    const goNext = useCallback(
-        () => setPage((p) => Math.min(Math.max(0, totalPages - 1), p + 1)),
-        [totalPages],
-    )
-    const goLast = useCallback(() => setPage(Math.max(0, totalPages - 1)), [totalPages])
-
-    const paginationProps: Omit<PaginationProps, 'labels'> = {
-        page,
-        pages: totalPages,
-        hasPrev,
-        hasNext,
-        onFirst: goFirst,
-        onPrev: goPrev,
-        onNext: goNext,
-        onLast: goLast,
-        pageSize,
-        pageSizeOptions: [5, 10, 20, 30, 50],
-        onPageSizeChange: setPageSize,
-    }
+    // ناوبری‌های مورد نیاز صفحه
+    const nav = { navigate, ROUTES };
 
     return {
-        nav: { navigate, ROUTES },
+        nav,
         i18n: { t },
+        // queryState هنوز نگه داشته می‌شود (Search ورودی بالای صفحه از آن استفاده می‌کند)
         queryState: { query, setQuery, page, setPage, pageSize, setPageSize },
-        list: { items, total, totalPages, hasPrev, hasNext },
+        // لیست برای UI: اقلام کلاینتی (Category[])
+        list: { items, total },
         status: { isLoading, isFetching, isError, error },
-        actions: { refetch, handleDelete, goFirst, goPrev, goNext, goLast },
-        ui: { pagination: paginationProps },
-    }
+        actions: { refetch, handleDelete },
+    };
 }

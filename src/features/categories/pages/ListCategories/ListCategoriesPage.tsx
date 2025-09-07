@@ -1,12 +1,15 @@
-import * as React from 'react'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { useListCategoriesPage } from './useListCategoriesPage'
-import CategoriesTable from '@/features/categories/components/layout/Table/CategoriesTable'
-import Pagination from '@/features/categories/components/ui/Pagination'
-import ErrorFallback from '@/components/layout/ErrorFallback'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import * as React from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useListCategoriesPage } from "./useListCategoriesPage";
+import ErrorFallback from "@/components/layout/ErrorFallback";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Plus, Minimize2, Maximize2 } from "lucide-react";
+
+import CategoryTree, {
+    CategoryTreeHandle,
+} from "@/features/categories/components/layout/Tree/CategoryTree";
+import { buildTree } from "@/features/categories/model/tree";
 
 export default function ListCategoriesPage() {
     const {
@@ -16,57 +19,62 @@ export default function ListCategoriesPage() {
         list,
         status,
         actions,
-    } = useListCategoriesPage()
+    } = useListCategoriesPage();
+
+    const tree = React.useMemo(() => buildTree(list.items ?? []), [list.items]);
 
     const subtitle =
         list.total > 0
-            ? (t('common.showing_count', { count: list.total }) as string)
-            : (t('common.search_hint') as string)
+            ? (t("common.showing_count", { count: list.total }) as string)
+            : (t("common.search_hint") as string);
+
+    // هندلرها
+    const handleAddRoot = () => {
+        nav.navigate(nav.ROUTES.CATEGORY.NEW);
+    };
+    const handleAddChild = (parentId: string) => {
+        nav.navigate(`${nav.ROUTES.CATEGORY.NEW}?parentId=${parentId}`);
+    };
+    const handleEdit = (id: string) => {
+        nav.navigate(nav.ROUTES.CATEGORY.EDIT(id));
+    };
+    const handleDelete = (id: string) => {
+        actions.handleDelete(id);
+    };
+
+    // ref برای کنترل درخت از هدر
+    const treeRef = React.useRef<CategoryTreeHandle>(null);
 
     const content = () => {
         if (status.isError) {
-            return <ErrorFallback error={status.error} onRetry={() => actions.refetch()} />
+            return (
+                <ErrorFallback error={status.error} onRetry={() => actions.refetch()} />
+            );
         }
-        if (status.isLoading) return <div>{t('common.loading')}</div>
-        if (list.items.length === 0) return <div>{t('common.no_results')}</div>
-        return <CategoriesTable items={list.items} onDelete={actions.handleDelete} />
-    }
+        if (status.isLoading) return <div>{t("common.loading")}</div>;
+        if (!list.items.length) return <div>{t("common.no_results")}</div>;
 
-    const paginationNode =
-        status.isLoading || list.items.length === 0 ? null : (
-            <Pagination
-                page={queryState.page}
-                pages={list.totalPages}
-                hasPrev={list.hasPrev}
-                hasNext={list.hasNext}
-                disabled={status.isLoading}
-                onFirst={actions.goFirst}
-                onPrev={actions.goPrev}
-                onNext={actions.goNext}
-                onLast={actions.goLast}
-                pageSize={queryState.pageSize}
-                pageSizeOptions={[5, 10, 20, 30, 50]}
-                onPageSizeChange={queryState.setPageSize}
-                labels={{
-                    first: t('pagination.first') as string,
-                    prev: t('pagination.prev') as string,
-                    next: t('pagination.next') as string,
-                    last: t('pagination.last') as string,
-                    rowsPerPage: t('pagination.rowsPerPage') as string,
-                    page: t('pagination.page') as string,
-                    of: t('pagination.of') as string,
-                }}
+        return (
+            <CategoryTree
+                ref={treeRef}
+                items={tree}
+                onAddChild={handleAddChild}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                searchQuery={queryState.query}
             />
-        )
+        );
+    };
 
     return (
         <DashboardLayout>
             <div className="flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6">
+                {/* Header با تمام کنترل‌ها */}
                 <div className="flex items-center justify-between px-4 lg:px-6">
-                    <div className="flex flex-col">
-                        <h1 className="text-2xl font-bold">{t('categories.title')}</h1>
-                    </div>
-                    <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold">{t("categories.title")}</h1>
+
+                    <div className="flex items-center gap-2">
+                        {/* Search */}
                         <div className="relative">
                             <Search
                                 aria-hidden="true"
@@ -74,33 +82,57 @@ export default function ListCategoriesPage() {
                             />
                             <Input
                                 value={queryState.query}
-                                onChange={(e) => {
-                                    queryState.setQuery(e.target.value)
-                                    queryState.setPage(0)
-                                }}
-                                placeholder={t('categories.search_placeholder') as string}
-                                aria-label={t('categories.search_placeholder') as string}
+                                onChange={(e) => queryState.setQuery(e.target.value)}
+                                placeholder={t("categories.search_placeholder") as string}
+                                aria-label={t("categories.search_placeholder") as string}
                                 className="w-72 [padding-inline-start:2rem]"
                             />
                         </div>
-                        <Button onClick={() => nav.navigate(nav.ROUTES.CATEGORY.NEW)}>
-                            {t('categories.create')}
+
+                        {/* Expand/Collapse all */}
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => treeRef.current?.collapseAll()}
+                            title={t("common.collapse_all") as string}
+                        >
+                            <Minimize2 className="me-1 h-4 w-4" />
+                            {t("common.collapse_all") as string}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => treeRef.current?.expandAll()}
+                            title={t("common.expand_all") as string}
+                        >
+                            <Maximize2 className="me-1 h-4 w-4" />
+                            {t("common.expand_all") as string}
+                        </Button>
+
+                        {/* Add Root */}
+                        <Button onClick={handleAddRoot}>
+                            <Plus className="me-2 h-4 w-4" />
+                            {t("categories.create")}
                         </Button>
                     </div>
                 </div>
+
                 {subtitle && (
                     <div className="px-4 lg:px-6 -mt-2">
                         <p className="text-sm text-muted-foreground">{subtitle}</p>
                     </div>
                 )}
+
+                {/* فقط لیست درختی، بدون قاب دور */}
                 <div className="px-4 lg:px-6">
-                    <div className={status.isFetching ? 'relative' : ''}>
-                        {status.isFetching && <div className="absolute inset-0 rounded-lg bg-background/40" />}
+                    <div className={status.isFetching ? "relative" : ""}>
+                        {status.isFetching && (
+                            <div className="absolute inset-0 rounded-lg bg-background/40" />
+                        )}
                         {content()}
                     </div>
                 </div>
-                {paginationNode && <div className="px-4 lg:px-6">{paginationNode}</div>}
             </div>
         </DashboardLayout>
-    )
+    );
 }
