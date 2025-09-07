@@ -1,12 +1,14 @@
 import * as React from "react"
 import DashboardLayout from "@/components/layout/DashboardLayout"
-import { useBrandsPageContainer } from "./Container"
-import BrandsPageUI from "./Ui"
+import { useListBrandsPage } from "./useListBrandsPage"
 import { BrandsTableSkeleton, BrandsPaginationSkeleton } from "./Skeletons"
 import { BrandsEmpty } from "./Empty"
 import BrandsTable from "@/features/brands/components/layout/Table/BrandsTable"
 import Pagination from "@/features/brands/components/ui/Pagination"
 import ErrorFallback from "@/components/layout/ErrorFallback"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 
 export default function ListBrandsPage() {
     const {
@@ -16,7 +18,7 @@ export default function ListBrandsPage() {
         list,
         status,
         actions,
-    } = useBrandsPageContainer()
+    } = useListBrandsPage()
 
     const subtitle =
         list.total > 0
@@ -69,22 +71,53 @@ export default function ListBrandsPage() {
 
     return (
         <DashboardLayout>
-            <BrandsPageUI
-                title={t("brands.title") as string}
-                subtitle={subtitle}
-                searchPlaceholder={t("brands.search_placeholder") as string}
-                brandsCreate={t("brands.create") as string}
-                query={queryState.query}
-                onQueryChange={(v) => {
-                    queryState.setQuery(v)
-                    queryState.setPage(0)
-                }}
-                onAdd={() => nav.navigate(nav.ROUTES.BRAND.NEW)}
-                isFetching={status.isFetching}
-                pagination={paginationNode}
-            >
-                {content()}
-            </BrandsPageUI>
+            <div className="flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6">
+                <div className="flex items-center justify-between px-4 lg:px-6">
+                    <div className="flex flex-col">
+                        <h1 className="text-2xl font-bold">{t("brands.title")}</h1>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Search
+                                aria-hidden="true"
+                                className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-4 text-muted-foreground [inset-inline-start:0.625rem]"
+                            />
+                            <Input
+                                value={queryState.query}
+                                onChange={(e) => {
+                                    queryState.setQuery(e.target.value)
+                                    queryState.setPage(0)
+                                }}
+                                placeholder={t("brands.search_placeholder") as string}
+                                aria-label={t("brands.search_placeholder") as string}
+                                className="w-72 [padding-inline-start:2rem]"
+                            />
+                        </div>
+
+                        <Button onClick={() => nav.navigate(nav.ROUTES.BRAND.NEW)}>
+                            {t("brands.create")}
+                        </Button>
+                    </div>
+                </div>
+
+                {subtitle && (
+                    <div className="px-4 lg:px-6 -mt-2">
+                        <p className="text-sm text-muted-foreground">{subtitle}</p>
+                    </div>
+                )}
+
+                <div className="px-4 lg:px-6">
+                    <div className={status.isFetching ? "relative" : ""}>
+                        {status.isFetching && (
+                            <div className="absolute inset-0 rounded-lg bg-background/40" />
+                        )}
+                        {content()}
+                    </div>
+                </div>
+
+                {paginationNode && <div className="px-4 lg:px-6">{paginationNode}</div>}
+            </div>
         </DashboardLayout>
     )
 }
