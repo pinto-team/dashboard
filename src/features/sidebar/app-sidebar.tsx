@@ -48,7 +48,10 @@ const itemsSchema: MenuItem[] = [
     {
         titleKey: "menu.basic",
         icon: SettingsIcon,
-        children: [{ titleKey: "menu.basic.brand", url: ROUTES.BRAND.LIST }],
+        children: [
+            { titleKey: "menu.basic.brand", url: ROUTES.BRAND.LIST },
+            { titleKey: "menu.basic.category", url: ROUTES.CATEGORY.LIST },
+        ],
     },
 ]
 
