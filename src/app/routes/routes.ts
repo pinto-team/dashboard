@@ -15,5 +15,6 @@ export const ROUTES = {
     // Category
     CATEGORY: {
         LIST: '/categories',
+        EDIT: (id = ':id') => `/categories/${id}/edit`,
     },
 } as const

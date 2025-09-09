@@ -2,7 +2,7 @@ import type { AxiosRequestConfig } from 'axios'
 import { catalogClient } from '@/lib/axios'
 import { API_ROUTES } from '@/shared/constants/apiRoutes'
 import { API_CONFIG } from '@/shared/config/api.config'
-import type { UploadFilesResponse } from '@/features/brand/model/types'
+import type { UploadFilesResponse } from '@/features/brands/model/types'
 
 export function toAbsoluteUrl(pathOrUrl: string): string {
     if (!pathOrUrl) return ''
@@ -52,6 +52,6 @@ export async function uploadFiles(files: File[], signal?: AbortSignal): Promise<
         form,
         cfg,
     )
-    return (data.files || []).map((f) => toAbsoluteUrl(f.url))
+    return (data.files || []).map((f: { url: string }) => toAbsoluteUrl(f.url))
 }
 

@@ -4,23 +4,18 @@ import NestedDraggableList from '@/features/categories/components/NestedDraggabl
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-const useT = () => {
-    const dict: Record<string, string> = {
-        'categories.title': 'دسته‌بندی‌ها',
-        'categories.search_placeholder': 'جستجوی دسته‌بندی...',
-        'categories.create': 'ایجاد دسته‌بندی',
-        'common.search_hint': 'برای یافتن دسته‌بندی‌ها جستجو کنید',
-        'common.showing_count': 'نمایش {{count}} مورد',
-    }
-    return (k: string, opt?: any) => (dict[k] || k).replace('{{count}}', String(opt?.count ?? ''))
-}
+import { useI18n } from '@/shared/hooks/useI18n'
+import { isRTLLocale } from '@/shared/i18n/utils'
 
 export default function ListCategoriesPage() {
-    const t = useT()
+    const { t, locale } = useI18n()
+    const rtl = isRTLLocale(locale)
     const [query, setQuery] = React.useState('')
     const [count, setCount] = React.useState(0)
-    const subtitle = count > 0 ? t('common.showing_count', { count }) : t('common.search_hint')
+    const subtitle =
+        count > 0
+            ? (t('common.showing_count', { count }) as string)
+            : (t('common.search_hint') as string)
 
     const handleCreate = () => {
         // به دکمه‌ی مخفی داخل NestedDraggableList متصل است
@@ -30,7 +25,7 @@ export default function ListCategoriesPage() {
 
     return (
         <DashboardLayout>
-            <div className="flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6" dir="rtl">
+            <div className="flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6" dir={rtl ? 'rtl' : 'ltr'}>
                 <div className="flex items-center justify-between px-4 lg:px-6">
                     <div className="flex flex-col">
                         <h1 className="text-2xl font-bold">{t('categories.title')}</h1>
@@ -45,8 +40,8 @@ export default function ListCategoriesPage() {
                             <Input
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder={t('categories.search_placeholder')}
-                                aria-label={t('categories.search_placeholder')}
+                                placeholder={t('categories.search_placeholder') as string}
+                                aria-label={t('categories.search_placeholder') as string}
                                 className="w-72 [padding-inline-start:2rem]"
                             />
                         </div>

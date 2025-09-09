@@ -1,10 +1,23 @@
 import * as React from 'react'
-import { ChevronDown, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react'
+import {
+    ChevronDown,
+    ChevronRight,
+    GripVertical,
+    MoreVertical,
+    Pencil,
+    Plus,
+    Trash2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { categoriesApiService } from '@/features/categories/services/categories.api'
 import type { CategoryData } from '@/features/categories/model/types'
 import InlineEditor from '@/features/categories/components/InlineEditor'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useNavigate } from 'react-router-dom'
+import { ROUTES } from '@/app/routes/routes'
+import { toAbsoluteUrl } from '@/shared/api/files'
+import { useI18n } from '@/shared/hooks/useI18n'
 
 type UUID = string
 
@@ -12,6 +25,7 @@ type UUID = string
 export type CategoryNode = {
     id: UUID
     name: string
+    image_url: string | null
     expanded?: boolean
     children: CategoryNode[]
 }
@@ -20,6 +34,7 @@ export type CategoryNode = {
 const toNode = (c: CategoryData): CategoryNode => ({
     id: c.id,
     name: c.name,
+    image_url: c.image_url,
     expanded: false,
     children: [],
 })
@@ -39,6 +54,9 @@ export default function NestedDraggableList({
     const [loadingRoot, setLoadingRoot] = React.useState(false)
     const [adding, setAdding] = React.useState<{ parentId: UUID | null } | null>(null)
     const expandTimer = React.useRef<number | null>(null)
+    const navigate = useNavigate()
+    const { t, locale } = useI18n()
+    const dir = locale === 'fa' ? 'rtl' : 'ltr'
 
     // ---------- بارگذاری ----------
     const loadChildren = React.useCallback(async (parentId: UUID | null) => {
@@ -53,7 +71,7 @@ export default function NestedDraggableList({
             const nodes = await loadChildren(null)
             setCategories(nodes)
         } catch (e: any) {
-            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در بارگذاری دسته‌ها')
+            toast.error(t('common.error'))
         } finally {
             setLoadingRoot(false)
         }
@@ -127,7 +145,14 @@ export default function NestedDraggableList({
 
     // ---------- افزودن ----------
     const addCategory = () => setAdding({ parentId: null })
-    const addSubCategory = (parentId: UUID) => setAdding({ parentId })
+    const addSubCategory = (parentId: UUID) => {
+        setAdding({ parentId })
+        setCategories((prev) => {
+            const next = deepClone(prev)
+            findAndUpdate(next, parentId, (p) => (p.expanded = true))
+            return next
+        })
+    }
 
     const confirmAdd = async (name: string) => {
         if (!adding) return
@@ -156,9 +181,9 @@ export default function NestedDraggableList({
                 findAndUpdate(next, adding.parentId, (p) => (p.expanded = true))
                 setCategories(next)
             }
-            toast.success('ایجاد شد')
+            toast.success(t('common.success'))
         } catch (e: any) {
-            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در ایجاد')
+            toast.error(t('common.error'))
         } finally {
             setAdding(null)
         }
@@ -187,9 +212,9 @@ export default function NestedDraggableList({
             }
             remove(next, null)
             setCategories(next)
-            toast.success('حذف شد')
+            toast.success(t('categories.deleted'))
         } catch (e: any) {
-            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در حذف')
+            toast.error(t('common.error'))
         }
     }
 
@@ -216,7 +241,7 @@ export default function NestedDraggableList({
                 return copy
             })
         } catch (e: any) {
-            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در بارگذاری زیردسته‌ها')
+            toast.error(t('common.error'))
         }
     }
 
@@ -309,10 +334,10 @@ export default function NestedDraggableList({
                 parent_id: targetParentId ?? null,
                 order: insertIndex,
             })
-            toast.success('ترتیب به‌روزرسانی شد')
+            toast.success(t('common.success'))
         } catch (err: any) {
             setCategories(current) // rollback
-            toast.error(err?.response?.data?.detail?.[0]?.msg || 'خطا در جابه‌جایی')
+            toast.error(t('common.error'))
         }
     }
 
@@ -337,7 +362,7 @@ export default function NestedDraggableList({
                 const fetched = await loadChildren(parentItem.id)
                 findAndUpdate(working, parentItem.id, (p) => (p.children = fetched))
             } catch (e: any) {
-                toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در بارگذاری زیردسته‌ها')
+                toast.error(t('common.error'))
                 return
             }
         }
@@ -374,10 +399,10 @@ export default function NestedDraggableList({
                 parent_id: parentItem.id,
                 order: newIndex,
             })
-            toast.success('انتقال انجام شد')
+            toast.success(t('common.success'))
         } catch (err: any) {
             setCategories(current)
-            toast.error(err?.response?.data?.detail?.[0]?.msg || 'خطا در انتقال')
+            toast.error(t('common.error'))
         }
     }
 
@@ -406,14 +431,21 @@ export default function NestedDraggableList({
                 >
                     <GripVertical className="w-4 h-4 text-gray-400" />
 
-                    {/* دکمه‌ی expand را همیشه نشان بده تا اجازه‌ی اولین expand داده شود */}
+                    {/* expand button */}
                     <button
                         onClick={() => toggleExpand(item.id)}
                         className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
-                        title={item.expanded ? 'بستن' : 'باز کردن'}
                     >
                         {item.expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                     </button>
+
+                    {item.image_url && (
+                        <img
+                            src={toAbsoluteUrl(item.image_url)}
+                            alt={item.name}
+                            className="h-6 w-6 rounded object-cover"
+                        />
+                    )}
 
                     <span className="flex-1 text-sm font-medium">{item.name}</span>
 
@@ -422,20 +454,40 @@ export default function NestedDraggableList({
                             size="sm"
                             variant="ghost"
                             className="h-7 w-7 p-0"
-                            onClick={() => addSubCategory(item.id)}
-                            title="افزودن زیردسته"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                addSubCategory(item.id)
+                            }}
+                            title={t('categories.create')}
                         >
                             <Plus className="w-3 h-3" />
                         </Button>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                            onClick={() => deleteCategory(item.id, parentId)}
-                            title="حذف"
-                        >
-                            <Trash2 className="w-3 h-3" />
-                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label={t('common.more_actions')}
+                                >
+                                    <MoreVertical className="w-3 h-3" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" sideOffset={6} onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={() => navigate(ROUTES.CATEGORY.EDIT(item.id))}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    {t('categories.actions.edit')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => deleteCategory(item.id, parentId)}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    {t('categories.actions.delete')}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 
@@ -479,12 +531,12 @@ export default function NestedDraggableList({
     }, [categories, searchQuery])
 
     return (
-        <div className="w-full max-w-2xl mx-auto p-6" dir="rtl">
+        <div className="w-full max-w-2xl mx-auto p-6" dir={dir}>
             <div className="space-y-2">
                 {loadingRoot ? (
-                    <div className="text-center py-8 text-gray-500">در حال بارگذاری…</div>
+                    <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>
                 ) : filtered.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">هیچ دسته‌بندی وجود ندارد</div>
+                    <div className="text-center py-8 text-gray-500">{t('common.no_results')}</div>
                 ) : (
                     filtered.map((cat) => renderCategory(cat))
                 )}
@@ -495,7 +547,7 @@ export default function NestedDraggableList({
             </div>
 
             <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-                💡 راهنما: آیتم‌ها را بکشید و رها کنید تا جابجا شوند. برای تبدیل به زیردسته، روی دستهٔ مورد نظر رها کنید.
+                {t('categories.help_drag_drop')}
             </div>
 
             {/* دکمه‌ی مخفی برای اتصال با صفحه‌ی والد (dispatchEvent) */}

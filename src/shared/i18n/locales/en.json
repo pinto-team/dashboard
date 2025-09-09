@@ -92,6 +92,7 @@
   "categories.form.parent_none": "No parent",
   "categories.form.image": "Image",
   "categories.form.image_help": "Upload the category image (recommended square format)",
+  "categories.help_drag_drop": "💡 Tip: Drag and drop items to reorder. Drop on a category to make it a subcategory.",
 
   "validation.required": "This field is required",
   "validation.min_length": "Must be at least {n} characters",
