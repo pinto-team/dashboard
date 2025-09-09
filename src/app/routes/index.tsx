@@ -13,9 +13,7 @@ import EditBrandPage from '@/features/brands/pages/EditBrand'
 
 import DetailBrandPage from '@/features/brands/pages/DetailBrand'
 import ListCategoriesPage from '@/features/categories/pages/ListCategories'
-import AddCategoryPage from '@/features/categories/pages/AddCategory'
 import EditCategoryPage from '@/features/categories/pages/EditCategory'
-import DetailCategoryPage from '@/features/categories/pages/DetailCategory'
 
 export const router = createBrowserRouter([
     {
@@ -34,7 +32,7 @@ export const router = createBrowserRouter([
                     { path: ROUTES.BRAND.EDIT(), element: <EditBrandPage /> },
 
                     { path: ROUTES.CATEGORY.LIST, element: <ListCategoriesPage /> },
-
+                    { path: ROUTES.CATEGORY.EDIT(), element: <EditCategoryPage /> },
                 ],
             },
             { path: ROUTES.LOGIN, element: <LoginPage /> },
