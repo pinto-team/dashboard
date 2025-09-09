@@ -459,27 +459,8 @@ export default function NestedDraggableList({
     }, [categories, searchQuery])
 
     return (
-        <Card className="w-full max-w-2xl mx-auto p-6" dir="rtl">
-            {/* سرچ و اکشن‌ها (مثل نمونه‌ی خودت) */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="relative">
-                    <Search
-                        aria-hidden="true"
-                        className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-4 text-muted-foreground [inset-inline-start:0.625rem]"
-                    />
-                    <Input
-                        value={searchQuery}
-                        readOnly
-                        placeholder="جستجوی دسته‌بندی..."
-                        aria-label="جستجوی دسته‌بندی..."
-                        className="w-72 [padding-inline-start:2rem] opacity-80"
-                        title="کنترل سرچ در والد مدیریت می‌شود"
-                    />
-                </div>
-                <Button onClick={addCategory} id="add-root-from-body">ایجاد دسته‌بندی</Button>
-            </div>
+        <div className="w-full max-w-2xl mx-auto p-6" dir="rtl">
 
-            {/* لیست */}
             <div className="space-y-2">
                 {loadingRoot ? (
                     <div className="text-center py-8 text-gray-500">در حال بارگذاری…</div>
@@ -497,12 +478,6 @@ export default function NestedDraggableList({
                 💡 راهنما: آیتم‌ها را بکشید و رها کنید تا جابجا شوند. برای تبدیل به زیردسته، روی دستهٔ مورد نظر رها کنید.
             </div>
 
-            {/* دکمه ایجاد ریشه (همانند نمونه) */}
-            <div className="mt-4 flex justify-center">
-                <Button variant="secondary" onClick={addCategory}>
-                    <Plus className="w-4 h-4 ml-2" /> افزودن دسته‌بندی ریشه
-                </Button>
-            </div>
-        </Card>
+        </div>
     )
 }
