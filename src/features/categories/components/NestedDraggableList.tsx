@@ -1,8 +1,6 @@
 import * as React from 'react'
-import { ChevronDown, ChevronRight, GripVertical, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { categoriesApiService } from '@/features/categories/services/categories.api'
 import type { CategoryData } from '@/features/categories/model/types'
@@ -10,19 +8,7 @@ import InlineEditor from '@/features/categories/components/InlineEditor'
 
 type UUID = string
 
-// ---------- i18n سبک نمونه‌ی خودت ----------
-const useT = () => {
-    const dict: Record<string, string> = {
-        'categories.title': 'دسته‌بندی‌ها',
-        'categories.search_placeholder': 'جستجوی دسته‌بندی...',
-        'categories.create': 'ایجاد دسته‌بندی',
-        'common.search_hint': 'برای یافتن دسته‌بندی‌ها جستجو کنید',
-        'common.showing_count': 'نمایش {{count}} مورد',
-    }
-    return (k: string, opt?: any) => (dict[k] || k).replace('{{count}}', String(opt?.count ?? ''))
-}
-
-// ---------- نوع درخت UI (گرافیکی) ----------
+// ---------- نوع درخت UI ----------
 export type CategoryNode = {
     id: UUID
     name: string
@@ -30,7 +16,7 @@ export type CategoryNode = {
     children: CategoryNode[]
 }
 
-// کمک: مپ دیتای API → نود UI
+// مپ دیتای API → نود UI
 const toNode = (c: CategoryData): CategoryNode => ({
     id: c.id,
     name: c.name,
@@ -38,7 +24,6 @@ const toNode = (c: CategoryData): CategoryNode => ({
     children: [],
 })
 
-// ---------- کامپوننت ----------
 export default function NestedDraggableList({
                                                 searchQuery,
                                                 onAddRoot,
@@ -53,11 +38,12 @@ export default function NestedDraggableList({
     const [dragOverItem, setDragOverItem] = React.useState<{ item: CategoryNode; parentId: UUID | null } | null>(null)
     const [loadingRoot, setLoadingRoot] = React.useState(false)
     const [adding, setAdding] = React.useState<{ parentId: UUID | null } | null>(null)
+    const expandTimer = React.useRef<number | null>(null)
 
-    // ---------- بارگذاری ریشه ----------
+    // ---------- بارگذاری ----------
     const loadChildren = React.useCallback(async (parentId: UUID | null) => {
         const res = await categoriesApiService.list({ parent_id: parentId ?? null, page: 1, limit: 100 })
-        const list = res.data.data // already sorted asc by server
+        const list = res.data.data // asc by server
         return list.map(toNode)
     }, [])
 
@@ -77,7 +63,7 @@ export default function NestedDraggableList({
         loadRoot()
     }, [loadRoot])
 
-    // ---------- شمارش کل نودها ----------
+    // ---------- شمارش ----------
     const countNodes = React.useCallback(
         (nodes: CategoryNode[]): number => nodes.reduce((acc, n) => acc + 1 + countNodes(n.children || []), 0),
         [],
@@ -86,7 +72,7 @@ export default function NestedDraggableList({
         onCountChange?.(countNodes(categories))
     }, [categories, countNodes, onCountChange])
 
-    // ---------- ابزارهای دستکاری درخت ----------
+    // ---------- ابزارهای درخت ----------
     const findAndUpdate = (
         nodes: CategoryNode[],
         id: UUID,
@@ -105,7 +91,6 @@ export default function NestedDraggableList({
         return null
     }
 
-
     const findAndGetChildrenRef = (
         nodes: CategoryNode[],
         parentId: UUID | null,
@@ -121,14 +106,28 @@ export default function NestedDraggableList({
 
     const deepClone = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj))
 
-    // ---------- افزودن ----------
-    const addCategory = () => {
-        setAdding({ parentId: null })
+    const isDescendant = (maybeAncestorId: UUID, maybeDescendantId: UUID, nodes: CategoryNode[]): boolean => {
+        // آیا maybeDescendantId در زیرمجموعه‌ی maybeAncestorId است؟
+        const stack: CategoryNode[] = [...nodes]
+        while (stack.length) {
+            const cur = stack.pop()!
+            if (cur.id === maybeAncestorId) {
+                const s: CategoryNode[] = [...(cur.children || [])]
+                while (s.length) {
+                    const x = s.pop()!
+                    if (x.id === maybeDescendantId) return true
+                    if (x.children?.length) s.push(...x.children)
+                }
+                return false
+            }
+            if (cur.children?.length) stack.push(...cur.children)
+        }
+        return false
     }
 
-    const addSubCategory = (parentId: UUID) => {
-        setAdding({ parentId })
-    }
+    // ---------- افزودن ----------
+    const addCategory = () => setAdding({ parentId: null })
+    const addSubCategory = (parentId: UUID) => setAdding({ parentId })
 
     const confirmAdd = async (name: string) => {
         if (!adding) return
@@ -147,7 +146,7 @@ export default function NestedDraggableList({
                     findAndUpdate(next, adding.parentId, (p) => (p.children = fetched))
                     parentChildren = findAndGetChildrenRef(next, adding.parentId)
                 }
-                const order = parentChildren!.length
+                const order = (parentChildren?.length ?? 0)
                 const res = await categoriesApiService.create({
                     name,
                     parent_id: adding.parentId,
@@ -194,23 +193,17 @@ export default function NestedDraggableList({
         }
     }
 
-    // ---------- Expand (با lazy-load فرزندها) ----------
-// ---------- Expand (با lazy-load فرزندها) ----------
+    // ---------- Expand (lazy-load) ----------
     const toggleExpand = async (id: UUID) => {
-        // مرحله ۱: toggle و ست‌کردن state (بدون بارگیری)
         const next = deepClone(categories)
         const target = findAndUpdate(next, id, (n) => {
             n.expanded = !n.expanded
         })
         setCategories(next)
 
-        // اگر پیدا نشد یا بسته شد، کاری نکن
         if (!target || !target.expanded) return
-
-        // اگر قبلاً فرزندها لود شده‌اند، نیاز به درخواست نیست
         if (target.children && target.children.length > 0) return
 
-        // مرحله ۲: بارگیری فرزندها و به‌روزرسانی state روی نسخه‌ی تازه
         try {
             const children = await loadChildren(target.id)
             setCategories((prev) => {
@@ -218,7 +211,7 @@ export default function NestedDraggableList({
                 const t = findAndUpdate(copy, id)
                 if (t) {
                     t.children = children
-                    t.expanded = true // باز بماند
+                    t.expanded = true
                 }
                 return copy
             })
@@ -227,19 +220,29 @@ export default function NestedDraggableList({
         }
     }
 
-    // ---------- Drag helpers ----------
+    // ---------- Drag & Drop ----------
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: CategoryNode, parentId: UUID | null = null) => {
         setDraggedItem({ item, parentId })
         e.dataTransfer.effectAllowed = 'move'
         e.dataTransfer.setData('text/plain', item.id) // Firefox
     }
+
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = 'move'
     }
+
     const handleDragEnter = (e: React.DragEvent, item: CategoryNode, parentId: UUID | null = null) => {
         e.preventDefault()
         setDragOverItem({ item, parentId })
+
+        // Auto-expand بعد از مکث کوتاه
+        if (!item.expanded) {
+            if (expandTimer.current) window.clearTimeout(expandTimer.current)
+            expandTimer.current = window.setTimeout(() => {
+                toggleExpand(item.id)
+            }, 350) as unknown as number
+        }
     }
 
     // جابه‌جایی «بین خواهر-برادرها» (قبل از target)
@@ -248,14 +251,17 @@ export default function NestedDraggableList({
         e.stopPropagation()
         if (!draggedItem || draggedItem.item.id === targetItem.id) return
 
-        // محاسبه‌ی insertIndex با فیکس off-by-one
-        const current = deepClone(categories)
+        // اگر مقصد، نواده‌ی آیتمِ درگ‌شده باشد و parent تغییر کند، از حلقه جلوگیری کن
+        if (targetParentId && isDescendant(draggedItem.item.id, targetParentId, categories)) {
+            setDraggedItem(null)
+            setDragOverItem(null)
+            return
+        }
 
-        // آرایه‌ی مقصد قبل از حذف
+        const current = deepClone(categories)
         const targetSiblings = findAndGetChildrenRef(current, targetParentId)!
         const targetIndexBefore = targetSiblings.findIndex((i) => i.id === targetItem.id)
 
-        // آرایه‌ی مبدا برای محاسبه‌ی draggedIndex
         const sourceSiblings = findAndGetChildrenRef(current, draggedItem.parentId)!
         const draggedIndexBefore = sourceSiblings.findIndex((i) => i.id === draggedItem.item.id)
 
@@ -264,9 +270,9 @@ export default function NestedDraggableList({
             insertIndex = Math.max(0, targetIndexBefore - 1)
         }
 
-        // optimistic update محلی
         const optimistic = deepClone(current)
-        // 1) remove از مبدا
+        const draggedCopy = deepClone(draggedItem.item)
+
         const removeItem = (items: CategoryNode[], parentId: UUID | null): boolean => {
             if (parentId === draggedItem.parentId) {
                 const index = items.findIndex((i) => i.id === draggedItem.item.id)
@@ -281,10 +287,10 @@ export default function NestedDraggableList({
             return false
         }
         removeItem(optimistic, null)
-        // 2) insert در مقصد با index محاسبه‌شده
+
         const insertAt = (items: CategoryNode[], parentId: UUID | null): boolean => {
             if (parentId === targetParentId) {
-                items.splice(insertIndex, 0, draggedItem.item)
+                items.splice(insertIndex, 0, draggedCopy)
                 return true
             }
             for (const it of items) {
@@ -293,11 +299,11 @@ export default function NestedDraggableList({
             return false
         }
         insertAt(optimistic, null)
+
         setCategories(optimistic)
         setDraggedItem(null)
         setDragOverItem(null)
 
-        // API: parent_id و order جدید
         try {
             await categoriesApiService.reorderOne(draggedItem.item.id, {
                 parent_id: targetParentId ?? null,
@@ -305,21 +311,25 @@ export default function NestedDraggableList({
             })
             toast.success('ترتیب به‌روزرسانی شد')
         } catch (err: any) {
-            // rollback
-            setCategories(current)
+            setCategories(current) // rollback
             toast.error(err?.response?.data?.detail?.[0]?.msg || 'خطا در جابه‌جایی')
         }
     }
 
-    // جابه‌جایی «به‌عنوان فرزند» (append به انتهای فرزندهای parentItem)
+    // جابه‌جایی «به‌عنوان فرزند»
     const handleDropAsChild = async (e: React.DragEvent, parentItem: CategoryNode) => {
         e.preventDefault()
         e.stopPropagation()
         if (!draggedItem || draggedItem.item.id === parentItem.id) return
 
-        const current = deepClone(categories)
+        // جلوگیری از دراپ داخل نواده‌ی خودش
+        if (isDescendant(draggedItem.item.id, parentItem.id, categories)) {
+            setDraggedItem(null)
+            setDragOverItem(null)
+            return
+        }
 
-        // اگر فرزندها هنوز لود نشده، اول بگیر
+        const current = deepClone(categories)
         let working = deepClone(current)
         const parentChildrenRef = findAndGetChildrenRef(working, parentItem.id)
         if (parentChildrenRef && parentChildrenRef.length === 0) {
@@ -332,8 +342,9 @@ export default function NestedDraggableList({
             }
         }
 
-        // optimistic
         const optimistic = deepClone(working)
+        const draggedCopy = deepClone(draggedItem.item)
+
         const removeItem = (items: CategoryNode[], parentId: UUID | null): boolean => {
             if (parentId === draggedItem.parentId) {
                 const index = items.findIndex((i) => i.id === draggedItem.item.id)
@@ -349,10 +360,9 @@ export default function NestedDraggableList({
         }
         removeItem(optimistic, null)
 
-        // index = انتهای لیست فرزندان
         const childrenArr = findAndGetChildrenRef(optimistic, parentItem.id)!
         const newIndex = childrenArr.length
-        childrenArr.push(draggedItem.item)
+        childrenArr.push(draggedCopy)
         findAndUpdate(optimistic, parentItem.id, (p) => (p.expanded = true))
 
         setCategories(optimistic)
@@ -371,9 +381,9 @@ export default function NestedDraggableList({
         }
     }
 
-    // ---------- رندر یک آیتم ----------
+    // ---------- رندر ----------
     const renderCategory = (item: CategoryNode, level = 0, parentId: UUID | null = null): React.ReactNode => {
-        const hasChildren = item.children && item.children.length > 0 // توجه: بعد از expand اول درست می‌شود
+        const hasChildren = item.children && item.children.length > 0
         const isBeingDragged = draggedItem?.item.id === item.id
         const isDragOver = dragOverItem?.item.id === item.id
 
@@ -385,7 +395,7 @@ export default function NestedDraggableList({
                     onDragOver={handleDragOver}
                     onDragEnter={(e) => handleDragEnter(e, item, parentId)}
                     onDrop={(e) => handleDrop(e, item, parentId)}
-                    className={`flex items-center gap-2 p-2 rounded-lg transition-all cursor-move ${
+                    className={`group flex items-center gap-2 p-2 rounded-lg transition-all cursor-move ${
                         isBeingDragged ? 'opacity-50' : ''
                     } ${
                         isDragOver
@@ -395,7 +405,8 @@ export default function NestedDraggableList({
                     style={{ marginRight: `${level * 32}px` }}
                 >
                     <GripVertical className="w-4 h-4 text-gray-400" />
-                    {/* نکته: برای اجازه‌ی expand اولیه، دکمه را همیشه نشان می‌دهیم */}
+
+                    {/* دکمه‌ی expand را همیشه نشان بده تا اجازه‌ی اولین expand داده شود */}
                     <button
                         onClick={() => toggleExpand(item.id)}
                         className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
@@ -428,19 +439,28 @@ export default function NestedDraggableList({
                     </div>
                 </div>
 
-                {item.expanded && (
-                    <div onDragOver={handleDragOver} onDrop={(e) => handleDropAsChild(e, item)} className="mt-1 min-h-[20px]">
-                        {item.children.map((child) => renderCategory(child, level + 1, item.id))}
-                        {adding && adding.parentId === item.id && (
-                            <InlineEditor onConfirm={confirmAdd} onCancel={cancelAdd} />
-                        )}
-                    </div>
-                )}
+                {/* Drop-zone برای تبدیل به فرزند: همیشه رندر می‌شود */}
+                <div
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDropAsChild(e, item)}
+                    className={
+                        item.expanded
+                            ? 'mt-1 min-h-[20px]'
+                            : 'mt-1 h-2 opacity-0 group-hover:opacity-60 group-hover:h-5 transition-all'
+                    }
+                >
+                    {/* اگر باز است، فرزندان را با تو‌رفتگی رندر کن */}
+                    {item.expanded &&
+                        item.children.map((child) => renderCategory(child, level + 1, item.id))}
+                    {adding && adding.parentId === item.id && (
+                        <InlineEditor onConfirm={confirmAdd} onCancel={cancelAdd} />
+                    )}
+                </div>
             </div>
         )
     }
 
-    // ---------- فیلتر نمایش ----------
+    // ---------- فیلتر ----------
     const filtered = React.useMemo(() => {
         const q = searchQuery.trim()
         if (!q) return categories
@@ -460,7 +480,6 @@ export default function NestedDraggableList({
 
     return (
         <div className="w-full max-w-2xl mx-auto p-6" dir="rtl">
-
             <div className="space-y-2">
                 {loadingRoot ? (
                     <div className="text-center py-8 text-gray-500">در حال بارگذاری…</div>
@@ -469,6 +488,7 @@ export default function NestedDraggableList({
                 ) : (
                     filtered.map((cat) => renderCategory(cat))
                 )}
+
                 {adding && adding.parentId === null && (
                     <InlineEditor onConfirm={confirmAdd} onCancel={cancelAdd} />
                 )}
@@ -478,6 +498,8 @@ export default function NestedDraggableList({
                 💡 راهنما: آیتم‌ها را بکشید و رها کنید تا جابجا شوند. برای تبدیل به زیردسته، روی دستهٔ مورد نظر رها کنید.
             </div>
 
+            {/* دکمه‌ی مخفی برای اتصال با صفحه‌ی والد (dispatchEvent) */}
+            <button id="add-root-from-body" type="button" className="hidden" onClick={addCategory} />
         </div>
     )
 }

@@ -20,6 +20,12 @@ export default function InlineEditor({
                                      }: Props) {
     const [name, setName] = useState(initialName)
 
+    const submit = () => {
+        const trimmed = name.trim()
+        if (trimmed.length === 0 || loading) return
+        onConfirm(trimmed)
+    }
+
     return (
         <div className="flex items-center gap-2 w-full" dir="rtl">
             <Input
@@ -28,7 +34,7 @@ export default function InlineEditor({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => {
-                    if (e.key === 'Enter') onConfirm(name.trim())
+                    if (e.key === 'Enter') submit()
                     if (e.key === 'Escape') onCancel?.()
                 }}
                 className="max-w-sm"
@@ -37,7 +43,7 @@ export default function InlineEditor({
             <Button
                 size="icon"
                 className="h-9 w-9"
-                onClick={() => onConfirm(name.trim())}
+                onClick={submit}
                 disabled={loading || name.trim().length === 0}
                 aria-label="تأیید"
             >

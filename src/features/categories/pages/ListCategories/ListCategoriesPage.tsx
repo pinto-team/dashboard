@@ -23,6 +23,7 @@ export default function ListCategoriesPage() {
     const subtitle = count > 0 ? t('common.showing_count', { count }) : t('common.search_hint')
 
     const handleCreate = () => {
+        // به دکمه‌ی مخفی داخل NestedDraggableList متصل است
         const addBtn = document.getElementById('add-root-from-body')
         addBtn?.dispatchEvent(new Event('click', { bubbles: true }))
     }
@@ -34,6 +35,7 @@ export default function ListCategoriesPage() {
                     <div className="flex flex-col">
                         <h1 className="text-2xl font-bold">{t('categories.title')}</h1>
                     </div>
+
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <Search
