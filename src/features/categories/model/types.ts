@@ -6,6 +6,7 @@ export interface CategoryData {
     description: string | null;
     parent_id: UUID | null;
     image_url: string | null;
+    image_id: string | null;
     order: number; // موقعیت بین خواهر-برادرها (از 0 شروع)
     created_at: string; // ISO8601
     updated_at: string; // ISO8601
@@ -16,13 +17,13 @@ export interface CreateCategoryRequest {
     parent_id?: UUID | null;
     order?: number; // اختیاری؛ اگر ندی انتهای لیست می‌رود
     description?: string | null;
-    image_url?: string | null;
+    image_id?: string | null;
 }
 
 export interface UpdateCategoryRequest {
     name?: string;
     description?: string | null;
-    image_url?: string | null;
+    image_id?: string | null;
     parent_id?: UUID | null; // برای جابه‌جایی والد
     order?: number;          // برای جابه‌جایی داخل همان والد یا جای جدید در والد جدید
 }

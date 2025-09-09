@@ -45,6 +45,7 @@
   "categories.title": "Categories",
   "categories.create": "Add Category",
   "categories.search_placeholder": "Search categories...",
+  "categories.image_alt": "Category image",
 
   "common.error": "Something went wrong",
   "common.back": "Back",
