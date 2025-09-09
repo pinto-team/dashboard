@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { categoriesApiService } from '@/features/categories/services/categories.api'
 import type { CategoryData } from '@/features/categories/model/types'
+import InlineEditor from '@/features/categories/components/InlineEditor'
 
 type UUID = string
 
@@ -51,6 +52,7 @@ export default function NestedDraggableList({
     const [draggedItem, setDraggedItem] = React.useState<{ item: CategoryNode; parentId: UUID | null } | null>(null)
     const [dragOverItem, setDragOverItem] = React.useState<{ item: CategoryNode; parentId: UUID | null } | null>(null)
     const [loadingRoot, setLoadingRoot] = React.useState(false)
+    const [adding, setAdding] = React.useState<{ parentId: UUID | null } | null>(null)
 
     // ---------- بارگذاری ریشه ----------
     const loadChildren = React.useCallback(async (parentId: UUID | null) => {
@@ -120,40 +122,50 @@ export default function NestedDraggableList({
     const deepClone = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj))
 
     // ---------- افزودن ----------
-    const addCategory = async () => {
+    const addCategory = () => {
+        setAdding({ parentId: null })
+    }
+
+    const addSubCategory = (parentId: UUID) => {
+        setAdding({ parentId })
+    }
+
+    const confirmAdd = async (name: string) => {
+        if (!adding) return
         try {
-            const order = categories.length
-            const res = await categoriesApiService.create({ name: `دسته‌بندی جدید ${order + 1}`, parent_id: null, order })
-            const node = toNode(res.data.data)
-            setCategories((prev) => [...prev, node])
-            onAddRoot?.()
+            if (adding.parentId === null) {
+                const order = categories.length
+                const res = await categoriesApiService.create({ name, parent_id: null, order })
+                const node = toNode(res.data.data)
+                setCategories((prev) => [...prev, node])
+                onAddRoot?.()
+            } else {
+                let next = deepClone(categories)
+                let parentChildren = findAndGetChildrenRef(next, adding.parentId)
+                if (parentChildren && parentChildren.length === 0) {
+                    const fetched = await loadChildren(adding.parentId)
+                    findAndUpdate(next, adding.parentId, (p) => (p.children = fetched))
+                    parentChildren = findAndGetChildrenRef(next, adding.parentId)
+                }
+                const order = parentChildren!.length
+                const res = await categoriesApiService.create({
+                    name,
+                    parent_id: adding.parentId,
+                    order,
+                })
+                parentChildren!.push(toNode(res.data.data))
+                findAndUpdate(next, adding.parentId, (p) => (p.expanded = true))
+                setCategories(next)
+            }
             toast.success('ایجاد شد')
         } catch (e: any) {
             toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در ایجاد')
+        } finally {
+            setAdding(null)
         }
     }
 
-    const addSubCategory = async (parentId: UUID) => {
-        try {
-            // اگر لیست فرزندها هنوز لود نشده، اول لود کن
-            let next = deepClone(categories)
-            const parentChildren = findAndGetChildrenRef(next, parentId)
-            if (parentChildren && parentChildren.length === 0) {
-                const fetched = await loadChildren(parentId)
-                findAndUpdate(next, parentId, (p) => (p.children = fetched))
-            }
-            // ایجاد
-            const parentChildrenAfter = findAndGetChildrenRef(next, parentId)!
-            const order = parentChildrenAfter.length
-            const res = await categoriesApiService.create({ name: 'زیردسته جدید', parent_id: parentId, order })
-            parentChildrenAfter.push(toNode(res.data.data))
-            findAndUpdate(next, parentId, (p) => (p.expanded = true))
-            setCategories(next)
-            toast.success('زیردسته اضافه شد')
-        } catch (e: any) {
-            toast.error(e?.response?.data?.detail?.[0]?.msg || 'خطا در ایجاد زیردسته')
-        }
-    }
+    const cancelAdd = () => setAdding(null)
 
     // ---------- حذف ----------
     const deleteCategory = async (id: UUID, parentId: UUID | null = null) => {
@@ -287,7 +299,7 @@ export default function NestedDraggableList({
 
         // API: parent_id و order جدید
         try {
-            await categoriesApiService.update(draggedItem.item.id, {
+            await categoriesApiService.reorderOne(draggedItem.item.id, {
                 parent_id: targetParentId ?? null,
                 order: insertIndex,
             })
@@ -348,7 +360,7 @@ export default function NestedDraggableList({
         setDragOverItem(null)
 
         try {
-            await categoriesApiService.update(draggedItem.item.id, {
+            await categoriesApiService.reorderOne(draggedItem.item.id, {
                 parent_id: parentItem.id,
                 order: newIndex,
             })
@@ -419,6 +431,9 @@ export default function NestedDraggableList({
                 {item.expanded && (
                     <div onDragOver={handleDragOver} onDrop={(e) => handleDropAsChild(e, item)} className="mt-1 min-h-[20px]">
                         {item.children.map((child) => renderCategory(child, level + 1, item.id))}
+                        {adding && adding.parentId === item.id && (
+                            <InlineEditor onConfirm={confirmAdd} onCancel={cancelAdd} />
+                        )}
                     </div>
                 )}
             </div>
@@ -472,6 +487,9 @@ export default function NestedDraggableList({
                     <div className="text-center py-8 text-gray-500">هیچ دسته‌بندی وجود ندارد</div>
                 ) : (
                     filtered.map((cat) => renderCategory(cat))
+                )}
+                {adding && adding.parentId === null && (
+                    <InlineEditor onConfirm={confirmAdd} onCancel={cancelAdd} />
                 )}
             </div>
 
