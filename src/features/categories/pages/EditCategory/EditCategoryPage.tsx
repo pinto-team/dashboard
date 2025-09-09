@@ -11,6 +11,7 @@ import { ROUTES } from '@/app/routes/routes'
 import { useI18n } from '@/shared/hooks/useI18n'
 import { isRTLLocale } from '@/shared/i18n/utils'
 import type { CreateCategoryRequest } from '@/features/categories/model/types'
+import { toAbsoluteUrl } from '@/shared/api/files.ts'
 
 type CategoryFormValues = {
     name: string
@@ -47,7 +48,8 @@ export default function EditCategoryPage() {
                     description: d.description ?? '',
                     image_id: d.image_id ?? '',
                 })
-                setInitialImageUrl(d.image_url ?? '')
+                setInitialImageUrl(d.image_url ? toAbsoluteUrl(d.image_url) : null)
+
             } catch {
                 toast.error(t('common.error'))
             } finally {
