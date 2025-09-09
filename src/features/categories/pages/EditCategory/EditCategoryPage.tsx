@@ -15,7 +15,7 @@ import type { CreateCategoryRequest } from '@/features/categories/model/types'
 type CategoryFormValues = {
     name: string
     description?: string
-    image_url?: string
+    image_id?: string
 }
 
 const FORM_ID = 'category-form'
@@ -27,6 +27,7 @@ export default function EditCategoryPage() {
     const rtl = isRTLLocale(locale)
 
     const [initialData, setInitialData] = React.useState<CategoryFormValues | null>(null)
+    const [initialImageUrl, setInitialImageUrl] = React.useState<string | null>(null)
     const [loading, setLoading] = React.useState(true)
     const [saving, setSaving] = React.useState(false)
     const [apiErrors, setApiErrors] = React.useState<
@@ -44,8 +45,9 @@ export default function EditCategoryPage() {
                 setInitialData({
                     name: d.name,
                     description: d.description ?? '',
-                    image_url: d.image_url ?? '',
+                    image_id: d.image_id ?? '',
                 })
+                setInitialImageUrl(d.image_url ?? '')
             } catch {
                 toast.error(t('common.error'))
             } finally {
@@ -120,6 +122,7 @@ export default function EditCategoryPage() {
                     <CategoryForm
                         formId={FORM_ID}
                         defaultValues={initialData ?? undefined}
+                        initialImageUrl={initialImageUrl}
                         onSubmit={handleSubmit}
                         submitting={saving}
                         apiErrors={apiErrors}

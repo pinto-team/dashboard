@@ -7,16 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useI18n } from '@/shared/hooks/useI18n'
+import CategoryImageField from '@/features/categories/components/CategoryImageField'
 import type { CreateCategoryRequest } from '@/features/categories/model/types'
 
 type CategoryFormValues = {
     name: string
     description?: string
-    image_url?: string
+    image_id?: string
 }
 
 type Props = Readonly<{
     defaultValues?: Partial<CategoryFormValues>
+    initialImageUrl?: string | null
     onSubmit: (data: CreateCategoryRequest) => void
     submitting?: boolean
     formId?: string
@@ -25,6 +27,7 @@ type Props = Readonly<{
 
 export default function CategoryForm({
     defaultValues,
+    initialImageUrl,
     onSubmit,
     submitting = false,
     formId = 'category-form',
@@ -47,12 +50,7 @@ export default function CategoryForm({
                         z.literal(''),
                     ])
                     .optional(),
-                image_url: z
-                    .union([
-                        z.string().max(2048, t('validation.max_length', { n: 2048 })),
-                        z.literal(''),
-                    ])
-                    .optional(),
+                image_id: z.union([z.string(), z.literal('')]).optional(),
             }),
         [t],
     )
@@ -62,7 +60,7 @@ export default function CategoryForm({
         defaultValues: {
             name: '',
             description: '',
-            image_url: '',
+            image_id: '',
             ...defaultValues,
         },
         mode: 'onBlur',
@@ -75,7 +73,7 @@ export default function CategoryForm({
             reset({
                 name: defaultValues.name ?? '',
                 description: defaultValues.description ?? '',
-                image_url: defaultValues.image_url ?? '',
+                image_id: defaultValues.image_id ?? '',
             })
         }
     }, [defaultValues, reset])
@@ -84,7 +82,7 @@ export default function CategoryForm({
         if (!apiErrors || apiErrors.length === 0) return
         apiErrors.forEach((err) => {
             const path = err.field?.split('.')?.pop() ?? err.field
-            if (path === 'name' || path === 'description' || path === 'image_url') {
+            if (path === 'name' || path === 'description' || path === 'image_id') {
                 setError(path as keyof CategoryFormValues, { type: 'server', message: err.message })
             }
         })
@@ -100,7 +98,7 @@ export default function CategoryForm({
                     const cleaned: CreateCategoryRequest = {
                         name: values.name.trim(),
                         description: values.description?.trim() || '',
-                        image_url: values.image_url?.trim() || '',
+                        image_id: values.image_id?.trim() || '',
                     }
                     onSubmit(cleaned)
                 })}
@@ -146,20 +144,7 @@ export default function CategoryForm({
                                 )}
                             </div>
 
-                            <div>
-                                <Label htmlFor="category-image">{t('categories.form.image')}</Label>
-                                <Input
-                                    id="category-image"
-                                    placeholder={t('categories.form.image_help')}
-                                    aria-invalid={Boolean(formState.errors.image_url)}
-                                    {...form.register('image_url')}
-                                />
-                                {formState.errors.image_url && (
-                                    <p className="mt-1 text-xs text-destructive">
-                                        {formState.errors.image_url.message}
-                                    </p>
-                                )}
-                            </div>
+                            <CategoryImageField initialImageUrl={initialImageUrl} />
                         </div>
                     </CardContent>
                 </Card>
