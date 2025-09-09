@@ -27,6 +27,12 @@ export interface UpdateCategoryRequest {
     order?: number;          // برای جابه‌جایی داخل همان والد یا جای جدید در والد جدید
 }
 
+export interface ReorderCategory {
+    id: UUID;
+    parent_id?: UUID | null;
+    order: number;
+}
+
 export interface PaginationMeta {
     page: number;
     limit: number;

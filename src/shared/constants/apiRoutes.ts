@@ -24,8 +24,9 @@ export const API_ROUTES = {
     CATEGORIES: {
         ROOT: '/categories',
         BY_ID: (id: string | number) => `/categories/${id}`,
-
-
+        ORDER: (id: string | number) => `/categories/${id}/order`,
+        REORDER: '/categories/reorder',
+        REORDER_BY_ID: (id: string | number) => `/categories/${id}/reorder`,
     },
 } as const
 

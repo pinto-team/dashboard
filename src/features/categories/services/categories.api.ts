@@ -4,6 +4,7 @@ import type {
     CategoryData,
     CreateCategoryRequest,
     UpdateCategoryRequest,
+    ReorderCategory,
 } from '@/features/categories/model/types'
 
 export type UUID = string
@@ -44,6 +45,13 @@ export const categoriesApiService = {
     },
 
     /**
+     * GET /categories/{id}
+     */
+    get(id: UUID) {
+        return catalogClient.get<ApiSuccessSingle<CategoryData>>(API_ROUTES.CATEGORIES.BY_ID(id))
+    },
+
+    /**
      * POST /categories
      * اگر order ارسال نشود، سرور آیتم را انتهای لیست والد قرار می‌دهد.
      */
@@ -60,6 +68,27 @@ export const categoriesApiService = {
      */
     update(id: UUID, payload: UpdateCategoryRequest) {
         return catalogClient.put<ApiSuccessSingle<CategoryData>>(API_ROUTES.CATEGORIES.BY_ID(id), payload)
+    },
+
+    /**
+     * PATCH /categories/{id}/order
+     */
+    patchOrder(id: UUID, order: number) {
+        return catalogClient.patch<ApiSuccessSingle<CategoryData>>(API_ROUTES.CATEGORIES.ORDER(id), { order })
+    },
+
+    /**
+     * PUT /categories/reorder
+     */
+    reorderMany(payload: ReorderCategory[]) {
+        return catalogClient.put<ApiSuccessList<CategoryData>>(API_ROUTES.CATEGORIES.REORDER, payload)
+    },
+
+    /**
+     * PUT /categories/{id}/reorder
+     */
+    reorderOne(id: UUID, payload: { parent_id?: UUID | null; order: number }) {
+        return catalogClient.put<ApiSuccessSingle<CategoryData>>(API_ROUTES.CATEGORIES.REORDER_BY_ID(id), payload)
     },
 
     /**
