@@ -26,13 +26,13 @@ type Props = Readonly<{
 }>
 
 export default function CategoryForm({
-    defaultValues,
-    initialImageUrl,
-    onSubmit,
-    submitting = false,
-    formId = 'category-form',
-    apiErrors,
-}: Props) {
+                                         defaultValues,
+                                         initialImageUrl,
+                                         onSubmit,
+                                         submitting = false,
+                                         formId = 'category-form',
+                                         apiErrors,
+                                     }: Props) {
     const { t } = useI18n()
 
     const schema = React.useMemo(
@@ -83,7 +83,10 @@ export default function CategoryForm({
         apiErrors.forEach((err) => {
             const path = err.field?.split('.')?.pop() ?? err.field
             if (path === 'name' || path === 'description' || path === 'image_id') {
-                setError(path as keyof CategoryFormValues, { type: 'server', message: err.message })
+                setError(path as keyof CategoryFormValues, {
+                    type: 'server',
+                    message: err.message,
+                })
             }
         })
     }, [apiErrors, setError])
@@ -109,10 +112,15 @@ export default function CategoryForm({
                             {t('categories.form.title')}
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-6 p-6">
+
+                    {/* ⬇️ تغییر اصلی: دو ستونه مثل برند */}
+                    <CardContent className="grid gap-6 p-6 md:grid-cols-2">
+                        {/* ستون چپ: فیلدهای متن */}
                         <div className="flex flex-col gap-4">
                             <div>
-                                <Label htmlFor="category-name">{t('categories.form.name')}*</Label>
+                                <Label htmlFor="category-name">
+                                    {t('categories.form.name')}*
+                                </Label>
                                 <Input
                                     id="category-name"
                                     placeholder={t('categories.form.name_ph')}
@@ -143,7 +151,10 @@ export default function CategoryForm({
                                     </p>
                                 )}
                             </div>
+                        </div>
 
+                        {/* ستون راست: تصویر دسته‌بندی (مثل BrandLogoField) */}
+                        <div className="self-start">
                             <CategoryImageField initialImageUrl={initialImageUrl} />
                         </div>
                     </CardContent>
@@ -152,4 +163,3 @@ export default function CategoryForm({
         </FormProvider>
     )
 }
-
