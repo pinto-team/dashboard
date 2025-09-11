@@ -17,4 +17,9 @@ export const ROUTES = {
         LIST: '/categories',
         EDIT: (id = ':id') => `/categories/${id}/edit`,
     },
+    // Product
+    PRODUCT: {
+        LIST: '/products',
+        NEW: '/products/new',
+    },
 } as const

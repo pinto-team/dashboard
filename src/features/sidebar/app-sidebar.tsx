@@ -51,6 +51,7 @@ const itemsSchema: MenuItem[] = [
         children: [
             { titleKey: "menu.basic.brand", url: ROUTES.BRAND.LIST },
             { titleKey: "menu.basic.category", url: ROUTES.CATEGORY.LIST },
+            { titleKey: "menu.basic.product", url: ROUTES.PRODUCT.LIST },
         ],
     },
 ]
