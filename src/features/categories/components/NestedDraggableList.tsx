@@ -60,8 +60,10 @@ export default function NestedDraggableList({
 
     // ---------- بارگذاری ----------
     const loadChildren = React.useCallback(async (parentId: UUID | null) => {
-        const res = await categoriesApiService.list({ parent_id: parentId ?? null, page: 1, limit: 100 })
-        const list = res.data.data // asc by server
+        // برخی API ها هنگام پاس دادن parent_id=null همه‌ی دسته‌ها را برمی‌گردانند.
+        // اینجا فقط آیتم‌هایی را نگه می‌داریم که والدشان همان parentId درخواست شده باشد.
+        const res = await categoriesApiService.list({ parent_id: parentId ?? undefined, page: 1, limit: 100 })
+        const list = res.data.data.filter((c) => c.parent_id === parentId) // asc by server
         return list.map(toNode)
     }, [])
 
