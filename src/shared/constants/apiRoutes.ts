@@ -28,6 +28,9 @@ export const API_ROUTES = {
         REORDER: '/categories/reorder',
         REORDER_BY_ID: (id: string | number) => `/categories/${id}/reorder`,
     },
+    PRODUCTS: {
+        ROOT: '/products',
+    },
 } as const
 
 export type ApiRoute = typeof API_ROUTES

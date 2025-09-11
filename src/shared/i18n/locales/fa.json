@@ -26,6 +26,7 @@
   "menu.basic": "پایه",
   "menu.basic.brand": "برندها",
   "menu.basic.category": "دسته‌ها",
+  "menu.basic.product": "محصولات",
 
   "user.guest": "مهمان",
 
@@ -46,6 +47,13 @@
   "categories.create": "افزودن دسته",
   "categories.search_placeholder": "جستجوی دسته...",
   "categories.image_alt": "تصویر دسته",
+
+  "products.saved_success": "محصول با موفقیت ذخیره شد",
+  "products.add": "افزودن محصول",
+  "products.title": "محصولات",
+  "products.create": "ایجاد محصول",
+  "products.search_placeholder": "جستجوی محصول...",
+  "products.image_alt": "تصویر محصول",
 
   "common.error": "مشکلی پیش آمد",
   "common.back": "بازگشت",
@@ -94,6 +102,22 @@
   "categories.form.image": "تصویر",
   "categories.form.image_help": "تصویر دسته را بارگذاری کنید (ترجیحاً مربع باشد)",
   "categories.help_drag_drop": "💡 راهنما: آیتم‌ها را بکشید و رها کنید تا جابجا شوند. برای تبدیل به زیردسته، روی دستهٔ مورد نظر رها کنید.",
+
+  "products.form.title": "اطلاعات محصول",
+  "products.form.name": "نام",
+  "products.form.name_ph": "نام محصول را وارد کنید",
+  "products.form.sku": "کد کالا",
+  "products.form.sku_ph": "کد کالا را وارد کنید",
+  "products.form.price": "قیمت",
+  "products.form.price_ph": "قیمت را وارد کنید",
+  "products.form.category_id": "دسته",
+  "products.form.category_id_ph": "شناسه دسته را وارد کنید",
+  "products.form.brand_id": "برند",
+  "products.form.brand_id_ph": "شناسه برند را وارد کنید",
+  "products.form.description": "توضیحات",
+  "products.form.description_ph": "توضیحات را وارد کنید",
+  "products.form.image": "تصویر",
+  "products.form.image_help": "تصویر محصول را بارگذاری کنید (ترجیحاً مربع باشد)",
 
   "validation.required": "این فیلد الزامی است",
   "validation.min_length": "حداقل باید {n} کاراکتر باشد",

@@ -26,6 +26,7 @@
   "menu.basic": "Basic",
   "menu.basic.brand": "Brands",
   "menu.basic.category": "Categories",
+  "menu.basic.product": "Products",
 
   "user.guest": "Guest",
 
@@ -46,6 +47,13 @@
   "categories.create": "Add Category",
   "categories.search_placeholder": "Search categories...",
   "categories.image_alt": "Category image",
+
+  "products.saved_success": "Product saved successfully",
+  "products.add": "Add Product",
+  "products.title": "Products",
+  "products.create": "Add Product",
+  "products.search_placeholder": "Search products...",
+  "products.image_alt": "Product image",
 
   "common.error": "Something went wrong",
   "common.back": "Back",
@@ -94,6 +102,22 @@
   "categories.form.image": "Image",
   "categories.form.image_help": "Upload the category image (recommended square format)",
   "categories.help_drag_drop": "💡 Tip: Drag and drop items to reorder. Drop on a category to make it a subcategory.",
+
+  "products.form.title": "Product Information",
+  "products.form.name": "Name",
+  "products.form.name_ph": "Enter product name",
+  "products.form.sku": "SKU",
+  "products.form.sku_ph": "Enter SKU",
+  "products.form.price": "Price",
+  "products.form.price_ph": "Enter price",
+  "products.form.category_id": "Category",
+  "products.form.category_id_ph": "Enter category id",
+  "products.form.brand_id": "Brand",
+  "products.form.brand_id_ph": "Enter brand id",
+  "products.form.description": "Description",
+  "products.form.description_ph": "Enter description",
+  "products.form.image": "Image",
+  "products.form.image_help": "Upload the product image (recommended square format)",
 
   "validation.required": "This field is required",
   "validation.min_length": "Must be at least {n} characters",
