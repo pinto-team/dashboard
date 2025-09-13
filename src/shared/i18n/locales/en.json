@@ -131,7 +131,7 @@
   "products.form.storage_ph": "Enter storage instructions",
   "products.form.shelf_life_days": "Shelf Life (days)",
   "products.form.shelf_life_days_ph": "Enter shelf life in days",
-  "products.form.is_active": "Active",
+  "products.form.is_active": "Status",
   "products.form.description": "Description",
   "products.form.description_ph": "Enter description",
   "products.form.image": "Image",
@@ -213,5 +213,7 @@
 
   "brands.actions.delete_confirm": "Are you sure you want to delete this brand? This action cannot be undone.",
   "common.cancel": "Cancel",
-  "common.confirm": "Confirm"
+  "common.confirm": "Confirm",
+  "common.active": "Active",
+  "common.inactive": "Inactive"
 }

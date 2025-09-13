@@ -87,13 +87,35 @@ export default function DetailProductPage() {
                                 <Separator />
                                 <Field label={t('products.table.price')} value={product.price ?? '-'} />
                                 <Separator />
+                                <Field label={t('products.form.barcode')} value={product.barcode || '-'} />
+                                <Separator />
+                                <Field label={t('products.form.barcode_type')} value={product.barcode_type || '-'} />
+                                <Separator />
                                 <Field label={t('products.form.weight')} value={product.weight ?? '-'} />
+                                <Separator />
+                                <Field label={t('products.form.weight_unit')} value={product.weight_unit || '-'} />
                                 <Separator />
                                 <Field label={t('products.form.packaging')} value={product.packaging || '-'} />
                                 <Separator />
+                                <Field label={t('products.form.storage')} value={product.storage || '-'} />
+                                <Separator />
+                                <Field
+                                    label={t('products.form.shelf_life_days')}
+                                    value={product.shelf_life_days ?? '-'}
+                                />
+                                <Separator />
+                                <Field
+                                    label={t('products.form.is_active')}
+                                    value={product.is_active ? t('common.active') : t('common.inactive')}
+                                />
+                                <Separator />
                                 <div className="grid gap-2">
-                                    <span className="text-xs text-muted-foreground">{t('products.form.description')}</span>
-                                    <p className="whitespace-pre-wrap text-sm leading-6">{product.description || '—'}</p>
+                  <span className="text-xs text-muted-foreground">
+                    {t('products.form.description')}
+                  </span>
+                                    <p className="whitespace-pre-wrap text-sm leading-6">
+                                        {product.description || '—'}
+                                    </p>
                                 </div>
                             </div>
 

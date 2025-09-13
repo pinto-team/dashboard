@@ -131,7 +131,7 @@
   "products.form.storage_ph": "شرایط نگهداری را وارد کنید",
   "products.form.shelf_life_days": "ماندگاری (روز)",
   "products.form.shelf_life_days_ph": "تعداد روزهای ماندگاری را وارد کنید",
-  "products.form.is_active": "فعال",
+  "products.form.is_active": "وضعیت",
   "products.form.description": "توضیحات",
   "products.form.description_ph": "توضیحات را وارد کنید",
   "products.form.image": "تصویر",
@@ -209,5 +209,7 @@
   "actions.delete": "حذف",
   "brands.actions.delete_confirm": "آیا از حذف این برند مطمئن هستید؟ این عملیات قابل بازگشت نیست.",
   "common.cancel": "انصراف",
-  "common.confirm": "تأیید"
+  "common.confirm": "تأیید",
+  "common.active": "فعال",
+  "common.inactive": "غیرفعال"
 }
