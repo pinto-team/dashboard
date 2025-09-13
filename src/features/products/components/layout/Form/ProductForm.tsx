@@ -41,10 +41,19 @@ export default function ProductForm({
                     .trim()
                     .min(1, t('validation.required'))
                     .max(120, t('validation.max_length', { n: 120 })),
+                full_name: z.string().max(120).optional(),
                 price: z.preprocess((v) => Number(v), z.number().min(0, t('validation.required'))),
                 category_id: z.string().trim().min(1, t('validation.required')),
                 brand_id: z.string().optional(),
                 description: z.string().max(500).optional(),
+                barcode: z.string().max(120).optional(),
+                barcode_type: z.string().max(120).optional(),
+                weight: z.preprocess((v) => (v === '' || v === undefined ? undefined : Number(v)), z.number().optional()),
+                weight_unit: z.string().max(120).optional(),
+                packaging: z.string().max(120).optional(),
+                storage: z.string().max(120).optional(),
+                shelf_life_days: z.preprocess((v) => (v === '' || v === undefined ? undefined : Number(v)), z.number().optional()),
+                is_active: z.boolean().optional(),
                 primary_image_id: z.string().optional(),
             }),
         [t],
@@ -55,10 +64,19 @@ export default function ProductForm({
         defaultValues: {
             sku: '',
             name: '',
+            full_name: '',
             price: 0,
             category_id: '',
             brand_id: '',
             description: '',
+            barcode: '',
+            barcode_type: '',
+            weight: undefined,
+            weight_unit: '',
+            packaging: '',
+            storage: '',
+            shelf_life_days: undefined,
+            is_active: true,
             primary_image_id: '',
             ...defaultValues,
         },
@@ -72,10 +90,19 @@ export default function ProductForm({
             reset({
                 sku: defaultValues.sku ?? '',
                 name: defaultValues.name ?? '',
+                full_name: defaultValues.full_name ?? '',
                 price: defaultValues.price ?? 0,
                 category_id: defaultValues.category_id ?? '',
                 brand_id: defaultValues.brand_id ?? '',
                 description: defaultValues.description ?? '',
+                barcode: defaultValues.barcode ?? '',
+                barcode_type: defaultValues.barcode_type ?? '',
+                weight: defaultValues.weight,
+                weight_unit: defaultValues.weight_unit ?? '',
+                packaging: defaultValues.packaging ?? '',
+                storage: defaultValues.storage ?? '',
+                shelf_life_days: defaultValues.shelf_life_days,
+                is_active: defaultValues.is_active ?? true,
                 primary_image_id: defaultValues.primary_image_id ?? '',
             })
         }
@@ -92,6 +119,15 @@ export default function ProductForm({
                 path === 'category_id' ||
                 path === 'brand_id' ||
                 path === 'description' ||
+                path === 'full_name' ||
+                path === 'barcode' ||
+                path === 'barcode_type' ||
+                path === 'weight' ||
+                path === 'weight_unit' ||
+                path === 'packaging' ||
+                path === 'storage' ||
+                path === 'shelf_life_days' ||
+                path === 'is_active' ||
                 path === 'primary_image_id'
             ) {
                 setError(path as keyof CreateProductRequest, { type: 'server', message: err.message })
@@ -109,10 +145,19 @@ export default function ProductForm({
                     const cleaned: CreateProductRequest = {
                         sku: values.sku?.trim() || '',
                         name: values.name.trim(),
+                        full_name: values.full_name?.trim() || '',
                         price: Number(values.price),
                         category_id: values.category_id.trim(),
                         brand_id: values.brand_id?.trim() || '',
                         description: values.description?.trim() || '',
+                        barcode: values.barcode?.trim() || '',
+                        barcode_type: values.barcode_type?.trim() || '',
+                        weight: values.weight,
+                        weight_unit: values.weight_unit?.trim() || '',
+                        packaging: values.packaging?.trim() || '',
+                        storage: values.storage?.trim() || '',
+                        shelf_life_days: values.shelf_life_days,
+                        is_active: values.is_active ?? true,
                         primary_image_id: values.primary_image_id?.trim() || '',
                     }
                     onSubmit(cleaned)
@@ -134,6 +179,14 @@ export default function ProductForm({
                             <div className="grid gap-2">
                                 <Label htmlFor="product-name">{t('products.form.name')}*</Label>
                                 <Input id="product-name" placeholder={t('products.form.name_ph')} {...form.register('name')} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-full-name">{t('products.form.full_name')}</Label>
+                                <Input
+                                    id="product-full-name"
+                                    placeholder={t('products.form.full_name_ph')}
+                                    {...form.register('full_name')}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="product-price">{t('products.form.price')}*</Label>
@@ -164,6 +217,74 @@ export default function ProductForm({
                                         <BrandSelect value={field.value} onChange={field.onChange} />
                                     )}
                                 />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-barcode">{t('products.form.barcode')}</Label>
+                                <Input id="product-barcode" placeholder={t('products.form.barcode_ph')} {...form.register('barcode')} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-barcode-type">{t('products.form.barcode_type')}</Label>
+                                <Input
+                                    id="product-barcode-type"
+                                    placeholder={t('products.form.barcode_type_ph')}
+                                    {...form.register('barcode_type')}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-weight">{t('products.form.weight')}</Label>
+                                <Input
+                                    id="product-weight"
+                                    type="number"
+                                    step="0.01"
+                                    placeholder={t('products.form.weight_ph')}
+                                    {...form.register('weight', { valueAsNumber: true })}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-weight-unit">{t('products.form.weight_unit')}</Label>
+                                <Input
+                                    id="product-weight-unit"
+                                    placeholder={t('products.form.weight_unit_ph')}
+                                    {...form.register('weight_unit')}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-packaging">{t('products.form.packaging')}</Label>
+                                <Input
+                                    id="product-packaging"
+                                    placeholder={t('products.form.packaging_ph')}
+                                    {...form.register('packaging')}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-storage">{t('products.form.storage')}</Label>
+                                <Input id="product-storage" placeholder={t('products.form.storage_ph')} {...form.register('storage')} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-shelf-life">{t('products.form.shelf_life_days')}</Label>
+                                <Input
+                                    id="product-shelf-life"
+                                    type="number"
+                                    placeholder={t('products.form.shelf_life_days_ph')}
+                                    {...form.register('shelf_life_days', { valueAsNumber: true })}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Controller
+                                    control={form.control}
+                                    name="is_active"
+                                    render={({ field }) => (
+                                        <input
+                                            id="product-active"
+                                            type="checkbox"
+                                            checked={field.value}
+                                            onChange={(e) => field.onChange(e.target.checked)}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="product-active" className="text-sm font-normal">
+                                    {t('products.form.is_active')}
+                                </Label>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="product-description">{t('products.form.description')}</Label>
