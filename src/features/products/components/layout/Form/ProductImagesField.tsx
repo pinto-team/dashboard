@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { useI18n } from '@/shared/hooks/useI18n'
 import type { CreateProductRequest } from '@/features/products/model/types'
 import ProductImageUploader from '@/features/products/components/layout/Uploader/ProductImageUploader'
+import { toAbsoluteUrl } from '@/shared/api/files'
 
 type ImageInfo = { id: string; url: string }
 
@@ -17,11 +18,17 @@ type Props = Readonly<{
 export default function ProductImagesField({ initialImages }: Props) {
     const { t } = useI18n()
     const { setValue } = useFormContext<CreateProductRequest>()
-    const [images, setImages] = React.useState<ImageInfo[]>(initialImages ? [...initialImages] : [])
+    const [images, setImages] = React.useState<ImageInfo[]>(
+        initialImages
+            ? initialImages.map((img) => ({ id: img.id, url: toAbsoluteUrl(img.url) }))
+            : [],
+    )
     const [uploadKey, setUploadKey] = React.useState(0)
 
     React.useEffect(() => {
-        const imgs = initialImages ? [...initialImages] : []
+        const imgs = initialImages
+            ? initialImages.map((img) => ({ id: img.id, url: toAbsoluteUrl(img.url) }))
+            : []
         setImages(imgs)
         setValue('image_ids', imgs.map((img) => img.id), { shouldDirty: false })
     }, [initialImages, setValue])
@@ -29,7 +36,7 @@ export default function ProductImagesField({ initialImages }: Props) {
     const addImage = React.useCallback(
         (file: { id?: string | null; url?: string | null } | null) => {
             if (!file?.id || !file.url) return
-            const newImages = [...images, { id: file.id, url: file.url }]
+            const newImages = [...images, { id: file.id, url: toAbsoluteUrl(file.url) }]
             setImages(newImages)
             setValue('image_ids', newImages.map((img) => img.id), { shouldDirty: true })
             setUploadKey((k) => k + 1)
