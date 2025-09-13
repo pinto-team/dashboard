@@ -41,14 +41,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
             setAccessToken(r.accessToken)
             setRefreshToken(r.refreshToken)
 
-            const u: AuthUser = {
-                id: r.id,
-                username: r.username,
-                email: r.email,
-                firstName: r.firstName,
-                lastName: r.lastName,
-                image: r.image,
-            }
+            const u: AuthUser = r.user
 
             setUser(u)
             setTokens(r.accessToken, r.refreshToken)
