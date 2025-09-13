@@ -90,10 +90,19 @@ export interface ProductData {
 export interface CreateProductRequest {
     sku?: string
     name: string
+    full_name?: string
     price: number
     category_id: string
     brand_id?: string
     description?: string
+    barcode?: string
+    barcode_type?: string
+    weight?: number
+    weight_unit?: string
+    packaging?: string
+    storage?: string
+    shelf_life_days?: number
+    is_active?: boolean
     primary_image_id?: string
 }
 

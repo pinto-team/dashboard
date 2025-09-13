@@ -21,6 +21,7 @@ export const ROUTES = {
     PRODUCT: {
         LIST: '/products',
         NEW: '/products/new',
+        DETAIL: (id = ':id') => `/products/${id}`,
         EDIT: (id = ':id') => `/products/${id}/edit`,
     },
 } as const
