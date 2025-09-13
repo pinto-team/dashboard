@@ -1,11 +1,12 @@
 // features/auth/types.ts
 export type AuthUser = {
-    id: number
+    id: string
     username: string
     email: string
     firstName: string
     lastName: string
-    image?: string
+    phone?: string
+    avatar?: string
 }
 
 export type AuthCtx = {

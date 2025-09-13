@@ -3,6 +3,7 @@ import { authClient } from '@/lib/axios'
 import { API_ROUTES } from '@/shared/constants/apiRoutes'
 import { handleAsyncError } from '@/shared/lib/errors'
 import { defaultLogger } from '@/shared/lib/logger'
+import { AuthUser } from '../types'
 
 function getLogger(action: string, context: Record<string, unknown> = {}) {
     return defaultLogger.withContext({ component: 'auth.api', action, ...context })
@@ -13,11 +14,35 @@ export async function apiLogin(username: string, password: string) {
 
     logger.info('Attempting login')
 
+    const context = {
+        platform: 'web',
+        browser_name: navigator.userAgent,
+        browser_system_name: navigator.platform,
+        browser_system_version: navigator.userAgent,
+        app_version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    }
+
     return handleAsyncError(
-        authClient.post(API_ROUTES.AUTH.LOGIN, { username, password }).then(({ data }) => {
-            logger.info('Login successful')
-            return data
-        }),
+        authClient
+            .post(API_ROUTES.AUTH.LOGIN, { username, password, context })
+            .then(({ data: response }) => {
+                logger.info('Login successful')
+                const { access_token, refresh_token, profile } = response.data
+                const user: AuthUser = {
+                    id: profile.id,
+                    username,
+                    email: profile.email,
+                    firstName: profile.first_name,
+                    lastName: profile.last_name,
+                    phone: profile.phone,
+                    avatar: profile.avatar,
+                }
+                return {
+                    accessToken: access_token,
+                    refreshToken: refresh_token,
+                    user,
+                }
+            }),
         'Login failed',
     )
 }
@@ -32,9 +57,19 @@ export async function apiMe(token: string) {
             .get(API_ROUTES.AUTH.ME, {
                 headers: { Authorization: `Bearer ${token}` },
             })
-            .then(({ data }) => {
+            .then(({ data: response }) => {
                 logger.info('User info fetched successfully')
-                return data
+                const profile = response.data?.profile || response.data
+                const user: AuthUser = {
+                    id: profile.id,
+                    username: profile.username || profile.email,
+                    email: profile.email,
+                    firstName: profile.first_name,
+                    lastName: profile.last_name,
+                    phone: profile.phone,
+                    avatar: profile.avatar,
+                }
+                return user
             }),
         'Failed to fetch user info',
     )
@@ -46,10 +81,16 @@ export async function apiRefresh(refreshToken: string) {
     logger.info('Attempting token refresh')
 
     return handleAsyncError(
-        authClient.post(API_ROUTES.AUTH.REFRESH, { refreshToken }).then(({ data }) => {
-            logger.info('Token refresh successful')
-            return data
-        }),
+        authClient
+            .post(API_ROUTES.AUTH.REFRESH, { refresh_token: refreshToken })
+            .then(({ data: response }) => {
+                logger.info('Token refresh successful')
+                const { access_token, refresh_token } = response.data
+                return {
+                    accessToken: access_token,
+                    refreshToken: refresh_token,
+                }
+            }),
         'Token refresh failed',
     )
 }
@@ -60,7 +101,7 @@ export async function apiLogout() {
     logger.info('Attempting logout')
 
     return handleAsyncError(
-        authClient.post(API_ROUTES.AUTH.LOGOUT).then(({ data }) => {
+        authClient.delete(API_ROUTES.AUTH.LOGOUT).then(({ data }) => {
             logger.info('Logout successful')
             return data
         }),
