@@ -5,7 +5,6 @@ import axios, { AxiosError } from 'axios'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { useI18n } from '@/shared/hooks/useI18n'
 import { uploadSingleImage } from '@/shared/api/files'
 
@@ -22,7 +21,6 @@ type Props = Readonly<{
 export default function ProductImageUploader({
     value,
     onChange,
-    label,
     disabled = false,
     maxSizeMB = 5,
     aspect = 'square',
