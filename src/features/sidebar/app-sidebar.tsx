@@ -143,7 +143,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 `${authUser.firstName} ${authUser.lastName}`.trim() ||
                 authUser.username,
             email: authUser.email,
-            avatar: authUser.image ?? "/avatars/placeholder.png",
+            avatar: authUser.avatar ?? "/avatars/placeholder.png",
         }
         : {
             name: t("user.guest"),

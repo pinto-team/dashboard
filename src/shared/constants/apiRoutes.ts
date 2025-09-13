@@ -2,8 +2,8 @@ import { API_CONFIG } from '@/shared/config/api.config'
 
 export const API_ROUTES = {
     AUTH: {
-        LOGIN: '/auth/login',
-        LOGOUT: '/auth/logout',
+        LOGIN: '/api/admins/login',
+        LOGOUT: '/api/users/logout',
         ME: '/auth/me',
         REFRESH: '/auth/refresh',
         REGISTER: '/auth/register',
