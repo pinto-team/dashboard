@@ -136,6 +136,12 @@
   "products.form.description_ph": "توضیحات را وارد کنید",
   "products.form.image": "تصویر",
   "products.form.image_help": "تصویر محصول را بارگذاری کنید (ترجیحاً مربع باشد)",
+  "products.form.images": "تصاویر اضافی",
+  "products.form.add_image": "افزودن تصویر",
+  "products.form.attributes": "ویژگی‌ها",
+  "products.form.add_attribute": "افزودن ویژگی",
+  "products.form.key": "کلید",
+  "products.form.value": "مقدار",
 
   "products.table.name": "نام",
   "products.table.sku": "کد کالا",

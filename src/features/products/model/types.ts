@@ -142,6 +142,8 @@ export interface CreateProductRequest {
     shelf_life_days?: number
     is_active?: boolean
     primary_image_id?: string
+    image_ids?: string[]
+    attributes?: Attribute[]
 }
 
 export type UpdateProductRequest = Partial<CreateProductRequest>

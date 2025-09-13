@@ -136,6 +136,12 @@
   "products.form.description_ph": "Enter description",
   "products.form.image": "Image",
   "products.form.image_help": "Upload the product image (recommended square format)",
+  "products.form.images": "Additional Images",
+  "products.form.add_image": "Add Image",
+  "products.form.attributes": "Attributes",
+  "products.form.add_attribute": "Add Attribute",
+  "products.form.key": "Key",
+  "products.form.value": "Value",
 
   "products.table.name": "Name",
   "products.table.sku": "SKU",
