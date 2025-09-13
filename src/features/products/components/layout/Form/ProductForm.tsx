@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import * as React from 'react'
 import { JSX } from 'react'
-import { FormProvider, useForm } from 'react-hook-form'
+import { FormProvider, useForm, Controller } from 'react-hook-form'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input'
 import { useI18n } from '@/shared/hooks/useI18n'
 import type { CreateProductRequest } from '@/features/products/model/types'
 import ProductImageField from './ProductImageField'
+import BrandSelect from './BrandSelect'
+import CategorySelect from './CategorySelect'
 
 type Props = Readonly<{
     defaultValues?: Partial<CreateProductRequest>
@@ -145,11 +147,23 @@ export default function ProductForm({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="product-category">{t('products.form.category_id')}*</Label>
-                                <Input id="product-category" placeholder={t('products.form.category_id_ph')} {...form.register('category_id')} />
+                                <Controller
+                                    control={form.control}
+                                    name="category_id"
+                                    render={({ field }) => (
+                                        <CategorySelect value={field.value} onChange={field.onChange} />
+                                    )}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="product-brand">{t('products.form.brand_id')}</Label>
-                                <Input id="product-brand" placeholder={t('products.form.brand_id_ph')} {...form.register('brand_id')} />
+                                <Controller
+                                    control={form.control}
+                                    name="brand_id"
+                                    render={({ field }) => (
+                                        <BrandSelect value={field.value} onChange={field.onChange} />
+                                    )}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="product-description">{t('products.form.description')}</Label>
