@@ -10,12 +10,15 @@ import { Input } from '@/components/ui/input'
 import { useI18n } from '@/shared/hooks/useI18n'
 import type { CreateProductRequest } from '@/features/products/model/types'
 import ProductImageField from './ProductImageField'
+import ProductImagesField from './ProductImagesField'
+import ProductAttributesField from './ProductAttributesField'
 import BrandSelect from './BrandSelect'
 import CategorySelect from './CategorySelect'
 
 type Props = Readonly<{
     defaultValues?: Partial<CreateProductRequest>
     initialImageUrl?: string | null
+    initialImages?: ReadonlyArray<{ id: string; url: string }>
     onSubmit: (data: CreateProductRequest) => void
     submitting?: boolean
     formId?: string
@@ -25,6 +28,7 @@ type Props = Readonly<{
 export default function ProductForm({
     defaultValues,
     initialImageUrl,
+    initialImages,
     onSubmit,
     submitting = false,
     formId = 'product-form',
@@ -55,6 +59,10 @@ export default function ProductForm({
                 shelf_life_days: z.preprocess((v) => (v === '' || v === undefined ? undefined : Number(v)), z.number().optional()),
                 is_active: z.boolean().optional(),
                 primary_image_id: z.string().optional(),
+                image_ids: z.array(z.string()).optional(),
+                attributes: z
+                    .array(z.object({ key: z.string().min(1), value: z.string().min(1) }))
+                    .optional(),
             }),
         [t],
     )
@@ -78,6 +86,8 @@ export default function ProductForm({
             shelf_life_days: undefined,
             is_active: true,
             primary_image_id: '',
+            image_ids: [],
+            attributes: [],
             ...defaultValues,
         },
         mode: 'onBlur',
@@ -104,6 +114,8 @@ export default function ProductForm({
                 shelf_life_days: defaultValues.shelf_life_days,
                 is_active: defaultValues.is_active ?? true,
                 primary_image_id: defaultValues.primary_image_id ?? '',
+                image_ids: defaultValues.image_ids ?? [],
+                attributes: defaultValues.attributes ?? [],
             })
         }
     }, [defaultValues, reset])
@@ -128,7 +140,9 @@ export default function ProductForm({
                 path === 'storage' ||
                 path === 'shelf_life_days' ||
                 path === 'is_active' ||
-                path === 'primary_image_id'
+                path === 'primary_image_id' ||
+                path === 'image_ids' ||
+                path === 'attributes'
             ) {
                 setError(path as keyof CreateProductRequest, { type: 'server', message: err.message })
             }
@@ -159,6 +173,14 @@ export default function ProductForm({
                         shelf_life_days: values.shelf_life_days,
                         is_active: values.is_active ?? true,
                         primary_image_id: values.primary_image_id?.trim() || '',
+                        image_ids: values.image_ids?.filter((id) => id) || [],
+                        attributes:
+                            values.attributes
+                                ?.filter((a) => a.key && a.value)
+                                .map((a) => ({
+                                    key: a.key.trim(),
+                                    value: a.value.trim(),
+                                })) || [],
                     }
                     onSubmit(cleaned)
                 })}
@@ -296,7 +318,11 @@ export default function ProductForm({
                                 />
                             </div>
                         </div>
-                        <ProductImageField initialImageUrl={initialImageUrl} />
+                        <div className="flex flex-col gap-6">
+                            <ProductImageField initialImageUrl={initialImageUrl} />
+                            <ProductImagesField initialImages={initialImages} />
+                            <ProductAttributesField />
+                        </div>
                     </CardContent>
                 </Card>
             </form>

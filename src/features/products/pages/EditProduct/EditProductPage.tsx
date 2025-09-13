@@ -33,6 +33,12 @@ function productToFormDefaults(p?: ProductData): Partial<CreateProductRequest> {
         shelf_life_days: p.shelf_life_days,
         is_active: p.is_active ?? true,
         primary_image_id: p.primary_image_id ?? '',
+        image_ids: p.image_ids ?? [],
+        attributes: Array.isArray(p.attributes)
+            ? p.attributes.map((a) => ({ key: a.key, value: a.value }))
+            : p.attributes
+              ? Object.entries(p.attributes).map(([key, value]) => ({ key, value }))
+              : [],
     }
 }
 
@@ -50,6 +56,19 @@ export default function EditProductPage(): JSX.Element {
 
     const product = detailQuery.data?.data
     const formDefaults = React.useMemo(() => productToFormDefaults(product), [product])
+    const primaryImageUrl = React.useMemo(() => {
+        const img =
+            product?.images?.find((i) => i.id === product.primary_image_id) ||
+            product?.images?.[0]
+        return img?.url || null
+    }, [product])
+    const additionalImages = React.useMemo(
+        () =>
+            (product?.images || [])
+                .filter((img) => img.id !== (product?.primary_image_id ?? product?.images?.[0]?.id))
+                .map((img) => ({ id: img.id, url: img.url || '' })),
+        [product],
+    )
 
     function handleSubmit(values: CreateProductRequest) {
         setApiErrors([])
@@ -127,6 +146,8 @@ export default function EditProductPage(): JSX.Element {
 
                 <ProductForm
                     defaultValues={formDefaults}
+                    initialImageUrl={primaryImageUrl}
+                    initialImages={additionalImages}
                     onSubmit={handleSubmit}
                     submitting={updateMutation.isPending}
                     apiErrors={apiErrors}

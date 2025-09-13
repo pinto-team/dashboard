@@ -20,6 +20,16 @@ export default function DetailProductPage() {
 
     const { data, isLoading, isError, error, refetch } = productsQueries.useDetail(id)
     const product = data?.data
+    const attributes = React.useMemo(
+        () =>
+            Array.isArray(product?.attributes)
+                ? product?.attributes
+                : product?.attributes
+                  ? Object.entries(product.attributes).map(([key, value]) => ({ key, value }))
+                  : [],
+        [product],
+    )
+    const images = React.useMemo(() => product?.images ?? [], [product])
 
     const goEdit = React.useCallback(() => {
         if (!product?.id) return
@@ -117,17 +127,61 @@ export default function DetailProductPage() {
                                         {product.description || '—'}
                                     </p>
                                 </div>
+                                {attributes.length > 0 && (
+                                    <>
+                                        <Separator />
+                                        <div className="grid gap-2">
+                                            <span className="text-xs text-muted-foreground">
+                                                {t('products.form.attributes')}
+                                            </span>
+                                            <ul className="text-sm leading-6">
+                                                {attributes.map((a) => (
+                                                    <li key={a.key} className="break-words">
+                                                        {a.key}: {a.value}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
-                            <div className="flex items-start justify-center">
-                                {product.images && product.images[0]?.url ? (
-                                    <img
-                                        src={toAbsoluteUrl(product.images[0].url)}
-                                        alt={t('products.image_alt') as string}
-                                        className="h-72 w-full max-w-[360px] rounded-lg object-contain border bg-background"
-                                        loading="lazy"
-                                        decoding="async"
-                                    />
+                            <div className="flex flex-col items-start justify-center gap-4">
+                                {images.length > 0 ? (
+                                    <>
+                                        <img
+                                            src={toAbsoluteUrl(
+                                                (
+                                                    images.find((i) => i.id === product.primary_image_id) ||
+                                                    images[0]
+                                                ).url || '',
+                                            )}
+                                            alt={t('products.image_alt') as string}
+                                            className="h-72 w-full max-w-[360px] rounded-lg object-contain border bg-background"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                        {images.length > 1 && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {images
+                                                    .filter(
+                                                        (img) =>
+                                                            img.id !==
+                                                            (product.primary_image_id ?? images[0].id),
+                                                    )
+                                                    .map((img) => (
+                                                        <img
+                                                            key={img.id}
+                                                            src={toAbsoluteUrl(img.url || '')}
+                                                            alt={t('products.image_alt') as string}
+                                                            className="h-20 w-20 rounded-md object-cover border bg-background"
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                        />
+                                                    ))}
+                                            </div>
+                                        )}
+                                    </>
                                 ) : (
                                     <div className="h-72 w-full max-w-[360px] rounded-lg border bg-muted/30" />
                                 )}
