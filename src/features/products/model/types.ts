@@ -1,3 +1,5 @@
+// models.ts
+
 export interface PackagingBarcode {
     level: string
     barcode: string
@@ -28,6 +30,26 @@ export interface DietaryInfo {
     [key: string]: boolean | undefined
 }
 
+export interface Attribute {
+    key: string
+    value: string
+}
+
+export interface Image {
+    id: string
+    url?: string
+    alt_text?: string
+    created_at?: string
+    updated_at?: string
+}
+
+export interface Tag {
+    id: string
+    name: string
+    created_at?: string
+    updated_at?: string
+}
+
 export interface ProductData {
     id: string
     category_id: string
@@ -44,7 +66,7 @@ export interface ProductData {
     pack_size?: number
     case_size?: number
     pallet_size?: number
-    attributes?: Record<string, string>
+    attributes?: Record<string, string> | Attribute[]
     weight?: number
     weight_unit?: string
     dimensions?: Dimensions
@@ -56,9 +78,10 @@ export interface ProductData {
     dietary?: DietaryInfo
     allergens?: string[]
     is_active?: boolean
-    tags?: string[]
+    tags?: string[] | Tag[]
     primary_image_id?: string | null
     image_ids?: string[]
+    images?: Image[]
     created_at?: string
     updated_at?: string
     deleted_at?: string | null
