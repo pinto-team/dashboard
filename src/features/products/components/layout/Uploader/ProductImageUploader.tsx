@@ -144,7 +144,6 @@ export default function ProductImageUploader({
 
     return (
         <div className="grid gap-2">
-            <Label>{label ?? t('products.form.image')}</Label>
 
             <div
                 className={dropZoneClassName}
@@ -197,7 +196,7 @@ export default function ProductImageUploader({
                     </div>
                 ) : (
                     <div className="text-center text-sm text-muted-foreground">
-                        {t('uploader.hint.drag_or_click')}
+                        {"+"}
                     </div>
                 )}
             </div>

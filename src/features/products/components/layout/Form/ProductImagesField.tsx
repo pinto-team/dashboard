@@ -81,7 +81,6 @@ export default function ProductImagesField({ initialImages }: Props) {
                     key={uploadKey}
                     value={null}
                     onChange={addImage}
-                    label={t('products.form.add_image')}
                     className="h-24 w-24"
                 />
             </div>
