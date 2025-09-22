@@ -9,6 +9,16 @@ export type AuthUser = {
     avatar?: string
 }
 
+export type AuthLoginResult = {
+    accessToken: string
+    refreshToken: string
+    idToken: string | null
+    expiresIn: number
+    tokenType: string
+    audience: string[]
+    user: AuthUser
+}
+
 export type AuthCtx = {
     user: AuthUser | null
     accessToken: string | null
