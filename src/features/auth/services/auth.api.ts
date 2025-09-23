@@ -3,20 +3,11 @@ import { authClient } from '@/lib/axios'
 import { API_ROUTES } from '@/shared/constants/apiRoutes'
 import { handleAsyncError } from '@/shared/lib/errors'
 import { defaultLogger } from '@/shared/lib/logger'
+import { buildAuthRequestContext, buildRefreshRequestPayload } from '../utils/context'
 import { AuthLoginResult, AuthUser } from '../types'
 
 function getLogger(action: string, context: Record<string, unknown> = {}) {
     return defaultLogger.withContext({ component: 'auth.api', action, ...context })
-}
-
-const DEVICE_ID_STORAGE_KEY = 'auth.deviceId'
-
-type NavigatorWithUAData = Navigator & {
-    userAgentData?: {
-        brands?: Array<{ brand: string; version?: string }>
-        platform?: string
-        platformVersion?: string
-    }
 }
 
 type RawLoginPayload = {
@@ -29,70 +20,34 @@ type RawLoginPayload = {
     profile?: unknown
 }
 
+type RawRefreshPayload = {
+    access_token?: unknown
+    refresh_token?: unknown
+    id_token?: unknown
+    expires_in?: unknown
+    audience?: unknown
+    profile?: unknown
+}
+
 function normalizeString(value: unknown, fallback = ''): string {
     if (typeof value === 'string') return value
     if (typeof value === 'number' || typeof value === 'boolean') return String(value)
     return fallback
 }
 
-function ensureDeviceId(): string {
-    if (typeof window === 'undefined') return 'web-unknown-device'
-
-    try {
-        const existing = localStorage.getItem(DEVICE_ID_STORAGE_KEY)
-        if (existing) {
-            return existing
-        }
-
-        const newId =
-            typeof crypto !== 'undefined' && 'randomUUID' in crypto
-                ? crypto.randomUUID()
-                : `device-${Math.random().toString(36).slice(2)}-${Date.now()}`
-
-        localStorage.setItem(DEVICE_ID_STORAGE_KEY, newId)
-        return newId
-    } catch {
-        return 'web-unknown-device'
-    }
-}
-
-function detectBrowserName(userAgent: string): string {
-    if (!userAgent) return 'unknown'
-    if (/Edg\//i.test(userAgent)) return 'Edge'
-    if (/OPR\//i.test(userAgent) || /Opera/i.test(userAgent)) return 'Opera'
-    if (/Chrome\//i.test(userAgent)) return 'Chrome'
-    if (/Safari/i.test(userAgent) && /Version\//i.test(userAgent)) return 'Safari'
-    if (/Firefox\//i.test(userAgent)) return 'Firefox'
-    return 'unknown'
-}
-
-function getLoginContext() {
-    const nav =
-        typeof navigator === 'undefined' ? undefined : (navigator as NavigatorWithUAData)
-    const uaData = nav?.userAgentData
-    const userAgent = normalizeString(nav?.userAgent, '')
-
-    // const platform = normalizeString(uaData?.platform || nav?.platform, 'web')
-    const platform = 'web'
-    const platformVersion = normalizeString(
-        uaData?.platformVersion || nav?.appVersion,
-        userAgent || 'unknown',
-    )
-
-    const browserName = normalizeString(
-        uaData?.brands?.[0]?.brand,
-        detectBrowserName(userAgent),
-    )
-
+function mapProfileToUser(profile: Record<string, unknown>, fallbackId = ''): AuthUser {
     return {
-        device_id: ensureDeviceId(),
-        platform,
-        platform_version: platformVersion || 'unknown',
-        browser_name: browserName || 'unknown',
-        browser_system_name: normalizeString(nav?.platform, platform) || 'unknown',
-        browser_system_version:
-            normalizeString(nav?.appVersion, userAgent || 'unknown') || 'unknown',
-        app_version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+        id: normalizeString(profile.id, fallbackId),
+        username:
+            normalizeString(
+                profile.username,
+                normalizeString(profile.email, fallbackId),
+            ) || fallbackId,
+        email: normalizeString(profile.email, ''),
+        firstName: normalizeString(profile.first_name, ''),
+        lastName: normalizeString(profile.last_name, ''),
+        phone: normalizeString(profile.phone, '') || undefined,
+        avatar: normalizeString(profile.avatar, '') || undefined,
     }
 }
 
@@ -106,7 +61,7 @@ export async function apiLogin(username: string, password: string): Promise<Auth
             .post(API_ROUTES.AUTH.LOGIN, {
                 username,
                 password,
-                context: getLoginContext(),
+                context: buildAuthRequestContext(),
             })
             .then(({ data: response }) => {
                 logger.info('Login successful')
@@ -129,15 +84,7 @@ export async function apiLogin(username: string, password: string): Promise<Auth
                     throw new Error('Invalid login response: missing tokens')
                 }
 
-                const user: AuthUser = {
-                    id: normalizeString(normalizedProfile.id, username),
-                    username: normalizeString(normalizedProfile.username, username),
-                    email: normalizeString(normalizedProfile.email, ''),
-                    firstName: normalizeString(normalizedProfile.first_name, ''),
-                    lastName: normalizeString(normalizedProfile.last_name, ''),
-                    phone: normalizeString(normalizedProfile.phone, '') || undefined,
-                    avatar: normalizeString(normalizedProfile.avatar, '') || undefined,
-                }
+                const user = mapProfileToUser(normalizedProfile, username)
 
                 return {
                     accessToken,
@@ -192,13 +139,26 @@ export async function apiRefresh(refreshToken: string) {
 
     return handleAsyncError(
         authClient
-            .post(API_ROUTES.AUTH.REFRESH, { refresh_token: refreshToken })
+            .post(API_ROUTES.AUTH.REFRESH, buildRefreshRequestPayload(refreshToken))
             .then(({ data: response }) => {
                 logger.info('Token refresh successful')
-                const { access_token, refresh_token } = response.data
+                const payload = (response?.data ?? response ?? {}) as RawRefreshPayload
+                const accessToken = normalizeString(payload.access_token, '')
+                const newRefreshToken = normalizeString(payload.refresh_token, '')
+
+                if (!accessToken || !newRefreshToken) {
+                    throw new Error('Invalid refresh response: missing tokens')
+                }
+
+                const normalizedProfile = (payload.profile ?? {}) as Record<string, unknown>
+                const user = Object.keys(normalizedProfile).length
+                    ? mapProfileToUser(normalizedProfile, '')
+                    : null
+
                 return {
-                    accessToken: access_token,
-                    refreshToken: refresh_token,
+                    accessToken,
+                    refreshToken: newRefreshToken,
+                    user,
                 }
             }),
         'Token refresh failed',

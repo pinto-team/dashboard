@@ -80,6 +80,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
                         setAccessToken(r.accessToken)
                         setRefreshToken(r.refreshToken)
                         setTokens(r.accessToken, r.refreshToken)
+                        if (r.user) {
+                            setUser(r.user)
+                            setCachedUser(r.user)
+                        }
                     } catch {
                         hardLogout()
                     }

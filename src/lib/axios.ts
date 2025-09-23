@@ -27,6 +27,7 @@ import {
     getRefreshToken,
     setTokens,
 } from '@/features/auth/storage'
+import { buildRefreshRequestPayload } from '@/features/auth/utils/context'
 import { API_CONFIG } from '@/shared/config/api.config'
 import { defaultLogger } from '@/shared/lib/logger'
 
@@ -38,8 +39,15 @@ type PendingResolver = {
 
 /** Minimal shape returned by the refresh endpoint */
 type RefreshResponse = {
-    accessToken: string
-    refreshToken: string
+    data?: {
+        access_token?: unknown
+        refresh_token?: unknown
+        id_token?: unknown
+        expires_in?: unknown
+        audience?: unknown
+        profile?: unknown
+    }
+    meta?: unknown
 }
 
 /** Options for creating a feature-scoped axios instance */
@@ -183,12 +191,23 @@ function createApiClient(config: ClientConfig): AxiosInstance {
 
                     const { data } = await axios.post<RefreshResponse>(
                         refreshUrl,
-                        { refreshToken: rt },
+                        buildRefreshRequestPayload(rt),
                         { headers: new AxiosHeaders({ 'Content-Type': 'application/json' }) },
                     )
 
-                    const newAccess = data.accessToken
-                    const newRefresh = data.refreshToken
+                    const payload = (data?.data ?? data ?? {}) as Record<string, unknown>
+                    const newAccess =
+                        typeof payload.access_token === 'string'
+                            ? (payload.access_token as string)
+                            : ''
+                    const newRefresh =
+                        typeof payload.refresh_token === 'string'
+                            ? (payload.refresh_token as string)
+                            : ''
+
+                    if (!newAccess || !newRefresh) {
+                        throw new Error('Invalid refresh response: missing tokens')
+                    }
 
                     setTokens(newAccess, newRefresh)
                     instance.defaults.headers.common['Authorization'] = `Bearer ${newAccess}`
