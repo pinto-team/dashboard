@@ -72,7 +72,8 @@ function getLoginContext() {
     const uaData = nav?.userAgentData
     const userAgent = normalizeString(nav?.userAgent, '')
 
-    const platform = normalizeString(uaData?.platform || nav?.platform, 'web')
+    // const platform = normalizeString(uaData?.platform || nav?.platform, 'web')
+    const platform = 'web'
     const platformVersion = normalizeString(
         uaData?.platformVersion || nav?.appVersion,
         userAgent || 'unknown',

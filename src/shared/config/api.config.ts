@@ -20,7 +20,7 @@ export const API_CONFIG = {
         BASE_URL:
             import.meta.env.VITE_AUTH_API_URL ||
             import.meta.env.VITE_API_URL ||
-            'http://localhost:3000',
+            'http://192.168.0.101:8083',
     },
 
     CATALOG: {
