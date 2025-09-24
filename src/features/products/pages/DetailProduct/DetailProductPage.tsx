@@ -1,16 +1,29 @@
-import * as React from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { Button } from '@/components/ui/button'
-import ErrorFallback from '@/components/layout/ErrorFallback'
-import { useI18n } from '@/shared/hooks/useI18n'
-import { toAbsoluteUrl } from '@/shared/api/files'
-import { ROUTES } from '@/app/routes/routes'
-import { productsQueries } from '@/features/products'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { isRTLLocale } from '@/shared/i18n/utils'
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+
+
+
+import * as React from 'react';
+
+
+
+import { useNavigate, useParams } from 'react-router-dom';
+
+
+
+import { ROUTES } from '@/app/routes/routes';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import ErrorFallback from '@/components/layout/ErrorFallback';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { productsQueries } from '@/features/products';
+import { toAbsoluteUrl } from '@/shared/api/files';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { isRTLLocale } from '@/shared/i18n/utils';
+
+
+
+
 
 export default function DetailProductPage() {
     const { id = '' } = useParams()

@@ -1,17 +1,29 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { toast } from 'sonner'
-import * as React from 'react'
-import { JSX } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { ROUTES } from '@/app/routes/routes'
-import { Button } from '@/components/ui/button'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import ProductForm from '@/features/products/components/layout/Form/ProductForm'
-import type { CreateProductRequest } from '@/features/products/model/types'
-import { useI18n } from '@/shared/hooks/useI18n'
-import { isRTLLocale } from '@/shared/i18n/utils'
-import { productsQueries } from '@/features/products'
+
+
+import * as React from 'react';
+import { JSX } from 'react';
+
+
+
+import { useNavigate } from 'react-router-dom';
+
+
+
+import { ROUTES } from '@/app/routes/routes';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { productsQueries } from '@/features/products';
+import ProductForm from '@/features/products/components/layout/Form/ProductForm';
+import type { CreateProductRequest } from '@/features/products/model/types';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { isRTLLocale } from '@/shared/i18n/utils';
+
+
+
+
 
 const FORM_ID = 'product-form'
 

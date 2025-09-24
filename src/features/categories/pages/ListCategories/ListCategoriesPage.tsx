@@ -1,11 +1,21 @@
-import * as React from 'react'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import NestedDraggableList from '@/features/categories/components/NestedDraggableList'
-import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useI18n } from '@/shared/hooks/useI18n'
-import { isRTLLocale } from '@/shared/i18n/utils'
+import { Search } from 'lucide-react';
+
+
+
+import * as React from 'react';
+
+
+
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import NestedDraggableList from '@/features/categories/components/NestedDraggableList';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { isRTLLocale } from '@/shared/i18n/utils';
+
+
+
+
 
 export default function ListCategoriesPage() {
     const { t, locale } = useI18n()

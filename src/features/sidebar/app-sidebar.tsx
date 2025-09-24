@@ -1,34 +1,28 @@
-import { IconInnerShadowTop } from "@tabler/icons-react"
-import { ChevronDown, Settings as SettingsIcon, UserCog } from "lucide-react"
-import * as React from "react"
-import { useMemo } from "react"
-import { NavLink } from "react-router-dom"
+import { IconInnerShadowTop } from "@tabler/icons-react";
+import { ChevronDown, Settings as SettingsIcon, UserCog } from "lucide-react";
 
-import { ROUTES } from "@/app/routes/routes"
-import { NavUser } from "@/components/layout/nav-user"
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarMenuSub,
-    SidebarMenuSubButton,
-    SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
-import { useAuth } from "@/features/auth/hooks/useAuth"
-import { useI18n } from "@/shared/hooks/useI18n"
-import { getSidebarSide, isRTLLocale } from "@/shared/i18n/utils"
+
+
+import * as React from "react";
+import { useMemo } from "react";
+
+
+
+import { NavLink } from "react-router-dom";
+
+
+
+import { ROUTES } from "@/app/routes/routes";
+import { NavUser } from "@/components/layout/nav-user";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from "@/components/ui/sidebar";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useI18n } from "@/shared/hooks/useI18n";
+import { getSidebarSide, isRTLLocale } from "@/shared/i18n/utils";
+
+
+
+
 
 type TranslateFn = (key: string) => string
 
@@ -144,17 +138,15 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
     const user = authUser
         ? {
-            name:
-                `${authUser.firstName} ${authUser.lastName}`.trim() ||
-                authUser.username,
-            email: authUser.email,
-            avatar: authUser.avatar ?? "/avatars/placeholder.png",
-        }
+              name: `${authUser.firstName} ${authUser.lastName}`.trim() || authUser.username,
+              email: authUser.email,
+              avatar: authUser.avatar ?? '/avatars/placeholder.png',
+          }
         : {
-            name: t("user.guest"),
-            email: "",
-            avatar: "/avatars/placeholder.png",
-        }
+              name: t('user.guest'),
+              email: '',
+              avatar: '/avatars/placeholder.png',
+          }
 
     const isRTL = isRTLLocale(locale)
     const side = getSidebarSide(locale)

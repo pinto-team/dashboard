@@ -1,17 +1,29 @@
-import * as React from 'react'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { toast } from 'sonner'
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Button } from '@/components/ui/button'
-import CategoryForm from '@/features/categories/components/CategoryForm'
-import { categoriesApiService } from '@/features/categories/services/categories.api'
-import { ROUTES } from '@/app/routes/routes'
-import { useI18n } from '@/shared/hooks/useI18n'
-import { isRTLLocale } from '@/shared/i18n/utils'
-import type { CreateCategoryRequest } from '@/features/categories/model/types'
-import { toAbsoluteUrl } from '@/shared/api/files.ts'
+
+
+import * as React from 'react';
+
+
+
+import { useNavigate, useParams } from 'react-router-dom';
+
+
+
+import { ROUTES } from '@/app/routes/routes';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import CategoryForm from '@/features/categories/components/CategoryForm';
+import type { CreateCategoryRequest } from '@/features/categories/model/types';
+import { categoriesApiService } from '@/features/categories/services/categories.api';
+import { toAbsoluteUrl } from '@/shared/api/files.ts';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { isRTLLocale } from '@/shared/i18n/utils';
+
+
+
+
 
 type CategoryFormValues = {
     name: string
@@ -134,4 +146,3 @@ export default function EditCategoryPage() {
         </DashboardLayout>
     )
 }
-

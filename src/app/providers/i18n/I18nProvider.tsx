@@ -1,10 +1,18 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { type Locale, messages } from '@/shared/i18n/messages.ts'
-import { convertDigitsByLocale } from '@/shared/i18n/numbers.ts'
-import { getTextDirection, isRTLLocale } from '@/shared/i18n/utils.ts'
 
-import { I18nCtx } from './i18n-context.ts'
+
+import { type Locale, messages } from '@/shared/i18n/messages.ts';
+import { convertDigitsByLocale } from '@/shared/i18n/numbers.ts';
+import { getTextDirection, isRTLLocale } from '@/shared/i18n/utils.ts';
+
+
+
+import { I18nCtx } from './i18n-context.ts';
+
+
+
+
 
 export default function I18nProvider({ children }: { children: ReactNode }) {
     const [locale, setLocale] = useState<Locale>(() => {

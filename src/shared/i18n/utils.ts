@@ -4,8 +4,8 @@ import type { Locale } from './messages'
 export const RTL_LANGUAGES: Locale[] = ['fa']
 
 // Check if a locale is RTL
-export const isRTLLocale = (locale: Locale): boolean => {
-    return RTL_LANGUAGES.includes(locale)
+export const isRTLLocale = (locale: string): boolean => {
+    return RTL_LANGUAGES.includes(<"en" | "fa">locale)
 }
 
 // Get text direction for a locale

@@ -104,7 +104,7 @@ export async function fetchCurrentSession({
 }: RequestOptions = {}): Promise<SessionRecord | null> {
     const { data } = await authClient.get<SessionsResponse>(API_ROUTES.SESSIONS.CURRENT, {
         signal,
-        params: params ?? { offset: 0, limit: 1 },
+        // params: params ?? { offset: 0, limit: 1 },
     })
 
     const sessions = normalizeSessions(data?.data)

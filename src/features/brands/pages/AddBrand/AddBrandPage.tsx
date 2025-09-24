@@ -1,17 +1,29 @@
-import { ArrowLeft, ArrowRight } from "lucide-react"
-import { toast } from "sonner"
-import * as React from "react"
-import { JSX } from "react"
-import { useNavigate } from "react-router-dom"
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
-import { ROUTES } from "@/app/routes/routes"
-import { Button } from "@/components/ui/button"
-import DashboardLayout from "@/components/layout/DashboardLayout"
-import BrandForm from "@/features/brands/components/layout/Form/BrandForm"
-import type { CreateBrandRequest } from "@/features/brands/model/types"
-import { useI18n } from "@/shared/hooks/useI18n"
-import { isRTLLocale } from "@/shared/i18n/utils"
-import { brandsQueries } from "@/features/brands"
+
+
+import * as React from "react";
+import { JSX } from "react";
+
+
+
+import { useNavigate } from "react-router-dom";
+
+
+
+import { ROUTES } from "@/app/routes/routes";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { brandsQueries } from "@/features/brands";
+import BrandForm from "@/features/brands/components/layout/Form/BrandForm";
+import type { CreateBrandRequest } from "@/features/brands/model/types";
+import { useI18n } from "@/shared/hooks/useI18n";
+import { isRTLLocale } from "@/shared/i18n/utils";
+
+
+
+
 
 const FORM_ID = "brand-form"
 
