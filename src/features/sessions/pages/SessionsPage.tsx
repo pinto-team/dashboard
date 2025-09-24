@@ -139,7 +139,7 @@ export default function SessionsPage() {
                 {
                     key: 'session_id',
                     label: t('sessions.fields.session_id') as string,
-                    value: session.session_id,
+                    value: session.session_id || fallback,
                 },
                 {
                     key: 'status',

@@ -18,7 +18,15 @@ export type SessionRecord = {
     is_current?: boolean
 }
 
+export type RawSessionRecord = Record<string, unknown> & {
+    session_id?: unknown
+    sessionId?: unknown
+    id?: unknown
+    is_current?: unknown
+    isCurrent?: unknown
+}
+
 export type SessionsResponse = {
-    data?: SessionRecord[] | null
+    data?: RawSessionRecord | RawSessionRecord[] | null
     meta?: unknown
 }
