@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+
 import { Badge } from '@/components/ui/badge'
-import { useI18n } from '@/shared/hooks/useI18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { fetchCurrentSession } from '@/features/sessions/api'
 import type { SessionRecord } from '@/features/sessions/model/types'
+import { useSessionFormatter } from '@/features/sessions/hooks/useSessionFormatter'
+import { useI18n } from '@/shared/hooks/useI18n'
 
 interface CurrentSessionCardProps {
     setSelectedSession: (session: SessionRecord | null) => void
@@ -13,6 +15,7 @@ interface CurrentSessionCardProps {
 
 export default function CurrentSessionCard({ setSelectedSession, setDetailsOpen }: CurrentSessionCardProps) {
     const { t } = useI18n()
+    const { buildDisplayName, buildPlatform, getStatusLabel, getSummaryDetails, fallbackLabel } = useSessionFormatter()
 
     const currentSessionQuery = useQuery({
         queryKey: ['sessions', 'current'],
@@ -30,19 +33,24 @@ export default function CurrentSessionCard({ setSelectedSession, setDetailsOpen 
     }
 
     const currentSession = currentSessionQuery.data
-    const fallbackDeviceLabel = t('sessions.value.not_available') as string
+    const summaryDetails = currentSession ? getSummaryDetails(currentSession) : []
 
     return (
-        <Card>
-            <CardHeader className="gap-1.5">
+        <Card className="border-border/60 bg-card/80 backdrop-blur">
+            <CardHeader className="gap-3 pb-0">
                 <div>
-                    <CardTitle>{t('sessions.current.title')}</CardTitle>
-                    <CardDescription>{t('sessions.current.description')}</CardDescription>
+                    <CardTitle className="text-base font-semibold sm:text-lg">
+                        {t('sessions.current.title')}
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                        {t('sessions.current.description')}
+                    </CardDescription>
                 </div>
                 <CardAction>
                     <Button
                         variant="outline"
                         size="sm"
+                        className="rounded-full border-dashed"
                         onClick={handleOpenCurrentDetails}
                         disabled={!currentSession || currentSessionQuery.isPending}
                     >
@@ -50,92 +58,56 @@ export default function CurrentSessionCard({ setSelectedSession, setDetailsOpen 
                     </Button>
                 </CardAction>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-6 pt-5">
                 {currentSessionQuery.isPending ? (
-                    <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
+                    <div className="rounded-lg border border-dashed border-border/60 bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
+                        {t('common.loading')}
+                    </div>
                 ) : !currentSession ? (
-                    <p className="text-sm text-muted-foreground">{t('sessions.current.empty')}</p>
+                    <div className="rounded-lg border border-dashed border-border/60 bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
+                        {t('sessions.current.empty')}
+                    </div>
                 ) : (
-                    <div className="flex flex-col gap-5">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <p className="text-lg font-semibold leading-tight break-words">
-                                    {buildDisplayName(currentSession, fallbackDeviceLabel)}
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0 space-y-1">
+                                <p className="text-lg font-semibold leading-tight sm:text-xl">
+                                    {buildDisplayName(currentSession)}
                                 </p>
-                                <p className="text-muted-foreground text-sm">
-                                    {buildPlatform(currentSession) || fallbackDeviceLabel}
+                                <p className="text-sm text-muted-foreground">
+                                    {buildPlatform(currentSession) || fallbackLabel}
                                 </p>
                             </div>
-                            <Badge variant={currentSession.revoked_at ? 'destructive' : 'secondary'}>
+                            <Badge
+                                variant={currentSession.revoked_at ? 'destructive' : 'secondary'}
+                                className="rounded-full px-3 py-1 text-xs font-medium"
+                            >
                                 {getStatusLabel(currentSession)}
                             </Badge>
                         </div>
-                        <dl className="grid gap-4 sm:grid-cols-2">
-                            {mapSessionDetails(currentSession).slice(0, 4).map((item) => (
-                                <div key={item.key} className="space-y-1">
-                                    <dt className="text-muted-foreground text-xs uppercase tracking-wide">{item.label}</dt>
-                                    <dd className="text-sm font-medium break-words">{item.value}</dd>
-                                </div>
-                            ))}
-                        </dl>
-                        <div className="text-sm text-muted-foreground">{t('sessions.current.helper')}</div>
+                        {summaryDetails.length > 0 && (
+                            <dl className="grid gap-3 sm:grid-cols-3">
+                                {summaryDetails.map((item) => (
+                                    <div
+                                        key={item.key}
+                                        className="rounded-lg border border-border/60 bg-muted/30 p-3"
+                                    >
+                                        <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                            {item.label}
+                                        </dt>
+                                        <dd className="mt-1 break-words text-sm font-semibold leading-snug text-foreground">
+                                            {item.value}
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                            {t('sessions.current.helper')}
+                        </p>
                     </div>
                 )}
             </CardContent>
         </Card>
     )
-}
-
-function buildDisplayName(session: SessionRecord, fallback: string) {
-    const primary = session.browser_name || session.platform || session.app_context
-    return primary || fallback
-}
-
-function buildPlatform(session: SessionRecord) {
-    const parts = [session.platform, session.platform_version].filter(Boolean)
-    return parts.join(' ')
-}
-
-function buildBrowser(session: SessionRecord) {
-    const parts = [session.browser_name, session.browser_system_name, session.browser_system_version]
-        .filter(Boolean)
-        .join(' • ')
-    return parts
-}
-
-function getStatusLabel(session: SessionRecord) {
-    const { t } = useI18n()
-    if (session.revoked_at) {
-        return t('sessions.status.revoked') as string
-    }
-    const status = session.status?.toLowerCase()
-    const key = status ? `sessions.status.${status}` : 'sessions.status.unknown'
-    const label = t(key)
-    const value = typeof label === 'string' ? label : String(label)
-    return value === key && status ? status : value
-}
-
-function mapSessionDetails(session: SessionRecord) {
-    const { t, locale } = useI18n()
-    const fallback = t('sessions.value.not_available') as string
-    const formatDateTime = (value?: string | null) => {
-        if (!value) return fallback
-        const timestamp = Date.parse(value)
-        if (Number.isNaN(timestamp)) return fallback
-        const date = new Date(timestamp)
-        try {
-            return new Intl.DateTimeFormat(locale, {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-            }).format(date)
-        } catch {
-            return date.toLocaleString()
-        }
-    }
-    return [
-        { key: 'session_id', label: t('sessions.fields.session_id') as string, value: session.session_id || fallback },
-        { key: 'status', label: t('sessions.fields.status') as string, value: getStatusLabel(session) },
-        { key: 'ip_address', label: t('sessions.fields.ip_address') as string, value: session.ip_address || fallback },
-        { key: 'app_context', label: t('sessions.fields.app_context') as string, value: session.app_context || fallback },
-    ]
 }
