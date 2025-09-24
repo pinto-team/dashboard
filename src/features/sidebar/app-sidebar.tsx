@@ -1,5 +1,5 @@
 import { IconInnerShadowTop } from "@tabler/icons-react"
-import { ChevronDown, Settings as SettingsIcon } from "lucide-react"
+import { ChevronDown, Settings as SettingsIcon, UserCog } from "lucide-react"
 import * as React from "react"
 import { useMemo } from "react"
 import { NavLink } from "react-router-dom"
@@ -53,6 +53,11 @@ const itemsSchema: MenuItem[] = [
             { titleKey: "menu.basic.category", url: ROUTES.CATEGORY.LIST },
             { titleKey: "menu.basic.product", url: ROUTES.PRODUCT.LIST },
         ],
+    },
+    {
+        titleKey: "menu.settings",
+        icon: UserCog,
+        children: [{ titleKey: "menu.settings.sessions", url: ROUTES.SETTINGS.SESSIONS }],
     },
 ]
 

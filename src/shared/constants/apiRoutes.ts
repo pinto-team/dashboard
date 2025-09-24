@@ -31,6 +31,12 @@ export const API_ROUTES = {
     PRODUCTS: {
         ROOT: '/products',
     },
+    SESSIONS: {
+        CURRENT: '/api/v1/sessions/current',
+        ME_ALL: '/api/v1/sessions/me/all',
+        ME_OTHERS: '/api/v1/sessions/me/others',
+        BY_ID: (sessionId: string) => `/api/v1/sessions/${sessionId}`,
+    },
 } as const
 
 export type ApiRoute = typeof API_ROUTES
