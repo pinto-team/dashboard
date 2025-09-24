@@ -171,7 +171,7 @@ export async function apiLogout() {
     logger.info('Attempting logout')
 
     return handleAsyncError(
-        authClient.delete(API_ROUTES.AUTH.LOGOUT).then(({ data }) => {
+        authClient.delete(API_ROUTES.SESSIONS.CURRENT).then(({ data }) => {
             logger.info('Logout successful')
             return data
         }),
