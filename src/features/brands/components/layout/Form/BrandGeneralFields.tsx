@@ -20,12 +20,12 @@ export default function BrandGeneralFields() {
                         id="brand-name-en"
                         placeholder={t('brands.form.name_en_ph')}
                         autoComplete="organization"
-                        aria-invalid={Boolean(errors.name?.en)}
-                        {...register('name.en')}
+                        aria-invalid={Boolean(errors.name?.['en-US'])}
+                        {...register('name.en-US' as const)}
                     />
-                    {errors.name?.en && (
+                    {errors.name?.['en-US'] && (
                         <p className="mt-1 text-xs text-destructive">
-                            {errors.name.en.message}
+                            {errors.name['en-US']?.message}
                         </p>
                     )}
                 </div>
@@ -36,12 +36,12 @@ export default function BrandGeneralFields() {
                         id="brand-name-fa"
                         placeholder={t('brands.form.name_fa_ph')}
                         autoComplete="organization"
-                        aria-invalid={Boolean(errors.name?.fa)}
-                        {...register('name.fa')}
+                        aria-invalid={Boolean(errors.name?.['fa-IR'])}
+                        {...register('name.fa-IR' as const)}
                     />
-                    {errors.name?.fa && (
+                    {errors.name?.['fa-IR'] && (
                         <p className="mt-1 text-xs text-destructive">
-                            {errors.name.fa.message}
+                            {errors.name['fa-IR']?.message}
                         </p>
                     )}
                 </div>
@@ -56,12 +56,12 @@ export default function BrandGeneralFields() {
                         id="brand-description-en"
                         placeholder={t('brands.form.description_en_ph')}
                         className="min-h-24 w-full resize-vertical rounded-md border bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-invalid={Boolean(errors.description?.en)}
-                        {...register('description.en')}
+                        aria-invalid={Boolean(errors.description?.['en-US'])}
+                        {...register('description.en-US' as const)}
                     />
-                    {errors.description?.en && (
+                    {errors.description?.['en-US'] && (
                         <p className="mt-1 text-xs text-destructive">
-                            {errors.description.en.message}
+                            {errors.description['en-US']?.message}
                         </p>
                     )}
                 </div>
@@ -74,12 +74,12 @@ export default function BrandGeneralFields() {
                         id="brand-description-fa"
                         placeholder={t('brands.form.description_fa_ph')}
                         className="min-h-24 w-full resize-vertical rounded-md border bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-invalid={Boolean(errors.description?.fa)}
-                        {...register('description.fa')}
+                        aria-invalid={Boolean(errors.description?.['fa-IR'])}
+                        {...register('description.fa-IR' as const)}
                     />
-                    {errors.description?.fa && (
+                    {errors.description?.['fa-IR'] && (
                         <p className="mt-1 text-xs text-destructive">
-                            {errors.description.fa.message}
+                            {errors.description['fa-IR']?.message}
                         </p>
                     )}
                 </div>

@@ -43,7 +43,7 @@ export interface BrandFormValues {
     website_url: string
     is_active: boolean
     logo_id?: string
-    social_links: SocialLinksPayload
+    social_links: Array<{ key: SocialLinkKey | ''; url: string }>
 }
 
 export interface UploadFilesResponse {

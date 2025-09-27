@@ -2,7 +2,52 @@ import type { Locale } from '@/shared/i18n/messages'
 import { normalizeSocialLinkKey } from '@/shared/constants/socialLinks'
 import type { SocialLinkKey } from '@/shared/constants/socialLinks'
 
+const LOCALE_CANONICAL_MAP: Record<string, string> = {
+    en: 'en-US',
+    'en-us': 'en-US',
+    'en_us': 'en-US',
+    fa: 'fa-IR',
+    'fa-ir': 'fa-IR',
+    'fa_ir': 'fa-IR',
+}
+
+const LOCALE_CANDIDATES: Record<string, ReadonlyArray<string>> = {
+    'en-US': ['en-US', 'en', 'en-us', 'en_us'],
+    'fa-IR': ['fa-IR', 'fa', 'fa-ir', 'fa_ir'],
+}
+
 export type LocalizedValue = Record<string, string | null | undefined>
+
+function canonicalizeLocaleKey(locale: string | null | undefined): string {
+    const trimmed = locale?.trim()
+    if (!trimmed) return ''
+    const lower = trimmed.toLowerCase()
+    return LOCALE_CANONICAL_MAP[lower] ?? trimmed
+}
+
+function getLocaleCandidates(locale: string | null | undefined): ReadonlyArray<string> {
+    const canonical = canonicalizeLocaleKey(locale)
+    if (!canonical) return []
+    return LOCALE_CANDIDATES[canonical] ?? [canonical, canonical.toLowerCase()]
+}
+
+function createLocalizedLookup(field: LocalizedValue): Map<string, string> {
+    const map = new Map<string, string>()
+    Object.entries(field).forEach(([rawKey, value]) => {
+        if (typeof value !== 'string') return
+        const trimmedKey = rawKey.trim()
+        if (!trimmedKey) return
+
+        const canonical = canonicalizeLocaleKey(trimmedKey)
+        map.set(trimmedKey, value)
+        map.set(trimmedKey.toLowerCase(), value)
+        if (canonical) {
+            map.set(canonical, value)
+            map.set(canonical.toLowerCase(), value)
+        }
+    })
+    return map
+}
 
 export function getLocalizedValue(
     field: LocalizedValue | string | null | undefined,
@@ -12,18 +57,28 @@ export function getLocalizedValue(
     if (!field) return ''
     if (typeof field === 'string') return field
 
-    const normalizedLocale = locale.toLowerCase()
-    const normalizedFallback = fallback.toLowerCase()
+    const lookup = createLocalizedLookup(field)
 
-    const direct = field[normalizedLocale] ?? field[locale]
-    if (direct && typeof direct === 'string' && direct.trim().length > 0) {
-        return direct
+    const localeCandidates = getLocaleCandidates(locale)
+    for (const candidate of localeCandidates) {
+        const value = lookup.get(candidate) ?? lookup.get(candidate.toLowerCase())
+        if (value && value.trim().length > 0) {
+            return value
+        }
     }
 
-    const fallbackValue =
-        field[normalizedFallback] ?? field[fallback] ?? firstNonEmptyValue(field)
-    if (fallbackValue && typeof fallbackValue === 'string') {
-        return fallbackValue
+    const fallbackCandidates = getLocaleCandidates(fallback)
+    for (const candidate of fallbackCandidates) {
+        const value = lookup.get(candidate) ?? lookup.get(candidate.toLowerCase())
+        if (value && value.trim().length > 0) {
+            return value
+        }
+    }
+
+    for (const value of lookup.values()) {
+        if (value && value.trim().length > 0) {
+            return value
+        }
     }
 
     return ''
@@ -38,7 +93,8 @@ export function cleanLocalizedField(
     Object.entries(field).forEach(([key, value]) => {
         const trimmed = value?.trim()
         if (trimmed) {
-            result[key] = trimmed
+            const normalizedKey = canonicalizeLocaleKey(key)
+            result[normalizedKey || key] = trimmed
         }
     })
 
@@ -75,18 +131,19 @@ export function ensureLocalizedDefaults(
     locales: ReadonlyArray<string>,
 ): Record<string, string> {
     const result: Record<string, string> = {}
+    const lookup = field ? createLocalizedLookup(field) : new Map<string, string>()
+
     locales.forEach((locale) => {
-        const value = field?.[locale]
-        result[locale] = typeof value === 'string' ? value : ''
+        let resolved = ''
+        const candidates = getLocaleCandidates(locale)
+        for (const candidate of candidates) {
+            const value = lookup.get(candidate) ?? lookup.get(candidate.toLowerCase())
+            if (typeof value === 'string') {
+                resolved = value
+                break
+            }
+        }
+        result[locale] = resolved
     })
     return result
-}
-
-function firstNonEmptyValue(field: LocalizedValue): string | undefined {
-    for (const value of Object.values(field)) {
-        if (typeof value === 'string' && value.trim().length > 0) {
-            return value
-        }
-    }
-    return undefined
 }
