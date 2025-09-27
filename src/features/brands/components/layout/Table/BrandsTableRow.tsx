@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { BrandData } from "@/features/brands/model/types";
 import { convertDigitsByLocale } from "@/shared/i18n/numbers";
+import { getLocalizedValue } from "@/shared/utils/localized";
+import { Badge } from "@/components/ui/badge";
 
 type Props = { brand: BrandData; onDelete: (id: string) => void; };
 
@@ -31,9 +33,9 @@ export default function BrandsTableRow({ brand, onDelete }: Props) {
             }}
         >
             <TableCell>
-                {brand.logo_url ? (
+                {brand.logo ? (
                     <img
-                        src={toAbsoluteUrl(brand.logo_url)}
+                        src={toAbsoluteUrl(brand.logo)}
                         alt={t("brands.logo_alt") as string}
                         className="h-10 w-10 rounded object-contain"
                         loading="lazy"
@@ -43,21 +45,33 @@ export default function BrandsTableRow({ brand, onDelete }: Props) {
                 ) : <div className="h-10 w-10 rounded bg-muted" onClick={(e)=>e.stopPropagation()} />}
             </TableCell>
 
-            <TableCell className="font-medium">{convertDigitsByLocale(brand.name, locale)}</TableCell>
-            <TableCell>{convertDigitsByLocale(brand.country ?? "-", locale)}</TableCell>
+            <TableCell className="font-medium">
+                {convertDigitsByLocale(getLocalizedValue(brand.name, locale), locale)}
+            </TableCell>
             <TableCell>
-                {brand.website ? (
+                {brand.website_url ? (
                     <a
-                        href={brand.website}
+                        href={brand.website_url}
                         target="_blank"
                         rel="noopener noreferrer external"
                         className="text-primary underline underline-offset-2"
                         onClick={(e) => e.stopPropagation()}
-                        title={convertDigitsByLocale(brand.website, locale)}
+                        title={convertDigitsByLocale(brand.website_url, locale)}
                     >
-                        {convertDigitsByLocale(brand.website, locale)}
+                        {convertDigitsByLocale(brand.website_url, locale)}
                     </a>
                 ) : ("-")}
+            </TableCell>
+            <TableCell>{convertDigitsByLocale(brand.slug ?? '-', locale)}</TableCell>
+            <TableCell>
+                <Badge
+                    variant={brand.is_active ? 'default' : 'secondary'}
+                    className={brand.is_active ? 'bg-emerald-500 text-white' : 'bg-muted text-foreground'}
+                >
+                    {brand.is_active
+                        ? (t('brands.status.active') as string)
+                        : (t('brands.status.inactive') as string)}
+                </Badge>
             </TableCell>
 
             <TableCell className="text-right">

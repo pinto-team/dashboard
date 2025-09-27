@@ -19,6 +19,8 @@ import { useI18n } from "@/shared/hooks/useI18n.ts";
 import { toAbsoluteUrl } from "@/shared/api/files.ts";
 import type { BrandData } from "@/features/brands/model/types.ts";
 import { convertDigitsByLocale } from "@/shared/i18n/numbers.ts";
+import { getLocalizedValue } from "@/shared/utils/localized";
+import { Badge } from "@/components/ui/badge";
 
 type Props = Readonly<{
     items: ReadonlyArray<BrandData>;
@@ -54,10 +56,13 @@ export default function BrandsTable({
                             {t("brands.table.name")}
                         </TableHead>
                         <TableHead className="px-3 text-xs font-medium text-muted-foreground">
-                            {t("brands.table.country")}
+                            {t("brands.table.website")}
                         </TableHead>
                         <TableHead className="px-3 text-xs font-medium text-muted-foreground">
-                            {t("brands.table.website")}
+                            {t("brands.table.slug")}
+                        </TableHead>
+                        <TableHead className="px-3 text-xs font-medium text-muted-foreground">
+                            {t("brands.table.status")}
                         </TableHead>
                         <TableHead className="w-16 px-3 text-right text-xs font-medium text-muted-foreground">
                             {t("brands.table.actions")}
@@ -80,9 +85,9 @@ export default function BrandsTable({
                                 }}
                             >
                                 <TableCell className="px-3">
-                                    {b.logo_url ? (
+                                    {b.logo ? (
                                         <img
-                                            src={toAbsoluteUrl(b.logo_url)}
+                                            src={toAbsoluteUrl(b.logo)}
                                             alt={t("brands.logo_alt") as string}
                                             className="size-8 rounded object-contain lg:size-9"
                                             loading="lazy"
@@ -99,26 +104,39 @@ export default function BrandsTable({
                                 </TableCell>
 
                                 <TableCell className="max-w-[18rem] px-3 py-2.5 font-medium lg:max-w-[24rem] lg:px-4">
-                                    <span className="block truncate">{convertDigitsByLocale(b.name, locale)}</span>
-                                </TableCell>
-
-                                <TableCell className="w-40 px-3 py-2.5 lg:px-4">
-                                    {convertDigitsByLocale(b.country ?? "-", locale)}
+                                    <span className="block truncate">
+                                        {convertDigitsByLocale(getLocalizedValue(b.name, locale), locale)}
+                                    </span>
                                 </TableCell>
 
                                 <TableCell className="px-3 py-2.5 lg:px-4">
-                                    {b.website ? (
+                                    {b.website_url ? (
                                         <a
-                                            href={b.website}
+                                            href={b.website_url}
                                             target="_blank"
                                             rel="noopener noreferrer external"
                                             className="block max-w-[22ch] truncate underline-offset-4 hover:underline"
                                             onClick={(e) => e.stopPropagation()}
-                                            title={convertDigitsByLocale(b.website, locale)}
+                                            title={convertDigitsByLocale(b.website_url, locale)}
                                         >
-                                            {convertDigitsByLocale(b.website, locale)}
+                                            {convertDigitsByLocale(b.website_url, locale)}
                                         </a>
                                     ) : ("-")}
+                                </TableCell>
+
+                                <TableCell className="px-3 py-2.5 lg:px-4">
+                                    {convertDigitsByLocale(b.slug ?? '-', locale)}
+                                </TableCell>
+
+                                <TableCell className="px-3 py-2.5 lg:px-4">
+                                    <Badge
+                                        variant={b.is_active ? 'default' : 'secondary'}
+                                        className={b.is_active ? 'bg-emerald-500 text-white' : 'bg-muted text-foreground'}
+                                    >
+                                        {b.is_active
+                                            ? (t('brands.status.active') as string)
+                                            : (t('brands.status.inactive') as string)}
+                                    </Badge>
                                 </TableCell>
 
                                 <TableCell className="px-3 py-2.5 text-right lg:px-4">

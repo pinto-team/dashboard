@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useFormContext } from 'react-hook-form'
 import BrandLogoUploader from '@/features/brands/components/layout/Uploader/BrandLogoUploader.tsx'
 import { useI18n } from '@/shared/hooks/useI18n.ts'
-import { CreateBrandRequest } from '@/features/brands/model/types.ts'
+import type { BrandFormValues } from '@/features/brands/model/types.ts'
 
 type Props = Readonly<{
     initialLogoUrl?: string | null
@@ -10,7 +10,7 @@ type Props = Readonly<{
 
 export default function BrandLogoField({ initialLogoUrl }: Props) {
     const { t } = useI18n()
-    const { setValue } = useFormContext<CreateBrandRequest>()
+    const { setValue } = useFormContext<BrandFormValues>()
     const [logoPreviewUrl, setLogoPreviewUrl] = React.useState(initialLogoUrl || '')
 
     React.useEffect(() => {

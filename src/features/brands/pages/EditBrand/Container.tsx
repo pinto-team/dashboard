@@ -4,20 +4,41 @@ import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 
 import { brandsQueries } from "@/features/brands"
-import type { BrandData, CreateBrandRequest } from "@/features/brands/model/types"
+import type { BrandData, BrandFormValues, CreateBrandRequest } from "@/features/brands/model/types"
 import { ROUTES } from "@/app/routes/routes"
 import { useI18n } from "@/shared/hooks/useI18n"
 import { defaultLogger } from "@/shared/lib/logger"
 import { toAbsoluteUrl } from "@/shared/api/files"
+import { ensureLocalizedDefaults, cleanLocalizedField, getLocalizedValue } from "@/shared/utils/localized"
 
-function brandToFormDefaults(b?: BrandData): Partial<CreateBrandRequest> {
+const SUPPORTED_LOCALES = ['en', 'fa'] as const
+
+function brandToFormDefaults(b?: BrandData): Partial<BrandFormValues> {
     if (!b) return {}
+    const name = {
+        ...ensureLocalizedDefaults(b.name ?? undefined, SUPPORTED_LOCALES),
+        ...(cleanLocalizedField(b.name ?? undefined) ?? {}),
+    }
+    const description = {
+        ...ensureLocalizedDefaults(b.description ?? undefined, SUPPORTED_LOCALES),
+        ...(cleanLocalizedField(b.description ?? undefined) ?? {}),
+    }
+    const social = Object.entries(b.social_links ?? {}).reduce<Record<string, string>>(
+        (acc, [key, value]) => {
+            acc[key] = typeof value === 'string' ? value : ''
+            return acc
+        },
+        {},
+    )
+
     return {
-        name: b.name ?? "",
-        description: b.description ?? "",
-        country: b.country ?? "",
-        website: b.website ?? "",
-        logo_id: b.logo_id ?? "",
+        name,
+        description,
+        slug: b.slug ?? '',
+        website_url: b.website_url ?? '',
+        logo_id: b.logo_id ?? '',
+        is_active: b.is_active,
+        social_links: social,
     }
 }
 
@@ -63,7 +84,7 @@ export function useEditBrandContainer() {
         [detail.data]
     )
     const initialLogoUrl = useMemo(
-        () => toAbsoluteUrl(detail.data?.data?.logo_url ?? ""),
+        () => toAbsoluteUrl(detail.data?.data?.logo ?? ""),
         [detail.data]
     )
 
@@ -128,7 +149,7 @@ export function useEditBrandContainer() {
         },
         ui: {
             title: detail.data?.data?.name
-                ? `${t("actions.edit")}: ${detail.data.data.name}`
+                ? `${t("actions.edit")}: ${getLocalizedValue(detail.data.data.name, locale)}`
                 : (t("actions.edit") as string),
             rtl,
             labels: {

@@ -14,9 +14,12 @@ export interface Pagination {
 /** Meta info always returned by API */
 export interface ApiMeta {
     message: string
-    status: 'success' | 'error'
+    status: string
     code: string
     pagination?: Pagination
+    method?: string
+    path?: string
+    timestamp?: string
 }
 
 /** Generic envelope for all API responses */

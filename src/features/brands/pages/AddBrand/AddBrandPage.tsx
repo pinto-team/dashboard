@@ -93,7 +93,6 @@ export default function AddBrandPage(): JSX.Element {
                 <BrandForm
                     formId={FORM_ID}
                     onSubmit={handleSubmit}
-                    submitting={createMutation.isPending}
                     apiErrors={apiErrors}
                 />
             </div>

@@ -16,10 +16,12 @@ import ErrorFallback from "@/components/layout/ErrorFallback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { brandsQueries } from "@/features/brands";
 import { toAbsoluteUrl } from "@/shared/api/files";
 import { useI18n } from "@/shared/hooks/useI18n";
 import { isRTLLocale } from "@/shared/i18n/utils";
+import { getLocalizedValue, cleanSocialLinks } from "@/shared/utils/localized";
 
 
 
@@ -33,6 +35,16 @@ export default function DetailBrandPage() {
 
     const { data, isLoading, isError, error, refetch } = brandsQueries.useDetail(id)
     const brand = data?.data
+
+    const localizedName = brand ? getLocalizedValue(brand.name, locale) : ''
+    const localizedDescription = brand
+        ? getLocalizedValue(brand.description ?? undefined, locale)
+        : ''
+    const websiteUrl = brand?.website_url
+    const socialLinks = brand ? cleanSocialLinks(brand.social_links ?? undefined) : undefined
+    const statusLabel = brand?.is_active
+        ? t("brands.status.active")
+        : t("brands.status.inactive")
 
     const goEdit = React.useCallback(() => {
         if (!brand?.id) return
@@ -105,21 +117,33 @@ export default function DetailBrandPage() {
                         <div className="grid gap-8 md:grid-cols-2">
                             {/* Left: info fields */}
                             <div className="grid gap-5">
-                                <Field label={t("brands.table.name")} value={brand.name || "-"} />
+                                <Field label={t("brands.table.name")} value={localizedName || "-"} />
                                 <Separator />
-                                <Field label={t("brands.table.country")} value={brand.country || "-"} />
+                                <Field label={t("brands.table.slug")} value={brand.slug || "-"} />
+                                <Separator />
+                                <Field
+                                    label={t("brands.table.status")}
+                                    value={
+                                        <Badge
+                                            variant={brand.is_active ? "default" : "secondary"}
+                                            className={brand.is_active ? "bg-emerald-500 text-white" : "bg-muted text-foreground"}
+                                        >
+                                            {statusLabel as string}
+                                        </Badge>
+                                    }
+                                />
                                 <Separator />
                                 <div className="grid gap-2">
                                     <span className="text-xs text-muted-foreground">{t("brands.table.website")}</span>
-                                    {brand.website ? (
+                                    {websiteUrl ? (
                                         <a
-                                            href={brand.website}
+                                            href={websiteUrl}
                                             target="_blank"
                                             rel="noopener noreferrer external"
                                             className="inline-flex max-w-[48ch] items-center gap-1 truncate underline-offset-4 hover:underline"
-                                            title={brand.website}
+                                            title={websiteUrl}
                                         >
-                                            <span className="truncate">{brand.website}</span>
+                                            <span className="truncate">{websiteUrl}</span>
                                             <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                                         </a>
                                     ) : (
@@ -129,15 +153,37 @@ export default function DetailBrandPage() {
                                 <Separator />
                                 <div className="grid gap-2">
                                     <span className="text-xs text-muted-foreground">{t("brands.form.description")}</span>
-                                    <p className="whitespace-pre-wrap text-sm leading-6">{brand.description || "—"}</p>
+                                    <p className="whitespace-pre-wrap text-sm leading-6">{localizedDescription || "—"}</p>
+                                </div>
+                                <Separator />
+                                <div className="grid gap-2">
+                                    <span className="text-xs text-muted-foreground">{t("brands.details.social_links")}</span>
+                                    {socialLinks && Object.keys(socialLinks).length > 0 ? (
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(socialLinks).map(([key, value]) => (
+                                                <a
+                                                    key={key}
+                                                    href={value}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer external"
+                                                    className="text-sm text-primary underline underline-offset-2"
+                                                    title={value}
+                                                >
+                                                    {t(`brands.form.social.${key}`) ?? key}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span>-</span>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Right: logo/image */}
                             <div className="flex items-start justify-center">
-                                {brand.logo_url ? (
+                                {brand.logo ? (
                                     <img
-                                        src={toAbsoluteUrl(brand.logo_url)}
+                                        src={toAbsoluteUrl(brand.logo)}
                                         alt={t("brands.logo_alt") as string}
                                         className="h-72 w-full max-w-[360px] rounded-lg object-contain border bg-background"
                                         loading="lazy"

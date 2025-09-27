@@ -3,6 +3,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { brandsQueries } from '@/features/brands'
 import { useI18n } from '@/shared/hooks/useI18n'
+import { getLocalizedValue } from '@/shared/utils/localized'
 
 interface Props {
   value?: string
@@ -10,7 +11,7 @@ interface Props {
 }
 
 export default function BrandSelect({ value, onChange }: Props) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [search, setSearch] = React.useState('')
   const { data, isLoading } = brandsQueries.useList({ page: 1, limit: 50, q: search })
   const options = data?.data ?? []
@@ -31,7 +32,7 @@ export default function BrandSelect({ value, onChange }: Props) {
         </div>
         {options.map((b) => (
           <SelectItem key={b.id} value={b.id}>
-            {b.name}
+            {getLocalizedValue(b.name, locale)}
           </SelectItem>
         ))}
       </SelectContent>

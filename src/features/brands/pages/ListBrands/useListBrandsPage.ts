@@ -8,6 +8,7 @@ import { ROUTES } from "@/app/routes/routes"
 import useDebounced from "@/shared/hooks/useDebounced"
 import { useI18n } from "@/shared/hooks/useI18n"
 import type { PaginationProps } from "@/features/brands/components/ui/Pagination"
+import { cleanLocalizedField, cleanSocialLinks } from "@/shared/utils/localized"
 
 export function useListBrandsPage() {
     const { t } = useI18n()
@@ -62,12 +63,31 @@ export function useListBrandsPage() {
                             onClick: () => {
                                 if (!toDelete) return
 
+                                const sanitizedName = cleanLocalizedField(toDelete.name)
                                 const payload: CreateBrandRequest = {
-                                    name: toDelete.name ?? "",
-                                    description: (toDelete as any).description ?? "",
-                                    country: (toDelete as any).country ?? "",
-                                    website: (toDelete as any).website ?? "",
-                                    logo_id: (toDelete as any).logo_id ?? undefined,
+                                    name: sanitizedName && Object.keys(sanitizedName).length > 0
+                                        ? sanitizedName
+                                        : { en: toDelete.slug },
+                                    slug: toDelete.slug,
+                                    is_active: toDelete.is_active,
+                                }
+
+                                const description = cleanLocalizedField(toDelete.description ?? undefined)
+                                if (description) {
+                                    payload.description = description
+                                }
+
+                                if (toDelete.website_url) {
+                                    payload.website_url = toDelete.website_url
+                                }
+
+                                if (toDelete.logo_id) {
+                                    payload.logo_id = toDelete.logo_id
+                                }
+
+                                const social = cleanSocialLinks(toDelete.social_links ?? undefined)
+                                if (social) {
+                                    payload.social_links = social
                                 }
 
                                 createMutation.mutate(payload, {
