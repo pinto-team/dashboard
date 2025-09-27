@@ -1,11 +1,11 @@
-import { catalogClient } from '@/lib/axios'
-import { API_ROUTES } from '@/shared/constants/apiRoutes'
+import { catalogClient } from "@/lib/axios"
+import { API_ROUTES } from "@/shared/constants/apiRoutes"
 import type {
     CategoryData,
     CreateCategoryRequest,
     UpdateCategoryRequest,
     ReorderCategory,
-} from '@/features/categories/model/types'
+} from "@/features/categories/model/types"
 
 export type UUID = string
 
@@ -16,14 +16,19 @@ export interface PaginationMeta {
     total_pages: number
 }
 
+export interface ApiMeta {
+    pagination?: PaginationMeta
+    [k: string]: unknown
+}
+
 export interface ApiSuccessSingle<T> {
     data: T
-    meta?: { pagination?: PaginationMeta; [k: string]: any }
+    meta?: ApiMeta
 }
 
 export interface ApiSuccessList<T> {
     data: T[]
-    meta?: { pagination: PaginationMeta; [k: string]: any }
+    meta?: ApiMeta
 }
 
 export interface ListCategoriesParams {
@@ -64,8 +69,8 @@ export const categoriesApiService = {
     },
 
     remove(id: UUID) {
-        return catalogClient.delete<{ data: Record<string, string>; meta?: Record<string, any> }>(
-            API_ROUTES.CATEGORIES.BY_ID(id),
+        return catalogClient.delete<{ data: Record<string, string>; meta?: Record<string, unknown> }>(
+            API_ROUTES.CATEGORIES.BY_ID(id)
         )
     },
 }

@@ -1,30 +1,50 @@
 // eslint.config.js
 import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
-import { globalIgnores } from 'eslint/config'
 import globals from 'globals'
-import tseslint from 'typescript-eslint'
+import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-    globalIgnores(['dist']),
+    globalIgnores(['node_modules', 'dist', 'build', '.next', 'coverage']),
+
     {
         files: ['**/*.{ts,tsx}'],
+
+        plugins: {
+            'react-hooks': reactHooks,
+            'react-refresh': reactRefresh,
+        },
+
         extends: [
-            js.configs.recommended,            // فقط قواعد پایه جاوااسکریپت
-            tseslint.configs.recommended,      // فقط قواعد ضروری تایپ‌اسکریپت
-            reactHooks.configs['recommended'], // قواعد ضروری هوک‌ها
-            reactRefresh.configs.vite,         // برای HMR و React Refresh
+            js.configs.recommended,
+            tseslint.configs.recommended,
         ],
+
         languageOptions: {
-            ecmaVersion: 2020,
+            ecmaVersion: 2022,
+            sourceType: 'module',
             globals: globals.browser,
         },
+
         rules: {
-            // همه رو warning بذار تا فقط errorهای حیاتی بیاد
-            'no-unused-vars': 'warn',
-            '@typescript-eslint/no-unused-vars': 'warn',
-            'react-refresh/only-export-components': 'warn',
+            // پایه را خاموش کن؛ فقط نسخه TS فعال باشد
+            'no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'warn',
+                {
+                    argsIgnorePattern: '^_',   // پارامترهایی که با _ شروع می‌شن هشدار نمی‌گیرن
+                    varsIgnorePattern: '^_',   // متغیرها هم همین‌طور (اگر لازم شد)
+                    ignoreRestSiblings: true,
+                },
+            ],
+
+            // React hooks + React Refresh
+            'react-hooks/rules-of-hooks': 'error',
+            'react-hooks/exhaustive-deps': 'warn',
+            'react-refresh/only-export-components': 'off',
+
         },
     },
 ])

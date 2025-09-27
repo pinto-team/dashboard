@@ -2,17 +2,23 @@ import * as React from "react"
 import TimeoutErrorPage from "@/components/layout/TimeoutErrorPage"
 import { Button } from "@/components/ui/button"
 
-export default function ErrorFallback({
-                                          error,
-                                          onRetry,
-                                      }: {
-    error: any
+type ErrorFallbackProps = {
+    error: unknown            // 👈 به جای any
     onRetry: () => void
-}) {
-    const msg = error?.message?.toLowerCase?.() || ""
+}
+
+function isErrorWithMessage(err: unknown): err is { message?: string; code?: string } {
+    return typeof err === "object" && err !== null && ("message" in err || "code" in err)
+}
+
+export default function ErrorFallback({ error, onRetry }: ErrorFallbackProps) {
+    const msg =
+        isErrorWithMessage(error) && typeof error.message === "string"
+            ? error.message.toLowerCase()
+            : ""
 
     const isTimeoutOrNetwork =
-        error?.code === "ECONNABORTED" ||
+        (isErrorWithMessage(error) && error.code === "ECONNABORTED") ||
         msg.includes("timeout") ||
         msg.includes("network error") ||
         msg.includes("failed to fetch") ||
@@ -27,7 +33,9 @@ export default function ErrorFallback({
             <div className="rounded-lg border p-6 text-center max-w-md">
                 <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
                 <p className="text-muted-foreground mb-4">
-                    {error?.message || "Unexpected error"}
+                    {isErrorWithMessage(error) && error.message
+                        ? error.message
+                        : "Unexpected error"}
                 </p>
                 <Button variant="outline" size="sm" onClick={onRetry}>
                     Retry

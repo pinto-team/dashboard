@@ -1,4 +1,4 @@
-export type SessionRecord = {
+    export type SessionRecord = {
     session_id: string
     app_context?: string | null
     locale?: string | null

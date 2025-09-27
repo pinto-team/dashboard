@@ -16,8 +16,6 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { revokeAllSessions, revokeCurrentSession, revokeSessionById } from '@/features/sessions/api'
 import { useSessionFormatter } from '@/features/sessions/hooks/useSessionFormatter'

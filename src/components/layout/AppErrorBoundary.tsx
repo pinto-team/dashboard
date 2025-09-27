@@ -7,7 +7,7 @@ type Props = {
 
 type State = {
     hasError: boolean
-    error: any
+    error: Error | null
 }
 
 export default class AppErrorBoundary extends React.Component<Props, State> {
@@ -16,11 +16,11 @@ export default class AppErrorBoundary extends React.Component<Props, State> {
         this.state = { hasError: false, error: null }
     }
 
-    static getDerivedStateFromError(error: any) {
+    static getDerivedStateFromError(error: Error) {
         return { hasError: true, error }
     }
 
-    componentDidCatch(error: any, errorInfo: any) {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         console.error("❌ Caught by AppErrorBoundary:", error, errorInfo)
     }
 
