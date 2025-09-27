@@ -9,7 +9,7 @@ import { ROUTES } from "@/app/routes/routes"
 import { useI18n } from "@/shared/hooks/useI18n"
 import { defaultLogger } from "@/shared/lib/logger"
 import { toAbsoluteUrl } from "@/shared/api/files"
-import { ensureLocalizedDefaults, cleanLocalizedField, getLocalizedValue } from "@/shared/utils/localized"
+import { ensureLocalizedDefaults, cleanLocalizedField, cleanSocialLinks, getLocalizedValue } from "@/shared/utils/localized"
 
 const SUPPORTED_LOCALES = ['en', 'fa'] as const
 
@@ -23,13 +23,12 @@ function brandToFormDefaults(b?: BrandData): Partial<BrandFormValues> {
         ...ensureLocalizedDefaults(b.description ?? undefined, SUPPORTED_LOCALES),
         ...(cleanLocalizedField(b.description ?? undefined) ?? {}),
     }
-    const social = Object.entries(b.social_links ?? {}).reduce<Record<string, string>>(
-        (acc, [key, value]) => {
-            acc[key] = typeof value === 'string' ? value : ''
-            return acc
-        },
-        {},
-    )
+    const social = Object.entries(cleanSocialLinks(b.social_links ?? undefined) ?? {}).reduce<
+        Record<string, string>
+    >((acc, [key, value]) => {
+        acc[key] = value
+        return acc
+    }, {})
 
     return {
         name,

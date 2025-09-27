@@ -10,6 +10,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.tsx'
 import { useI18n } from '@/shared/hooks/useI18n.ts'
 import type { BrandFormValues, CreateBrandRequest } from '@/features/brands/model/types.ts'
+import type { SocialLinkKey } from '@/shared/constants/socialLinks.ts'
 import BrandGeneralFields from './BrandGeneralFields.tsx'
 import BrandMetadataFields from './BrandMetadataFields.tsx'
 import BrandLogoField from './BrandLogoField.tsx'
@@ -21,7 +22,7 @@ import {
 } from '@/shared/utils/localized.ts'
 
 const SUPPORTED_LOCALES = ['en', 'fa'] as const
-const SOCIAL_KEYS = ['instagram', 'telegram', 'linkedin', 'twitter'] as const
+const FORM_SOCIAL_KEYS = ['instagram', 'telegram', 'linkedin', 'x'] as const satisfies ReadonlyArray<SocialLinkKey>
 
 type TranslateFn = ReturnType<typeof useI18n>['t']
 
@@ -100,11 +101,11 @@ function createSchema(t: TranslateFn): z.ZodType<BrandFormValues> {
                 instagram: urlRule.optional(),
                 telegram: urlRule.optional(),
                 linkedin: urlRule.optional(),
-                twitter: urlRule.optional(),
+                x: urlRule.optional(),
             })
             .catchall(urlRule.optional())
             .default(
-                SOCIAL_KEYS.reduce<Record<string, string>>((acc, key) => {
+                FORM_SOCIAL_KEYS.reduce<Record<string, string>>((acc, key) => {
                     acc[key] = ''
                     return acc
                 }, {}),
@@ -116,17 +117,19 @@ function buildDefaultValues(defaultValues?: Partial<BrandFormValues>): BrandForm
     const nameDefaults = ensureLocalizedDefaults(defaultValues?.name, SUPPORTED_LOCALES)
     const descriptionDefaults = ensureLocalizedDefaults(defaultValues?.description, SUPPORTED_LOCALES)
 
+    const sanitizedSocial = cleanSocialLinks(defaultValues?.social_links) ?? {}
     const social: Record<string, string> = {}
-    SOCIAL_KEYS.forEach((key) => {
-        const raw = defaultValues?.social_links?.[key]
+
+    FORM_SOCIAL_KEYS.forEach((key) => {
+        const raw = sanitizedSocial[key]
         social[key] = typeof raw === 'string' ? raw : ''
     })
 
-    if (defaultValues?.social_links) {
-        Object.entries(defaultValues.social_links).forEach(([key, value]) => {
-            social[key] = typeof value === 'string' ? value : ''
-        })
-    }
+    Object.entries(sanitizedSocial).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+            social[key] = value
+        }
+    })
 
     return {
         name: { ...nameDefaults, ...(defaultValues?.name ?? {}) },

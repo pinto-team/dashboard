@@ -1,4 +1,6 @@
 import type { Locale } from '@/shared/i18n/messages'
+import { normalizeSocialLinkKey } from '@/shared/constants/socialLinks'
+import type { SocialLinkKey } from '@/shared/constants/socialLinks'
 
 export type LocalizedValue = Record<string, string | null | undefined>
 
@@ -44,19 +46,28 @@ export function cleanLocalizedField(
 }
 
 export function cleanSocialLinks(
-    links?: LocalizedValue,
-): Record<string, string> | undefined {
+    links?: Record<string, string | null | undefined>,
+): Partial<Record<SocialLinkKey, string>> | undefined {
     if (!links) return undefined
 
-    const result: Record<string, string> = {}
-    Object.entries(links).forEach(([key, value]) => {
-        const trimmed = value?.trim()
-        if (trimmed) {
-            result[key] = trimmed
-        }
+    const result: Partial<Record<SocialLinkKey, string>> = {}
+    let hasValue = false
+
+    Object.entries(links).forEach(([rawKey, value]) => {
+        const normalizedRawKey = rawKey.trim().toLowerCase()
+        const key = normalizeSocialLinkKey(normalizedRawKey)
+        if (!key) return
+
+        const trimmed = value?.trim?.()
+        if (!trimmed) return
+
+        if (result[key] && normalizedRawKey !== key) return
+
+        result[key] = trimmed
+        hasValue = true
     })
 
-    return Object.keys(result).length > 0 ? result : undefined
+    return hasValue ? result : undefined
 }
 
 export function ensureLocalizedDefaults(

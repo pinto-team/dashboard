@@ -158,8 +158,8 @@
   "brands.form.social.telegram_ph": "https://t.me/brand",
   "brands.form.social.linkedin": "LinkedIn",
   "brands.form.social.linkedin_ph": "https://linkedin.com/company/brand",
-  "brands.form.social.twitter": "Twitter",
-  "brands.form.social.twitter_ph": "https://twitter.com/brand",
+  "brands.form.social.x": "X (Twitter)",
+  "brands.form.social.x_ph": "https://x.com/brand",
   "brands.form.logo": "Logo",
   "brands.form.logo_help": "Upload the brand logo (recommended square format)",
 
