@@ -4,17 +4,15 @@ import * as React from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useI18n } from '@/shared/hooks/useI18n'
 import CategoryImageField from '@/features/categories/components/CategoryImageField'
-import type { CreateCategoryRequest } from '@/features/categories/model/types'
-
-type CategoryFormValues = {
-    name: string
-    description?: string
-    image_id?: string
-}
+import CategoryGeneralFields from '@/features/categories/components/CategoryGeneralFields'
+import CategoryMetadataFields from '@/features/categories/components/CategoryMetadataFields'
+import type { CategoryFormValues, CreateCategoryRequest } from '@/features/categories/model/types'
+import {
+    cleanLocalizedField,
+    ensureLocalizedDefaults,
+} from '@/shared/utils/localized'
 
 type Props = Readonly<{
     defaultValues?: Partial<CategoryFormValues>
@@ -25,69 +23,106 @@ type Props = Readonly<{
     apiErrors?: ReadonlyArray<{ field: string; message: string }>
 }>
 
+const SUPPORTED_LOCALES = ['en-US', 'fa-IR'] as const
+
+function createSchema(t: ReturnType<typeof useI18n>['t']): z.ZodType<CategoryFormValues> {
+    const localizedStringRule = z
+        .string()
+        .trim()
+        .min(1, t('validation.required'))
+        .min(2, t('validation.min_length', { n: 2 }))
+        .max(160, t('validation.max_length', { n: 160 }))
+
+    const optionalDescriptionRule = z
+        .string()
+        .trim()
+        .max(500, t('validation.max_length', { n: 500 }))
+        .optional()
+
+    return z
+        .object({
+            name: z
+                .object({ 'en-US': localizedStringRule, 'fa-IR': localizedStringRule })
+                .catchall(localizedStringRule.optional()),
+            description: z
+                .object({
+                    'en-US': optionalDescriptionRule,
+                    'fa-IR': optionalDescriptionRule,
+                })
+                .catchall(optionalDescriptionRule)
+                .default({ 'en-US': '', 'fa-IR': '' }),
+            slug: z
+                .string()
+                .trim()
+                .min(1, t('validation.required'))
+                .regex(/^[a-z0-9-]+$/, t('validation.slug')), // only lowercase slug
+            parent_id: z.union([z.string().uuid(), z.literal('').transform(() => null), z.null()]).default(null),
+            sort_index: z.coerce
+                .number({ invalid_type_error: t('validation.number') })
+                .int(t('validation.integer'))
+                .min(0, t('validation.min_value', { n: 0 }))
+                .default(0),
+            image_id: z.union([z.string().uuid(), z.literal(''), z.null()]).optional(),
+            is_active: z.boolean(),
+        })
+        .transform((value) => ({
+            ...value,
+            parent_id: value.parent_id === '' ? null : value.parent_id,
+            image_id: value.image_id === '' ? undefined : value.image_id,
+        })) as z.ZodType<CategoryFormValues>
+}
+
+function buildDefaultValues(defaultValues?: Partial<CategoryFormValues>): CategoryFormValues {
+    const nameDefaults = ensureLocalizedDefaults(defaultValues?.name, SUPPORTED_LOCALES)
+    const descriptionDefaults = ensureLocalizedDefaults(defaultValues?.description, SUPPORTED_LOCALES)
+
+    return {
+        name: { ...nameDefaults, ...(defaultValues?.name ?? {}) },
+        description: { ...descriptionDefaults, ...(defaultValues?.description ?? {}) },
+        slug: defaultValues?.slug ?? '',
+        parent_id: defaultValues?.parent_id ?? null,
+        sort_index: defaultValues?.sort_index ?? 0,
+        image_id: defaultValues?.image_id ?? undefined,
+        is_active: defaultValues?.is_active ?? true,
+    }
+}
+
 export default function CategoryForm({
-                                         defaultValues,
-                                         initialImageUrl,
-                                         onSubmit,
-                                         submitting = false,
-                                         formId = 'category-form',
-                                         apiErrors,
-                                     }: Props) {
+    defaultValues,
+    initialImageUrl,
+    onSubmit,
+    submitting = false,
+    formId = 'category-form',
+    apiErrors,
+}: Props) {
     const { t } = useI18n()
 
-    const schema = React.useMemo(
-        () =>
-            z.object({
-                name: z
-                    .string()
-                    .trim()
-                    .min(1, t('validation.required'))
-                    .min(2, t('validation.min_length', { n: 2 }))
-                    .max(120, t('validation.max_length', { n: 120 })),
-                description: z
-                    .union([
-                        z.string().max(500, t('validation.max_length', { n: 500 })),
-                        z.literal(''),
-                    ])
-                    .optional(),
-                image_id: z.union([z.string(), z.literal('')]).optional(),
-            }),
-        [t],
+    const schema = React.useMemo(() => createSchema(t), [t])
+    const initialValues = React.useMemo(
+        () => buildDefaultValues(defaultValues),
+        [defaultValues],
     )
 
     const form = useForm<CategoryFormValues>({
         resolver: zodResolver(schema),
-        defaultValues: {
-            name: '',
-            description: '',
-            image_id: '',
-            ...defaultValues,
-        },
+        defaultValues: initialValues,
         mode: 'onBlur',
     })
 
-    const { handleSubmit, reset, setError, formState } = form
+    const { handleSubmit, reset, setError } = form
 
     React.useEffect(() => {
         if (defaultValues) {
-            reset({
-                name: defaultValues.name ?? '',
-                description: defaultValues.description ?? '',
-                image_id: defaultValues.image_id ?? '',
-            })
+            reset(buildDefaultValues(defaultValues))
         }
     }, [defaultValues, reset])
 
     React.useEffect(() => {
         if (!apiErrors || apiErrors.length === 0) return
         apiErrors.forEach((err) => {
-            const path = err.field?.split('.')?.pop() ?? err.field
-            if (path === 'name' || path === 'description' || path === 'image_id') {
-                setError(path as keyof CategoryFormValues, {
-                    type: 'server',
-                    message: err.message,
-                })
-            }
+            if (!err.field) return
+            const normalizedPath = err.field.replace(/\[(\w+)\]/g, '.$1')
+            setError(normalizedPath as any, { type: 'server', message: err.message })
         })
     }, [apiErrors, setError])
 
@@ -98,14 +133,37 @@ export default function CategoryForm({
                 noValidate
                 className="grid gap-6"
                 onSubmit={handleSubmit((values) => {
-                    const cleaned: CreateCategoryRequest = {
-                        name: values.name.trim(),
-                        description: values.description?.trim() || '',
-                        image_id: values.image_id?.trim() || '',
+                    const sanitizedName = cleanLocalizedField(values.name) ?? {}
+                    const sanitizedDescription = cleanLocalizedField(values.description)
+
+                    const payload: CreateCategoryRequest = {
+                        name: sanitizedName,
+                        slug: values.slug.trim(),
+                        is_active: values.is_active,
                     }
-                    onSubmit(cleaned)
+
+                    if (sanitizedDescription && Object.keys(sanitizedDescription).length > 0) {
+                        payload.description = sanitizedDescription
+                    }
+
+                    if (values.parent_id) {
+                        payload.parent_id = values.parent_id
+                    }
+
+                    if (Number.isFinite(values.sort_index)) {
+                        payload.sort_index = Number(values.sort_index)
+                    }
+
+                    const imageId = typeof values.image_id === 'string' ? values.image_id.trim() : values.image_id
+                    if (imageId) {
+                        payload.image_id = imageId
+                    }
+
+                    onSubmit(payload)
                 })}
             >
+                <input type="hidden" {...form.register('parent_id')} />
+                <input type="hidden" {...form.register('image_id')} />
                 <Card className="overflow-hidden shadow-sm">
                     <CardHeader className="bg-muted/50">
                         <CardTitle className="text-lg font-semibold">
@@ -113,50 +171,12 @@ export default function CategoryForm({
                         </CardTitle>
                     </CardHeader>
 
-                    {/* ⬇️ تغییر اصلی: دو ستونه مثل برند */}
-                    <CardContent className="grid gap-6 p-6 md:grid-cols-2">
-                        {/* ستون چپ: فیلدهای متن */}
-                        <div className="flex flex-col gap-4">
-                            <div>
-                                <Label htmlFor="category-name">
-                                    {t('categories.form.name')}*
-                                </Label>
-                                <Input
-                                    id="category-name"
-                                    placeholder={t('categories.form.name_ph')}
-                                    aria-invalid={Boolean(formState.errors.name)}
-                                    {...form.register('name')}
-                                />
-                                {formState.errors.name && (
-                                    <p className="mt-1 text-xs text-destructive">
-                                        {formState.errors.name.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div>
-                                <Label htmlFor="category-description">
-                                    {t('categories.form.description')}
-                                </Label>
-                                <textarea
-                                    id="category-description"
-                                    placeholder={t('categories.form.description_ph')}
-                                    className="min-h-24 w-full resize-vertical rounded-md border bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
-                                    aria-invalid={Boolean(formState.errors.description)}
-                                    {...form.register('description')}
-                                />
-                                {formState.errors.description && (
-                                    <p className="mt-1 text-xs text-destructive">
-                                        {formState.errors.description.message}
-                                    </p>
-                                )}
-                            </div>
+                    <CardContent className="grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_280px]">
+                        <div className="flex flex-col gap-6">
+                            <CategoryGeneralFields submitting={submitting} />
+                            <CategoryMetadataFields submitting={submitting} />
                         </div>
-
-                        {/* ستون راست: تصویر دسته‌بندی (مثل BrandLogoField) */}
-                        <div className="self-start">
-                            <CategoryImageField initialImageUrl={initialImageUrl} />
-                        </div>
+                        <CategoryImageField initialImageUrl={initialImageUrl} submitting={submitting} />
                     </CardContent>
                 </Card>
             </form>

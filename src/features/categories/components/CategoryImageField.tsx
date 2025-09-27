@@ -2,26 +2,23 @@ import * as React from 'react'
 import { useFormContext } from 'react-hook-form'
 import CategoryImageUploader from '@/features/categories/components/CategoryImageUploader.tsx'
 import { useI18n } from '@/shared/hooks/useI18n.ts'
-import { CreateCategoryRequest } from '@/features/categories/model/types.ts'
-// اضافه:
+import type { CategoryFormValues } from '@/features/categories/model/types.ts'
 import { toAbsoluteUrl } from '@/shared/api/files'
 
-type Props = Readonly<{ initialImageUrl?: string | null }>
+type Props = Readonly<{ initialImageUrl?: string | null; submitting?: boolean }>
 
-export default function CategoryImageField({ initialImageUrl }: Props) {
+export default function CategoryImageField({ initialImageUrl, submitting = false }: Props) {
     const { t } = useI18n()
-    const { setValue } = useFormContext<CreateCategoryRequest>()
+    const { setValue } = useFormContext<CategoryFormValues>()
     const [imagePreviewUrl, setImagePreviewUrl] = React.useState<string>('')
 
     React.useEffect(() => {
-        // اگر URL موجود است، مطلق کن؛ اگر نه، خالی بگذار
         setImagePreviewUrl(initialImageUrl ? toAbsoluteUrl(initialImageUrl) : '')
     }, [initialImageUrl])
 
     return (
         <div className="flex flex-col">
             <CategoryImageUploader
-                // نکتهٔ مهم: اگر خالی است، null بده؛ نه رشتهٔ خالی.
                 value={imagePreviewUrl ? imagePreviewUrl : null}
                 onChange={(file) => {
                     const id = file?.id || ''
@@ -32,6 +29,7 @@ export default function CategoryImageField({ initialImageUrl }: Props) {
                 label={t('categories.form.image')}
                 aspect="square"
                 className="h-56 w-full self-start"
+                disabled={submitting}
             />
             <p className="mt-2 text-xs text-muted-foreground">
                 {t('categories.form.image_help')}

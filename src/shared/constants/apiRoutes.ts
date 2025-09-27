@@ -22,11 +22,9 @@ export const API_ROUTES = {
         ROOT: '/api/v1/brands',
     },
     CATEGORIES: {
-        ROOT: '/categories',
-        BY_ID: (id: string | number) => `/categories/${id}`,
-        ORDER: (id: string | number) => `/categories/${id}/order`,
-        REORDER: '/categories/reorder',
-        REORDER_BY_ID: (id: string | number) => `/categories/${id}/reorder`,
+        ROOT: '/api/v1/categories',
+        BY_ID: (id: string | number) => `/api/v1/categories/${id}`,
+        BY_SLUG: (slug: string) => `/api/v1/categories/slug/${slug}`,
     },
     PRODUCTS: {
         ROOT: '/products',

@@ -1,9 +1,12 @@
 // features/categories/components/useNestedCategories.ts
-import * as React from "react"
-import { toast } from "sonner"
-import { categoriesApiService } from "@/features/categories/services/categories.api"
-import type { CategoryData } from "@/features/categories/model/types"
-import { useI18n } from "@/shared/hooks/useI18n"
+import * as React from 'react'
+import { toast } from 'sonner'
+
+import { categoriesApiService } from '@/features/categories/services/categories.api'
+import type { CategoryData, CreateCategoryRequest } from '@/features/categories/model/types'
+import { useI18n } from '@/shared/hooks/useI18n'
+import { getLocalizedValue } from '@/shared/utils/localized'
+import { slugify } from '@/shared/utils/slug'
 
 export type UUID = string
 
@@ -15,19 +18,27 @@ export type CategoryNode = {
     children: CategoryNode[]
 }
 
-const toNode = (c: CategoryData): CategoryNode => ({
-    id: c.id,
-    name: c.name,
-    image_url: c.image_url,
-    expanded: false,
-    children: [],
-})
+const extractImagePath = (category: CategoryData): string | null => {
+    const legacy = (category as { image_url?: string | null }).image_url
+    return legacy ?? category.image ?? null
+}
 
 export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (count: number) => void) {
     const [categories, setCategories] = React.useState<CategoryNode[]>([])
     const [loadingRoot, setLoadingRoot] = React.useState(false)
     const [adding, setAdding] = React.useState<{ parentId: UUID | null } | null>(null)
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
+
+    const toNode = React.useCallback(
+        (category: CategoryData): CategoryNode => ({
+            id: category.id,
+            name: getLocalizedValue(category.name, locale),
+            image_url: extractImagePath(category),
+            expanded: false,
+            children: [],
+        }),
+        [locale],
+    )
 
     // ----- helpers -----
     const deepClone = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj))
@@ -55,10 +66,43 @@ export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (cou
     }
 
     // ----- load -----
-    const loadChildren = React.useCallback(async (parentId: UUID | null) => {
-        const res = await categoriesApiService.list({ parent_id: parentId ?? undefined, page: 1, limit: 100 })
-        return res.data.data.filter((c) => c.parent_id === parentId).map(toNode)
+    const fetchAllCategories = React.useCallback(async () => {
+        const pageSize = 100
+        let offset = 0
+        const aggregated: CategoryData[] = []
+
+        while (true) {
+            const response = await categoriesApiService.list({ offset, limit: pageSize })
+            const payload = response.data
+            const items = payload?.data ?? []
+            if (items.length === 0) {
+                break
+            }
+
+            aggregated.push(...items)
+
+            const total = payload?.meta?.pagination?.total
+            offset += items.length
+
+            if (typeof total === 'number' && total > 0) {
+                if (aggregated.length >= total) {
+                    break
+                }
+            } else if (items.length < pageSize) {
+                break
+            }
+        }
+
+        return aggregated
     }, [])
+
+    const loadChildren = React.useCallback(
+        async (parentId: UUID | null) => {
+            const list = await fetchAllCategories()
+            return list.filter((c) => c.parent_id === parentId).map(toNode)
+        },
+        [fetchAllCategories, toNode],
+    )
 
     const loadRoot = React.useCallback(async () => {
         setLoadingRoot(true)
@@ -96,24 +140,62 @@ export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (cou
         })
     }
 
-    const confirmAdd = async (name: string) => {
+    const confirmAdd = async (rawName: string) => {
         if (!adding) return
         try {
+            const trimmedName = rawName.trim()
+            if (!trimmedName) {
+                toast.error(t('validation.required'))
+                return
+            }
+
+            const localizedName = { 'en-US': trimmedName, 'fa-IR': trimmedName }
+            const payload: CreateCategoryRequest = {
+                name: localizedName,
+                slug: slugify(trimmedName, 'category'),
+                is_active: true,
+                sort_index:
+                    adding.parentId === null
+                        ? categories.length
+                        : findChildrenRef(categories, adding.parentId)?.length ?? 0,
+            }
+
+            if (adding.parentId) {
+                payload.parent_id = adding.parentId
+            }
+
+            const res = await categoriesApiService.create(payload)
+            const created = res.data.data
+
             if (adding.parentId === null) {
-                const res = await categoriesApiService.create({ name, parent_id: null, order: categories.length })
-                setCategories((prev) => [...prev, toNode(res.data.data)])
+                if (created) {
+                    setCategories((prev) => [...prev, toNode(created)])
+                } else {
+                    const refreshed = await loadChildren(null)
+                    setCategories(refreshed)
+                }
                 onAddRoot?.()
             } else {
                 const next = deepClone(categories)
                 let parentChildren = findChildrenRef(next, adding.parentId)
-                if (parentChildren && parentChildren.length === 0) {
+                if (!parentChildren) {
+                    parentChildren = []
+                    findAndUpdate(next, adding.parentId, (p) => (p.children = parentChildren!))
+                }
+                if (parentChildren.length === 0) {
                     const fetched = await loadChildren(adding.parentId)
                     findAndUpdate(next, adding.parentId, (p) => (p.children = fetched))
                     parentChildren = findChildrenRef(next, adding.parentId)
                 }
-                const order = parentChildren?.length ?? 0
-                const res = await categoriesApiService.create({ name, parent_id: adding.parentId, order })
-                parentChildren!.push(toNode(res.data.data))
+
+                if (created) {
+                    parentChildren!.push(toNode(created))
+                } else {
+                    const refreshed = await loadChildren(adding.parentId)
+                    findAndUpdate(next, adding.parentId, (p) => (p.children = refreshed))
+                    parentChildren = findChildrenRef(next, adding.parentId)
+                }
+
                 findAndUpdate(next, adding.parentId, (p) => (p.expanded = true))
                 setCategories(next)
             }
