@@ -5,13 +5,15 @@ import { toast } from "sonner"
 
 import { brandsQueries } from "@/features/brands"
 import type { BrandData, BrandFormValues, CreateBrandRequest } from "@/features/brands/model/types"
+import type { SocialLinkKey } from "@/shared/constants/socialLinks"
+import { SOCIAL_LINK_KEYS } from "@/shared/constants/socialLinks"
 import { ROUTES } from "@/app/routes/routes"
 import { useI18n } from "@/shared/hooks/useI18n"
 import { defaultLogger } from "@/shared/lib/logger"
 import { toAbsoluteUrl } from "@/shared/api/files"
 import { ensureLocalizedDefaults, cleanLocalizedField, cleanSocialLinks, getLocalizedValue } from "@/shared/utils/localized"
 
-const SUPPORTED_LOCALES = ['en', 'fa'] as const
+const SUPPORTED_LOCALES = ['en-US', 'fa-IR'] as const
 
 function brandToFormDefaults(b?: BrandData): Partial<BrandFormValues> {
     if (!b) return {}
@@ -23,12 +25,20 @@ function brandToFormDefaults(b?: BrandData): Partial<BrandFormValues> {
         ...ensureLocalizedDefaults(b.description ?? undefined, SUPPORTED_LOCALES),
         ...(cleanLocalizedField(b.description ?? undefined) ?? {}),
     }
-    const social = Object.entries(cleanSocialLinks(b.social_links ?? undefined) ?? {}).reduce<
-        Record<string, string>
-    >((acc, [key, value]) => {
-        acc[key] = value
-        return acc
-    }, {})
+    const sanitizedSocial = cleanSocialLinks(b.social_links ?? undefined) ?? {}
+    const socialEntries = Object.entries(sanitizedSocial)
+        .sort((a, b) => {
+            const aIndex = SOCIAL_LINK_KEYS.indexOf(a[0] as SocialLinkKey)
+            const bIndex = SOCIAL_LINK_KEYS.indexOf(b[0] as SocialLinkKey)
+            if (aIndex === -1 && bIndex === -1) return a[0].localeCompare(b[0])
+            if (aIndex === -1) return 1
+            if (bIndex === -1) return -1
+            return aIndex - bIndex
+        })
+        .map(([key, value]) => ({
+            key: key as SocialLinkKey,
+            url: value,
+        }))
 
     return {
         name,
@@ -37,7 +47,7 @@ function brandToFormDefaults(b?: BrandData): Partial<BrandFormValues> {
         website_url: b.website_url ?? '',
         logo_id: b.logo_id ?? '',
         is_active: b.is_active,
-        social_links: social,
+        social_links: socialEntries,
     }
 }
 

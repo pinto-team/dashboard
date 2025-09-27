@@ -10,6 +10,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.tsx'
 import { useI18n } from '@/shared/hooks/useI18n.ts'
 import type { BrandFormValues, CreateBrandRequest } from '@/features/brands/model/types.ts'
+import { isSupportedSocialLinkKey } from '@/shared/constants/socialLinks.ts'
 import type { SocialLinkKey } from '@/shared/constants/socialLinks.ts'
 import BrandGeneralFields from './BrandGeneralFields.tsx'
 import BrandMetadataFields from './BrandMetadataFields.tsx'
@@ -21,8 +22,7 @@ import {
     ensureLocalizedDefaults,
 } from '@/shared/utils/localized.ts'
 
-const SUPPORTED_LOCALES = ['en', 'fa'] as const
-const FORM_SOCIAL_KEYS = ['instagram', 'telegram', 'linkedin', 'x'] as const satisfies ReadonlyArray<SocialLinkKey>
+const SUPPORTED_LOCALES = ['en-US', 'fa-IR'] as const
 
 type TranslateFn = ReturnType<typeof useI18n>['t']
 
@@ -79,14 +79,32 @@ function createSchema(t: TranslateFn): z.ZodType<BrandFormValues> {
             message: t('validation.url'),
         })
 
+    const requiredUrlRule = urlRule.min(1, t('validation.required'))
+
+    const socialLinkSchema = z
+        .object({
+            key: z
+                .string()
+                .trim()
+                .min(1, t('validation.required'))
+                .refine((value) => isSupportedSocialLinkKey(value), {
+                    message: t('brands.form.social.invalid_key'),
+                }),
+            url: requiredUrlRule,
+        })
+        .transform((value) => ({
+            key: value.key as SocialLinkKey,
+            url: value.url,
+        }))
+
     return z.object({
         name: z
-            .object({ en: nameRule, fa: nameRule })
+            .object({ 'en-US': nameRule, 'fa-IR': nameRule })
             .catchall(nameRule.optional()),
         description: z
-            .object({ en: descriptionRule.optional(), fa: descriptionRule.optional() })
+            .object({ 'en-US': descriptionRule.optional(), 'fa-IR': descriptionRule.optional() })
             .catchall(descriptionRule.optional())
-            .default({ en: '', fa: '' }),
+            .default({ 'en-US': '', 'fa-IR': '' }),
         slug: z
             .string()
             .trim()
@@ -97,19 +115,22 @@ function createSchema(t: TranslateFn): z.ZodType<BrandFormValues> {
         logo_id: z.union([z.string(), z.literal('')]).optional(),
         is_active: z.boolean(),
         social_links: z
-            .object({
-                instagram: urlRule.optional(),
-                telegram: urlRule.optional(),
-                linkedin: urlRule.optional(),
-                x: urlRule.optional(),
+            .array(socialLinkSchema)
+            .superRefine((links, ctx) => {
+                const seen = new Set<string>()
+                links.forEach((link, index) => {
+                    const normalizedKey = link.key.toLowerCase()
+                    if (seen.has(normalizedKey)) {
+                        ctx.addIssue({
+                            code: z.ZodIssueCode.custom,
+                            message: t('brands.form.social.duplicate'),
+                            path: [index, 'key'],
+                        })
+                    }
+                    seen.add(normalizedKey)
+                })
             })
-            .catchall(urlRule.optional())
-            .default(
-                FORM_SOCIAL_KEYS.reduce<Record<string, string>>((acc, key) => {
-                    acc[key] = ''
-                    return acc
-                }, {}),
-            ),
+            .default([]),
     }) as z.ZodType<BrandFormValues>
 }
 
@@ -117,19 +138,10 @@ function buildDefaultValues(defaultValues?: Partial<BrandFormValues>): BrandForm
     const nameDefaults = ensureLocalizedDefaults(defaultValues?.name, SUPPORTED_LOCALES)
     const descriptionDefaults = ensureLocalizedDefaults(defaultValues?.description, SUPPORTED_LOCALES)
 
-    const sanitizedSocial = cleanSocialLinks(defaultValues?.social_links) ?? {}
-    const social: Record<string, string> = {}
-
-    FORM_SOCIAL_KEYS.forEach((key) => {
-        const raw = sanitizedSocial[key]
-        social[key] = typeof raw === 'string' ? raw : ''
-    })
-
-    Object.entries(sanitizedSocial).forEach(([key, value]) => {
-        if (typeof value === 'string') {
-            social[key] = value
-        }
-    })
+    const socialDefaults = (defaultValues?.social_links ?? []).map((item) => ({
+        key: item?.key ?? '',
+        url: item?.url ?? '',
+    }))
 
     return {
         name: { ...nameDefaults, ...(defaultValues?.name ?? {}) },
@@ -138,8 +150,26 @@ function buildDefaultValues(defaultValues?: Partial<BrandFormValues>): BrandForm
         website_url: defaultValues?.website_url ?? '',
         logo_id: defaultValues?.logo_id ?? '',
         is_active: defaultValues?.is_active ?? true,
-        social_links: social,
+        social_links: socialDefaults,
     }
+}
+
+function normalizeSocialLinkEntries(entries: BrandFormValues['social_links']): Record<string, string> {
+    return entries.reduce<Record<string, string>>((acc, entry) => {
+        const key = entry.key?.trim()
+        const url = entry.url?.trim()
+        if (!key || !url) {
+            return acc
+        }
+
+        const normalizedUrl = normalizeUrl(url)
+        if (!normalizedUrl) {
+            return acc
+        }
+
+        acc[key] = normalizedUrl
+        return acc
+    }, {})
 }
 
 export default function BrandForm({
@@ -189,7 +219,8 @@ export default function BrandForm({
                 onSubmit={handleSubmit((values) => {
                     const sanitizedName = cleanLocalizedField(values.name) ?? {}
                     const sanitizedDescription = cleanLocalizedField(values.description)
-                    const sanitizedSocialLinks = cleanSocialLinks(values.social_links)
+                    const socialLinkRecord = normalizeSocialLinkEntries(values.social_links)
+                    const sanitizedSocialLinks = cleanSocialLinks(socialLinkRecord)
 
                     const payload: CreateBrandRequest = {
                         name: sanitizedName,

@@ -67,7 +67,7 @@ export function useListBrandsPage() {
                                 const payload: CreateBrandRequest = {
                                     name: sanitizedName && Object.keys(sanitizedName).length > 0
                                         ? sanitizedName
-                                        : { en: toDelete.slug },
+                                        : { 'en-US': toDelete.slug },
                                     slug: toDelete.slug,
                                     is_active: toDelete.is_active,
                                 }
