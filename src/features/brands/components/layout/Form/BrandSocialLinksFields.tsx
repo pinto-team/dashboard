@@ -67,18 +67,18 @@ export default function BrandSocialLinksFields() {
             </div>
 
             <div>
-                <Label htmlFor="brand-social-twitter">
-                    {t('brands.form.social.twitter')}
+                <Label htmlFor="brand-social-x">
+                    {t('brands.form.social.x')}
                 </Label>
                 <Input
-                    id="brand-social-twitter"
-                    placeholder={t('brands.form.social.twitter_ph')}
+                    id="brand-social-x"
+                    placeholder={t('brands.form.social.x_ph')}
                     autoComplete="url"
-                    {...register('social_links.twitter')}
+                    {...register('social_links.x')}
                 />
-                {socialErrors.twitter && (
+                {socialErrors.x && (
                     <p className="mt-1 text-xs text-destructive">
-                        {socialErrors.twitter.message}
+                        {socialErrors.x.message}
                     </p>
                 )}
             </div>

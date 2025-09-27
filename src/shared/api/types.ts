@@ -15,11 +15,14 @@ export interface Pagination {
 export interface ApiMeta {
     message: string
     status: string
-    code: string
+    code: number | string
     pagination?: Pagination
     method?: string
     path?: string
     timestamp?: string
+    trace_id?: string
+    request_id?: string
+    host?: string
 }
 
 /** Generic envelope for all API responses */

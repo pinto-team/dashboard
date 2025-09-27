@@ -1,9 +1,11 @@
 import type { ApiResponse } from '@/shared/api/types'
+import type { SocialLinkKey } from '@/shared/constants/socialLinks'
 import type { LocalizedValue } from '@/shared/utils/localized'
 
 export type LocalizedField = LocalizedValue
 
-export type SocialLinks = LocalizedValue
+export type SocialLinks = Partial<Record<SocialLinkKey, string | null | undefined>>
+export type SocialLinksPayload = Partial<Record<SocialLinkKey, string>>
 
 export interface BrandData {
     id: string
@@ -16,7 +18,7 @@ export interface BrandData {
     is_active: boolean
     social_links?: SocialLinks | null
     issued_at: string
-    updated_at: string
+    updated_at: string | null
 }
 
 export interface CreateBrandRequest {
@@ -26,7 +28,7 @@ export interface CreateBrandRequest {
     logo_id?: string
     slug: string
     is_active: boolean
-    social_links?: Record<string, string>
+    social_links?: SocialLinksPayload
 }
 
 export type UpdateBrandRequest = Partial<CreateBrandRequest>
@@ -41,7 +43,7 @@ export interface BrandFormValues {
     website_url: string
     is_active: boolean
     logo_id?: string
-    social_links: Record<string, string>
+    social_links: SocialLinksPayload
 }
 
 export interface UploadFilesResponse {
