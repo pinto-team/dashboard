@@ -9,10 +9,30 @@ import { FormProvider, useForm } from 'react-hook-form'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.tsx'
 import { useI18n } from '@/shared/hooks/useI18n.ts'
-import { CreateBrandRequest } from '@/features/brands/model/types.ts'
+import type { BrandFormValues, CreateBrandRequest } from '@/features/brands/model/types.ts'
 import BrandGeneralFields from './BrandGeneralFields.tsx'
-import BrandCountryWebsiteFields from './BrandCountryWebsiteFields.tsx'
+import BrandMetadataFields from './BrandMetadataFields.tsx'
 import BrandLogoField from './BrandLogoField.tsx'
+import BrandSocialLinksFields from './BrandSocialLinksFields.tsx'
+import {
+    cleanLocalizedField,
+    cleanSocialLinks,
+    ensureLocalizedDefaults,
+} from '@/shared/utils/localized.ts'
+
+const SUPPORTED_LOCALES = ['en', 'fa'] as const
+const SOCIAL_KEYS = ['instagram', 'telegram', 'linkedin', 'twitter'] as const
+
+type TranslateFn = ReturnType<typeof useI18n>['t']
+
+type Props = Readonly<{
+    defaultValues?: Partial<BrandFormValues>
+    /** Optional initial logo URL for preview (useful on edit) */
+    initialLogoUrl?: string | null
+    onSubmit: (data: CreateBrandRequest) => void
+    formId?: string
+    apiErrors?: ReadonlyArray<{ field: string; message: string }>
+}>
 
 function normalizeUrl(value: string): string {
     const trimmed = value.trim()
@@ -25,80 +45,118 @@ function normalizeUrl(value: string): string {
         return trimmed
     }
 }
-function isLenientValidUrl(value: string): true | string {
+
+function isLenientValidUrl(value: string): boolean {
     if (!value) return true
     const candidate = /^(https?:)?\/\//i.test(value) ? value : `https://${value}`
     try {
         new URL(candidate)
         return true
     } catch {
-        return 'validation.url'
+        return false
     }
 }
 
-type Props = Readonly<{
-    defaultValues?: Partial<CreateBrandRequest>
-    /** Optional initial logo URL for preview (useful on edit) */
-    initialLogoUrl?: string | null
-    onSubmit: (data: CreateBrandRequest) => void
-    submitting?: boolean
-    formId?: string
-    apiErrors?: ReadonlyArray<{ field: string; message: string }>
-}>
+function createSchema(t: TranslateFn): z.ZodType<BrandFormValues> {
+    const nameRule = z
+        .string()
+        .trim()
+        .min(1, t('validation.required'))
+        .min(2, t('validation.min_length', { n: 2 }))
+        .max(120, t('validation.max_length', { n: 120 }))
+
+    const descriptionRule = z
+        .string()
+        .trim()
+        .max(500, t('validation.max_length', { n: 500 }))
+
+    const urlRule = z
+        .string()
+        .trim()
+        .max(2048, t('validation.max_length', { n: 2048 }))
+        .refine((value) => !value || isLenientValidUrl(value), {
+            message: t('validation.url'),
+        })
+
+    return z.object({
+        name: z
+            .object({ en: nameRule, fa: nameRule })
+            .catchall(nameRule.optional()),
+        description: z
+            .object({ en: descriptionRule.optional(), fa: descriptionRule.optional() })
+            .catchall(descriptionRule.optional())
+            .default({ en: '', fa: '' }),
+        slug: z
+            .string()
+            .trim()
+            .min(1, t('validation.required'))
+            .min(2, t('validation.min_length', { n: 2 }))
+            .max(160, t('validation.max_length', { n: 160 })),
+        website_url: urlRule.optional().default(''),
+        logo_id: z.union([z.string(), z.literal('')]).optional(),
+        is_active: z.boolean(),
+        social_links: z
+            .object({
+                instagram: urlRule.optional(),
+                telegram: urlRule.optional(),
+                linkedin: urlRule.optional(),
+                twitter: urlRule.optional(),
+            })
+            .catchall(urlRule.optional())
+            .default(
+                SOCIAL_KEYS.reduce<Record<string, string>>((acc, key) => {
+                    acc[key] = ''
+                    return acc
+                }, {}),
+            ),
+    }) as z.ZodType<BrandFormValues>
+}
+
+function buildDefaultValues(defaultValues?: Partial<BrandFormValues>): BrandFormValues {
+    const nameDefaults = ensureLocalizedDefaults(defaultValues?.name, SUPPORTED_LOCALES)
+    const descriptionDefaults = ensureLocalizedDefaults(defaultValues?.description, SUPPORTED_LOCALES)
+
+    const social: Record<string, string> = {}
+    SOCIAL_KEYS.forEach((key) => {
+        const raw = defaultValues?.social_links?.[key]
+        social[key] = typeof raw === 'string' ? raw : ''
+    })
+
+    if (defaultValues?.social_links) {
+        Object.entries(defaultValues.social_links).forEach(([key, value]) => {
+            social[key] = typeof value === 'string' ? value : ''
+        })
+    }
+
+    return {
+        name: { ...nameDefaults, ...(defaultValues?.name ?? {}) },
+        description: { ...descriptionDefaults, ...(defaultValues?.description ?? {}) },
+        slug: defaultValues?.slug ?? '',
+        website_url: defaultValues?.website_url ?? '',
+        logo_id: defaultValues?.logo_id ?? '',
+        is_active: defaultValues?.is_active ?? true,
+        social_links: social,
+    }
+}
 
 export default function BrandForm({
     defaultValues,
     initialLogoUrl,
     onSubmit,
-    submitting = false,
     formId = 'brand-form',
     apiErrors,
 }: Props): JSX.Element {
     const { t } = useI18n()
 
-    const schema = React.useMemo(
-        () =>
-            z.object({
-                name: z
-                    .string()
-                    .trim()
-                    .min(1, t('validation.required'))
-                    .min(2, t('validation.min_length', { n: 2 }))
-                    .max(120, t('validation.max_length', { n: 120 })),
-                description: z
-                    .union([
-                        z.string().max(500, t('validation.max_length', { n: 500 })),
-                        z.literal(''),
-                    ])
-                    .optional(),
-                country: z
-                    .union([
-                        z.string().max(60, t('validation.max_length', { n: 60 })),
-                        z.literal(''),
-                    ])
-                    .optional(),
-                website: z
-                    .union([
-                        z.string().max(2048, t('validation.max_length', { n: 2048 })),
-                        z.literal(''),
-                    ])
-                    .optional()
-                    .refine((v) => !v || isLenientValidUrl(v) === true, t('validation.url')),
-                logo_id: z.union([z.string(), z.literal('')]).optional(),
-            }),
-        [t],
+    const schema = React.useMemo(() => createSchema(t), [t])
+    const initialValues = React.useMemo(
+        () => buildDefaultValues(defaultValues),
+        [defaultValues],
     )
 
-    const form = useForm<CreateBrandRequest>({
+    const form = useForm<BrandFormValues>({
         resolver: zodResolver(schema),
-        defaultValues: {
-            name: '',
-            description: '',
-            country: '',
-            website: '',
-            logo_id: '',
-            ...defaultValues,
-        },
+        defaultValues: initialValues,
         mode: 'onBlur',
     })
 
@@ -106,29 +164,16 @@ export default function BrandForm({
 
     React.useEffect(() => {
         if (defaultValues) {
-            reset({
-                name: defaultValues.name ?? '',
-                description: defaultValues.description ?? '',
-                country: defaultValues.country ?? '',
-                website: defaultValues.website ?? '',
-                logo_id: defaultValues.logo_id ?? '',
-            })
+            reset(buildDefaultValues(defaultValues))
         }
     }, [defaultValues, reset])
 
     React.useEffect(() => {
         if (!apiErrors || apiErrors.length === 0) return
         apiErrors.forEach((err) => {
-            const path = err.field?.split('.')?.pop() ?? err.field
-            if (
-                path === 'name' ||
-                path === 'description' ||
-                path === 'country' ||
-                path === 'website' ||
-                path === 'logo_id'
-            ) {
-                setError(path as keyof CreateBrandRequest, { type: 'server', message: err.message })
-            }
+            if (!err.field) return
+            const normalizedPath = err.field.replace(/\[(\w+)\]/g, '.$1')
+            setError(normalizedPath as any, { type: 'server', message: err.message })
         })
     }, [apiErrors, setError])
 
@@ -139,14 +184,38 @@ export default function BrandForm({
                 noValidate
                 className="grid gap-6"
                 onSubmit={handleSubmit((values) => {
-                    const cleaned: CreateBrandRequest = {
-                        name: values.name.trim(),
-                        description: values.description?.trim() || '',
-                        country: values.country?.trim() || '',
-                        website: values.website ? normalizeUrl(values.website) : '',
-                        logo_id: values.logo_id?.trim() || '',
+                    const sanitizedName = cleanLocalizedField(values.name) ?? {}
+                    const sanitizedDescription = cleanLocalizedField(values.description)
+                    const sanitizedSocialLinks = cleanSocialLinks(values.social_links)
+
+                    const payload: CreateBrandRequest = {
+                        name: sanitizedName,
+                        slug: values.slug.trim(),
+                        is_active: values.is_active,
                     }
-                    onSubmit(cleaned)
+
+                    if (sanitizedDescription) {
+                        payload.description = sanitizedDescription
+                    }
+
+                    const website = values.website_url?.trim()
+                    if (website) {
+                        const normalized = normalizeUrl(website)
+                        if (normalized) {
+                            payload.website_url = normalized
+                        }
+                    }
+
+                    const logoId = values.logo_id?.trim()
+                    if (logoId) {
+                        payload.logo_id = logoId
+                    }
+
+                    if (sanitizedSocialLinks) {
+                        payload.social_links = sanitizedSocialLinks
+                    }
+
+                    onSubmit(payload)
                 })}
             >
                 <Card className="overflow-hidden shadow-sm">
@@ -156,10 +225,16 @@ export default function BrandForm({
                         </CardTitle>
                     </CardHeader>
 
-                    <CardContent className="grid gap-6 p-6 md:grid-cols-2">
-                        <div className="flex flex-col gap-4">
+                    <CardContent className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
+                        <div className="flex flex-col gap-6">
                             <BrandGeneralFields />
-                            <BrandCountryWebsiteFields />
+                            <BrandMetadataFields />
+                            <div>
+                                <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+                                    {t('brands.form.social_links')}
+                                </h2>
+                                <BrandSocialLinksFields />
+                            </div>
                         </div>
                         <BrandLogoField initialLogoUrl={initialLogoUrl} />
                     </CardContent>

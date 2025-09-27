@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import BrandForm from "@/features/brands/components/layout/Form/BrandForm"
-import type { CreateBrandRequest } from "@/features/brands/model/types"
+import type { BrandFormValues, CreateBrandRequest } from "@/features/brands/model/types"
 import { useIsRTL } from "@/shared/hooks/useIsRTL"
 import { ConfirmDialog } from "@/features/brands/components/ui/confirm-dialog"
 
@@ -33,7 +33,7 @@ export default function EditBrandUI(props: {
     setDeleteOpen: Dispatch<SetStateAction<boolean>>
 
     onSubmit: (values: CreateBrandRequest) => void
-    formDefaults: Partial<CreateBrandRequest>
+    formDefaults: Partial<BrandFormValues>
     initialLogoUrl?: string | null
     apiErrors: ApiError
 
@@ -93,7 +93,6 @@ export default function EditBrandUI(props: {
                 defaultValues={formDefaults}
                 initialLogoUrl={initialLogoUrl ?? undefined}
                 onSubmit={onSubmit}
-                submitting={isSaving}
                 apiErrors={apiErrors}
             />
 

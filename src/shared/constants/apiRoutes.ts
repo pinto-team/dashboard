@@ -19,7 +19,7 @@ export const API_ROUTES = {
         THUMBNAIL: (id: string | number) => `/files/${id}/thumbnail`,
     },
     BRANDS: {
-        ROOT: '/brands',
+        ROOT: '/api/v1/brands',
     },
     CATEGORIES: {
         ROOT: '/categories',
