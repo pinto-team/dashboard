@@ -15,20 +15,58 @@ import { ROUTES } from '@/app/routes/routes';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import CategoryForm from '@/features/categories/components/CategoryForm';
-import type { CreateCategoryRequest } from '@/features/categories/model/types';
+import type {
+    CategoryData,
+    CategoryFormValues,
+    CreateCategoryRequest,
+} from '@/features/categories/model/types';
 import { categoriesApiService } from '@/features/categories/services/categories.api';
 import { toAbsoluteUrl } from '@/shared/api/files.ts';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { isRTLLocale } from '@/shared/i18n/utils';
+import { ensureLocalizedDefaults } from '@/shared/utils/localized';
 
 
 
 
 
-type CategoryFormValues = {
-    name: string
-    description?: string
-    image_id?: string
+const SUPPORTED_LOCALES = ['en-US', 'fa-IR'] as const
+
+function mapCategoryToFormValues(category: CategoryData): CategoryFormValues {
+    const nameDefaults = ensureLocalizedDefaults(category.name, SUPPORTED_LOCALES)
+    const descriptionDefaults = ensureLocalizedDefaults(category.description ?? undefined, SUPPORTED_LOCALES)
+
+    const sanitizedName = { ...nameDefaults }
+    Object.entries(category.name ?? {}).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+            sanitizedName[key] = value
+        }
+    })
+
+    const sanitizedDescription = { ...descriptionDefaults }
+    if (category.description) {
+        Object.entries(category.description).forEach(([key, value]) => {
+            if (typeof value === 'string') {
+                sanitizedDescription[key] = value
+            }
+        })
+    }
+
+    return {
+        name: sanitizedName,
+        description: sanitizedDescription,
+        slug: category.slug ?? '',
+        parent_id: category.parent_id ?? null,
+        sort_index: category.sort_index ?? 0,
+        image_id: category.image_id ?? undefined,
+        is_active: category.is_active ?? true,
+    }
+}
+
+function resolveCategoryImage(category: CategoryData): string | null {
+    const legacyImage = (category as { image_url?: string | null }).image_url
+    const raw = legacyImage ?? category.image ?? null
+    return raw ? toAbsoluteUrl(raw) : null
 }
 
 const FORM_ID = 'category-form'
@@ -55,12 +93,8 @@ export default function EditCategoryPage() {
                 const res = await categoriesApiService.get(id)
                 if (!mounted) return
                 const d = res.data.data
-                setInitialData({
-                    name: d.name,
-                    description: d.description ?? '',
-                    image_id: d.image_id ?? '',
-                })
-                setInitialImageUrl(d.image_url ? toAbsoluteUrl(d.image_url) : null)
+                setInitialData(mapCategoryToFormValues(d))
+                setInitialImageUrl(resolveCategoryImage(d))
 
             } catch {
                 toast.error(t('common.error'))

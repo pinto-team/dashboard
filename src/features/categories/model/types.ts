@@ -1,60 +1,51 @@
-export type UUID = string;
+import type { ApiResponse } from '@/shared/api/types'
+import type { LocalizedValue } from '@/shared/utils/localized'
+
+export type UUID = string
 
 export interface CategoryData {
-    id: UUID;
-    name: string;
-    description: string | null;
-    parent_id: UUID | null;
-    image_url: string | null;
-    image_id: string | null;
-    order: number; // موقعیت بین خواهر-برادرها (از 0 شروع)
-    created_at: string; // ISO8601
-    updated_at: string; // ISO8601
+    id: UUID
+    name: LocalizedValue
+    description?: LocalizedValue | null
+    parent_id: UUID | null
+    slug: string
+    sort_index: number
+    image_id?: UUID | null
+    image?: string | null
+    is_active: boolean
+    issued_at: string
+    updated_at: string | null
 }
 
-export interface CreateCategoryRequest {
-    name: string;
-    parent_id?: UUID | null;
-    order?: number; // اختیاری؛ اگر ندی انتهای لیست می‌رود
-    description?: string | null;
-    image_id?: string | null;
+export interface CategoryListParams {
+    offset?: number
+    limit?: number
+    parent_id?: UUID | null
 }
 
-export interface UpdateCategoryRequest {
-    name?: string;
-    description?: string | null;
-    image_id?: string | null;
-    parent_id?: UUID | null; // برای جابه‌جایی والد
-    order?: number;          // برای جابه‌جایی داخل همان والد یا جای جدید در والد جدید
+export interface CategoryPayloadBase {
+    name: Record<string, string>
+    description?: Record<string, string>
+    parent_id?: UUID | null
+    slug: string
+    sort_index?: number
+    image_id?: UUID | null
+    is_active?: boolean
 }
 
-export interface ReorderCategory {
-    id: UUID;
-    parent_id?: UUID | null;
-    order: number;
+export type CreateCategoryRequest = CategoryPayloadBase
+
+export type UpdateCategoryRequest = Partial<CategoryPayloadBase>
+
+export interface CategoryFormValues {
+    name: Record<string, string>
+    description: Record<string, string>
+    slug: string
+    parent_id: UUID | null
+    sort_index: number
+    image_id?: UUID | null | string
+    is_active: boolean
 }
 
-export interface PaginationMeta {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-}
-
-export interface ApiSuccessSingle<T> {
-    data: T;
-    meta?: { pagination?: PaginationMeta; [k: string]: any };
-}
-
-export interface ApiSuccessList<T> {
-    data: T[];
-    meta?: { pagination: PaginationMeta; [k: string]: any };
-}
-
-export interface ListCategoriesParams {
-    parent_id?: UUID | null;
-    page?: number;
-    limit?: number;
-    // اگر خواستی بعداً سرچ بر اساس name اضافه کنیم
-    name?: string;
-}
+export type CategoryResponse = ApiResponse<CategoryData>
+export type CategoryListResponse = ApiResponse<CategoryData[]>

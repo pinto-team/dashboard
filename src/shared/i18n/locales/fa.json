@@ -175,13 +175,27 @@
   "categories.form.title": "اطلاعات دسته",
   "categories.form.name": "نام",
   "categories.form.name_ph": "نام دسته را وارد کنید",
+  "categories.form.name_en": "نام (انگلیسی)",
+  "categories.form.name_en_ph": "نام دسته را به انگلیسی وارد کنید",
+  "categories.form.name_fa": "نام (فارسی)",
+  "categories.form.name_fa_ph": "نام دسته را به فارسی وارد کنید",
   "categories.form.description": "توضیحات",
   "categories.form.description_ph": "توضیحات را وارد کنید",
+  "categories.form.description_en": "توضیحات (انگلیسی)",
+  "categories.form.description_en_ph": "توضیحات انگلیسی را وارد کنید",
+  "categories.form.description_fa": "توضیحات (فارسی)",
+  "categories.form.description_fa_ph": "توضیحات فارسی را وارد کنید",
   "categories.form.parent_id": "دسته والد",
   "categories.form.parent_id_ph": "دسته والد را انتخاب کنید",
   "categories.form.parent_none": "بدون والد",
   "categories.form.image": "تصویر",
   "categories.form.image_help": "تصویر دسته را بارگذاری کنید (ترجیحاً مربع باشد)",
+  "categories.form.slug": "اسلاگ",
+  "categories.form.slug_ph": "اسلاگ را وارد کنید",
+  "categories.form.sort_index": "ترتیب نمایش",
+  "categories.form.sort_index_hint": "اعداد کمتر در بین زیردسته‌های یک والد زودتر نمایش داده می‌شوند.",
+  "categories.form.is_active_label": "وضعیت فعال بودن",
+  "categories.form.is_active_hint": "دسته‌های غیرفعال در لیست فروشگاه نمایش داده نمی‌شوند.",
   "categories.help_drag_drop": "💡 راهنما: آیتم‌ها را بکشید و رها کنید تا جابجا شوند. برای تبدیل به زیردسته، روی دستهٔ مورد نظر رها کنید.",
 
   "products.form.title": "اطلاعات محصول",
@@ -234,6 +248,10 @@
   "validation.required": "این فیلد الزامی است",
   "validation.min_length": "حداقل باید {n} کاراکتر باشد",
   "validation.max_length": "حداکثر باید {n} کاراکتر باشد",
+  "validation.slug": "فقط حروف کوچک انگلیسی، عدد و خط تیره مجاز است",
+  "validation.number": "لطفاً یک عدد معتبر وارد کنید",
+  "validation.integer": "لطفاً یک عدد صحیح وارد کنید",
+  "validation.min_value": "مقدار باید حداقل {n} باشد",
   "validation.url": "لطفاً یک آدرس معتبر وارد کنید",
 
   "brands.table.logo": "لوگو",

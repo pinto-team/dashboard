@@ -23,7 +23,7 @@ export const categoriesQueries = createCrudHooks<CategoryData, CreateCategoryReq
 /**
  * نکته:
  * - برای لیست، پارام‌های سرور را هنگام استفاده پاس بده:
- *   categoriesQueries.useList({ parent_id: null, page: 1, limit: 50 })
- * - برای جابه‌جایی/انتقال، از useUpdate با payload شامل parent_id و/یا order استفاده کن.
+ *   categoriesQueries.useList({ offset: 0, limit: 50 })
+ * - برای جابه‌جایی/انتقال، از useUpdate با payload شامل parent_id و/یا sort_index استفاده کن.
  */
 export * from './model/types'
