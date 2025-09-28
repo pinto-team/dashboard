@@ -11,23 +11,34 @@
  * Development flags only affect logging and do not change behavior.
  */
 
+function normalizeBaseUrl(url: string): string {
+    if (!url) {
+        return ''
+    }
+    return url.replace(/\/+$/, '')
+}
+
+const DEFAULT_BASE_URL = normalizeBaseUrl(
+    import.meta.env.VITE_API_URL || 'http://localhost:3000',
+)
+const DEFAULT_AUTH_URL = normalizeBaseUrl(
+    import.meta.env.VITE_AUTH_API_URL || DEFAULT_BASE_URL,
+)
+const DEFAULT_CATALOG_URL = normalizeBaseUrl(
+    import.meta.env.VITE_CATALOG_API_URL || DEFAULT_BASE_URL,
+)
+
 export const API_CONFIG = {
     // Main API URL (fallback for backward compatibility)
-    BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    BASE_URL: DEFAULT_BASE_URL,
 
     // Feature-specific API URLs
     AUTH: {
-        BASE_URL:
-            import.meta.env.VITE_AUTH_API_URL ||
-            import.meta.env.VITE_API_URL ||
-            'http://192.168.0.101:8083',
+        BASE_URL: DEFAULT_AUTH_URL,
     },
 
     CATALOG: {
-        BASE_URL:
-            import.meta.env.VITE_CATALOG_API_URL ||
-            import.meta.env.VITE_API_URL ||
-            'http://localhost:3000',
+        BASE_URL: DEFAULT_CATALOG_URL,
     },
 
     // MSW configuration
@@ -43,3 +54,5 @@ export const API_CONFIG = {
 } as const
 
 export type ApiConfig = typeof API_CONFIG
+
+export { normalizeBaseUrl }
