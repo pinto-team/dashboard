@@ -27,6 +27,7 @@ import {
     getRefreshToken,
     setTokens,
 } from '@/features/auth/storage'
+import { emitForcedLogout, emitTokenRefreshed } from '@/features/auth/lib/auth-events'
 import { buildRefreshRequestPayload } from '@/features/auth/utils/context'
 import { API_CONFIG } from '@/shared/config/api.config'
 import { defaultLogger } from '@/shared/lib/logger'
@@ -218,6 +219,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
 
                     setTokens(newAccess, newRefresh)
                     instance.defaults.headers.common['Authorization'] = `Bearer ${newAccess}`
+                    emitTokenRefreshed({ accessToken: newAccess, refreshToken: newRefresh })
 
                     processQueue(null, newAccess)
 
