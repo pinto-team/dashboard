@@ -13,6 +13,7 @@ import {
     clearAuthStorage,
     getAccessToken,
     getRefreshToken,
+    setSessionId,
     setTokens,
 } from "@/features/auth/storage"
 import { emitForcedLogout, emitTokenRefreshed } from "@/features/auth/lib/auth-events"
@@ -57,6 +58,37 @@ function setAuthHeaderOnConfig(config: AxiosRequestConfig, token: string) {
     const headers = toAxiosHeaders(config.headers)
     headers.set("Authorization", `Bearer ${token}`)
     config.headers = headers
+}
+
+function resolveSessionId(payload: Record<string, unknown>): string | null {
+    const toString = (value: unknown): string => {
+        if (typeof value === "string") return value.trim()
+        if (typeof value === "number" || typeof value === "boolean") {
+            return String(value)
+        }
+        return ""
+    }
+
+    const direct = toString(payload.session_id)
+    if (direct) return direct
+
+    const camel = toString(payload.sessionId)
+    if (camel) return camel
+
+    const nested = payload.session
+    if (nested && typeof nested === "object") {
+        const record = nested as Record<string, unknown>
+        const nestedDirect = toString(record.session_id)
+        if (nestedDirect) return nestedDirect
+
+        const nestedCamel = toString(record.sessionId)
+        if (nestedCamel) return nestedCamel
+
+        const nestedId = toString(record.id)
+        if (nestedId) return nestedId
+    }
+
+    return null
 }
 
 function createApiClient(config: ClientConfig): AxiosInstance {
@@ -184,9 +216,18 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                         throw new Error("Invalid refresh response: missing tokens")
                     }
 
+                    const sessionId = resolveSessionId(payload)
+                    if (sessionId) {
+                        setSessionId(sessionId)
+                    }
+
                     setTokens(newAccess, newRefresh)
                     instance.defaults.headers.common["Authorization"] = `Bearer ${newAccess}`
-                    emitTokenRefreshed({ accessToken: newAccess, refreshToken: newRefresh })
+                    emitTokenRefreshed({
+                        accessToken: newAccess,
+                        refreshToken: newRefresh,
+                        sessionId: sessionId ?? undefined,
+                    })
 
                     processQueue(null, newAccess)
 
