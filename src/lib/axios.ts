@@ -19,18 +19,21 @@ import axios, {
     AxiosInstance,
     AxiosRequestConfig,
     InternalAxiosRequestConfig,
-} from 'axios'
+} from "axios"
 
 import {
     clearAuthStorage,
     getAccessToken,
     getRefreshToken,
     setTokens,
-} from '@/features/auth/storage'
-import { emitForcedLogout, emitTokenRefreshed } from '@/features/auth/lib/auth-events'
-import { buildRefreshRequestPayload } from '@/features/auth/utils/context'
-import { API_CONFIG } from '@/shared/config/api.config'
-import { defaultLogger } from '@/shared/lib/logger'
+} from "@/features/auth/storage"
+import {
+    emitForcedLogout,
+    emitTokenRefreshed,
+} from "@/features/auth/lib/auth-events"
+import { buildRefreshRequestPayload } from "@/features/auth/utils/context"
+import { API_CONFIG } from "@/shared/config/api.config"
+import { defaultLogger } from "@/shared/lib/logger"
 
 /** Resolver pair used to unblock queued requests after refresh */
 type PendingResolver = {
@@ -60,7 +63,7 @@ type ClientConfig = {
 }
 
 /** Internal flag used to avoid infinite retry loops */
-const RETRY_FLAG = '__isRetryRequest'
+const RETRY_FLAG = "__isRetryRequest"
 
 // Single-flight refresh guard and queue for pending 401s
 let isRefreshing = false
@@ -85,7 +88,7 @@ function processQueue(error: unknown | null, token?: string) {
 /** Set Authorization header on a given axios config */
 function setAuthHeaderOnConfig(config: AxiosRequestConfig, token: string) {
     const headers = toAxiosHeaders(config.headers)
-    headers.set('Authorization', `Bearer ${token}`)
+    headers.set("Authorization", `Bearer ${token}`)
     config.headers = headers
 }
 
@@ -93,27 +96,28 @@ function setAuthHeaderOnConfig(config: AxiosRequestConfig, token: string) {
 function createApiClient(config: ClientConfig): AxiosInstance {
     const instance = axios.create({
         baseURL: config.baseURL,
-        headers: new AxiosHeaders({ 'Content-Type': 'application/json' }),
-        timeout: 10000, // تایم‌اوت 10 ثانیه
+        headers: new AxiosHeaders({ "Content-Type": "application/json" }),
+        timeout: 10000,
     })
 
     if (config.feature) {
-        instance.defaults.headers.common['X-Feature'] = config.feature
+        instance.defaults.headers.common["X-Feature"] = config.feature
     }
 
+    /** ---------- REQUEST INTERCEPTOR ---------- */
     instance.interceptors.request.use(
         (requestConfig: InternalAxiosRequestConfig) => {
             const token = getAccessToken()
             if (token && config.enableAuth) {
                 const headers = toAxiosHeaders(requestConfig.headers)
-                if (!headers.has('Authorization')) {
-                    headers.set('Authorization', `Bearer ${token}`)
+                if (!headers.has("Authorization")) {
+                    headers.set("Authorization", `Bearer ${token}`)
                 }
                 requestConfig.headers = headers
             }
 
             if (API_CONFIG.DEV.LOG_REQUESTS) {
-                defaultLogger.info('API Request', {
+                defaultLogger.info("API Request", {
                     method: requestConfig.method?.toUpperCase(),
                     url: requestConfig.url,
                     baseURL: requestConfig.baseURL,
@@ -124,13 +128,14 @@ function createApiClient(config: ClientConfig): AxiosInstance {
 
             return requestConfig
         },
-        (err) => Promise.reject(err),
+        (err) => Promise.reject(err)
     )
 
+    /** ---------- RESPONSE LOGGING INTERCEPTOR ---------- */
     instance.interceptors.response.use(
         (response) => {
             if (API_CONFIG.DEV.LOG_RESPONSES) {
-                defaultLogger.info('API Response', {
+                defaultLogger.info("API Response", {
                     status: response.status,
                     url: response.config.url,
                     method: response.config.method?.toUpperCase(),
@@ -140,7 +145,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
             return response
         },
         (error: AxiosError) => {
-            defaultLogger.error('API Error', {
+            defaultLogger.error("API Error", {
                 status: error.response?.status,
                 url: error.config?.url,
                 method: (error.config as AxiosRequestConfig | undefined)?.method?.toUpperCase(),
@@ -149,17 +154,18 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                 feature: config.feature,
             })
             return Promise.reject(error)
-        },
+        }
     )
 
+    /** ---------- REFRESH LOGIC INTERCEPTOR ---------- */
     if (config.enableRefresh !== false) {
         instance.interceptors.response.use(
             (response) => response,
             async (error: AxiosError) => {
                 const originalRequest = error.config as
                     | (InternalAxiosRequestConfig & {
-                          [RETRY_FLAG]?: boolean
-                      })
+                    [RETRY_FLAG]?: boolean
+                })
                     | undefined
                 const status = error.response?.status
 
@@ -167,13 +173,15 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     return Promise.reject(error)
                 }
 
+                // اگر قبلاً یک بار تلاش کردیم و دوباره 401 شد → خروج اجباری
                 if (originalRequest[RETRY_FLAG]) {
                     clearAuthStorage()
-                    delete instance.defaults.headers.common['Authorization']
-                    emitForcedLogout({ reason: 'session_expired' })
+                    delete instance.defaults.headers.common["Authorization"]
+                    emitForcedLogout({ reason: "session_expired" })
                     return Promise.reject(error)
                 }
 
+                // اگر در حال حاضر یک رفرش در جریان است → منتظر بمان
                 if (isRefreshing) {
                     try {
                         const newToken = await new Promise<string>((resolve, reject) => {
@@ -187,13 +195,19 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     }
                 }
 
+                // شروع اولین رفرش
                 originalRequest[RETRY_FLAG] = true
                 isRefreshing = true
 
                 try {
                     const rt = getRefreshToken()
                     if (!rt) {
-                        throw error
+                        // ❗ اگر رفرش‌توکن نداریم، همینجا logout کن
+                        clearAuthStorage()
+                        delete instance.defaults.headers.common["Authorization"]
+                        emitForcedLogout({ reason: "no_refresh_token" })
+                        processQueue(new Error("No refresh token"))
+                        return Promise.reject(error)
                     }
 
                     const refreshUrl = `${API_CONFIG.AUTH.BASE_URL}/auth/refresh`
@@ -201,25 +215,26 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     const { data } = await axios.post<RefreshResponse>(
                         refreshUrl,
                         buildRefreshRequestPayload(rt),
-                        { headers: new AxiosHeaders({ 'Content-Type': 'application/json' }) },
+                        { headers: new AxiosHeaders({ "Content-Type": "application/json" }) }
                     )
 
                     const payload = (data?.data ?? data ?? {}) as Record<string, unknown>
                     const newAccess =
-                        typeof payload.access_token === 'string'
+                        typeof payload.access_token === "string"
                             ? (payload.access_token as string)
-                            : ''
+                            : ""
                     const newRefresh =
-                        typeof payload.refresh_token === 'string'
+                        typeof payload.refresh_token === "string"
                             ? (payload.refresh_token as string)
-                            : ''
+                            : ""
 
                     if (!newAccess || !newRefresh) {
-                        throw new Error('Invalid refresh response: missing tokens')
+                        throw new Error("Invalid refresh response: missing tokens")
                     }
 
+                    // ذخیره توکن جدید و اطلاع به بقیه
                     setTokens(newAccess, newRefresh)
-                    instance.defaults.headers.common['Authorization'] = `Bearer ${newAccess}`
+                    instance.defaults.headers.common["Authorization"] = `Bearer ${newAccess}`
                     emitTokenRefreshed({ accessToken: newAccess, refreshToken: newRefresh })
 
                     processQueue(null, newAccess)
@@ -229,22 +244,25 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                 } catch (refreshErr) {
                     processQueue(refreshErr)
                     clearAuthStorage()
-                    delete instance.defaults.headers.common['Authorization']
+                    delete instance.defaults.headers.common["Authorization"]
+
                     const refreshStatus =
                         axios.isAxiosError(refreshErr) && refreshErr.response
                             ? refreshErr.response.status
                             : undefined
+
                     emitForcedLogout({
                         reason:
-                            typeof refreshStatus === 'number'
+                            typeof refreshStatus === "number"
                                 ? `refresh_failed_${refreshStatus}`
-                                : 'refresh_failed',
+                                : "refresh_failed",
                     })
+
                     return Promise.reject(refreshErr)
                 } finally {
                     isRefreshing = false
                 }
-            },
+            }
         )
     }
 
@@ -261,17 +279,17 @@ export const apiClient = createApiClient({
 /** Auth-scoped client (talks to auth service) */
 export const authClient = createApiClient({
     baseURL: API_CONFIG.AUTH.BASE_URL,
-    feature: 'auth',
+    feature: "auth",
     enableAuth: true,
     enableRefresh: true,
 })
 
-/** Catalog-scoped client example (refresh disabled if opaque tokens) */
+/** Catalog-scoped client (refresh MUST be enabled to recover from 401) */
 export const catalogClient = createApiClient({
-    baseURL: API_CONFIG.CATALOG.BASE_URL || 'http://localhost:8000',
-    feature: 'catalog',
+    baseURL: API_CONFIG.CATALOG.BASE_URL || "http://localhost:8000",
+    feature: "catalog",
     enableAuth: true,
-    enableRefresh: false,
+    enableRefresh: true, // ← قبلاً false بود؛ برای رفع مشکل 401 باید true باشد
 })
 
 /** Factory to create additional feature clients on demand */
