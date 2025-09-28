@@ -104,6 +104,8 @@ export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (cou
         [fetchAllCategories, toNode],
     )
 
+    const hasLoadedRef = React.useRef(false)
+
     const loadRoot = React.useCallback(async () => {
         setLoadingRoot(true)
         try {
@@ -117,6 +119,8 @@ export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (cou
     }, [loadChildren, t])
 
     React.useEffect(() => {
+        if (hasLoadedRef.current) return
+        hasLoadedRef.current = true
         loadRoot()
     }, [loadRoot])
 
