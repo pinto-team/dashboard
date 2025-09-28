@@ -170,6 +170,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                 if (originalRequest[RETRY_FLAG]) {
                     clearAuthStorage()
                     delete instance.defaults.headers.common['Authorization']
+                    emitForcedLogout({ reason: 'session_expired' })
                     return Promise.reject(error)
                 }
 
@@ -229,6 +230,16 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     processQueue(refreshErr)
                     clearAuthStorage()
                     delete instance.defaults.headers.common['Authorization']
+                    const refreshStatus =
+                        axios.isAxiosError(refreshErr) && refreshErr.response
+                            ? refreshErr.response.status
+                            : undefined
+                    emitForcedLogout({
+                        reason:
+                            typeof refreshStatus === 'number'
+                                ? `refresh_failed_${refreshStatus}`
+                                : 'refresh_failed',
+                    })
                     return Promise.reject(refreshErr)
                 } finally {
                     isRefreshing = false
