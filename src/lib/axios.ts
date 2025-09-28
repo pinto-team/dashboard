@@ -170,7 +170,6 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                 if (originalRequest[RETRY_FLAG]) {
                     clearAuthStorage()
                     delete instance.defaults.headers.common['Authorization']
-                    emitForcedLogout({ reason: 'unauthorized_after_refresh' })
                     return Promise.reject(error)
                 }
 
@@ -230,7 +229,6 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     processQueue(refreshErr)
                     clearAuthStorage()
                     delete instance.defaults.headers.common['Authorization']
-                    emitForcedLogout({ reason: 'refresh_failed' })
                     return Promise.reject(refreshErr)
                 } finally {
                     isRefreshing = false
