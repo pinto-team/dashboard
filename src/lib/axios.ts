@@ -162,7 +162,13 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     | undefined
                 const status = error.response?.status
 
-                if (status !== 401 || !originalRequest || originalRequest[RETRY_FLAG]) {
+                if (status !== 401 || !originalRequest) {
+                    return Promise.reject(error)
+                }
+
+                if (originalRequest[RETRY_FLAG]) {
+                    clearAuthStorage()
+                    delete instance.defaults.headers.common['Authorization']
                     return Promise.reject(error)
                 }
 
@@ -171,6 +177,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                         const newToken = await new Promise<string>((resolve, reject) => {
                             pendingQueue.push({ resolve, reject })
                         })
+                        originalRequest[RETRY_FLAG] = true
                         setAuthHeaderOnConfig(originalRequest, newToken)
                         return instance(originalRequest)
                     } catch (e) {
@@ -219,6 +226,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                 } catch (refreshErr) {
                     processQueue(refreshErr)
                     clearAuthStorage()
+                    delete instance.defaults.headers.common['Authorization']
                     return Promise.reject(refreshErr)
                 } finally {
                     isRefreshing = false
