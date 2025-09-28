@@ -1,22 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import type { ApiResponse } from './types'
-import { createCrudApi } from './crudFactory'
+import type { CrudApi, ListParams } from './crudFactory' // ← نوع‌ها را از crudFactory بگیر
 
 /**
  * تولید هوک‌های CRUD با تایپ کامل
  * @param key کلید اصلی کش برای React Query
  * @param api یک آبجکت برگردانده شده از createCrudApi
  */
-export function createCrudHooks<TData extends { id: string | number }, TCreate, TUpdate>(
+export function createCrudHooks<
+    TData extends { id: string | number },
+    TCreate,
+    TUpdate,
+    TParams extends ListParams = ListParams
+>(
     key: string,
-    api: ReturnType<typeof createCrudApi<TData, TCreate, TUpdate>>,
+    api: CrudApi<TData, TCreate, TUpdate, TParams>,
 ) {
     return {
         /**
          * 📄 گرفتن لیست
          */
-        useList: (params?: unknown) =>
+        useList: (params?: TParams) =>
             useQuery<ApiResponse<TData[]>, AxiosError<ApiResponse<unknown>>>({
                 queryKey: [key, 'list', params ? JSON.stringify(params) : undefined],
                 queryFn: () => api.list(params),
@@ -29,7 +34,7 @@ export function createCrudHooks<TData extends { id: string | number }, TCreate, 
             useQuery<ApiResponse<TData>, AxiosError<ApiResponse<unknown>>>({
                 queryKey: [key, 'detail', id],
                 queryFn: () => api.detail(id),
-                enabled: !!id,
+                enabled: id !== undefined && id !== null && `${id}`.length > 0,
             }),
 
         /**
@@ -40,7 +45,6 @@ export function createCrudHooks<TData extends { id: string | number }, TCreate, 
             return useMutation<ApiResponse<TData>, AxiosError<ApiResponse<unknown>>, TCreate>({
                 mutationFn: api.create,
                 onSuccess: (data) => {
-                    // وقتی آیتم جدید ساخته شد، لیست و جزئیات را دوباره واکشی کن
                     qc.invalidateQueries({ queryKey: [key, 'list'] })
                     const id = data.data?.id
                     if (id !== undefined && id !== null) {

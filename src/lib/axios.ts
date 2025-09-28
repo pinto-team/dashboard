@@ -1,17 +1,5 @@
 /**
  * Axios client factory and preconfigured instances.
- *
- * Responsibilities:
- * - Configure base axios instances per feature with sensible defaults
- * - Attach Authorization header from storage when enabled
- * - Log requests/responses in development
- * - Handle 401 responses with a robust single-flight refresh flow
- * - Queue pending 401 requests until a new token is issued
- *
- * How refresh works:
- * - On a 401, the first request triggers a refresh call using refresh token
- * - Concurrent 401s are queued and resolved when refresh succeeds
- * - Original requests are retried with the new access token
  */
 import axios, {
     AxiosError,
@@ -27,21 +15,13 @@ import {
     getRefreshToken,
     setTokens,
 } from "@/features/auth/storage"
-import {
-    emitForcedLogout,
-    emitTokenRefreshed,
-} from "@/features/auth/lib/auth-events"
+import { emitForcedLogout, emitTokenRefreshed } from "@/features/auth/lib/auth-events"
 import { buildRefreshRequestPayload } from "@/features/auth/utils/context"
 import { API_CONFIG } from "@/shared/config/api.config"
+import { API_ROUTES, buildFeatureUrl } from "@/shared/constants/apiRoutes" // ⬅️ اضافه شد
 import { defaultLogger } from "@/shared/lib/logger"
 
-/** Resolver pair used to unblock queued requests after refresh */
-type PendingResolver = {
-    resolve: (token: string) => void
-    reject: (reason?: unknown) => void
-}
-
-/** Minimal shape returned by the refresh endpoint */
+type PendingResolver = { resolve: (token: string) => void; reject: (reason?: unknown) => void }
 type RefreshResponse = {
     data?: {
         access_token?: unknown
@@ -53,8 +33,6 @@ type RefreshResponse = {
     }
     meta?: unknown
 }
-
-/** Options for creating a feature-scoped axios instance */
 type ClientConfig = {
     baseURL: string
     feature?: string
@@ -62,37 +40,25 @@ type ClientConfig = {
     enableRefresh?: boolean
 }
 
-/** Internal flag used to avoid infinite retry loops */
 const RETRY_FLAG = "__isRetryRequest"
-
-// Single-flight refresh guard and queue for pending 401s
 let isRefreshing = false
 let pendingQueue: PendingResolver[] = []
 
-/** Normalize headers into a mutable AxiosHeaders instance */
 function toAxiosHeaders(h?: unknown): AxiosHeaders {
     if (!h) return new AxiosHeaders()
     return h instanceof AxiosHeaders ? h : new AxiosHeaders(h as Record<string, string>)
 }
-
-/** Resolve or reject all pending queued 401 requests */
 function processQueue(error: unknown | null, token?: string) {
-    if (error) {
-        pendingQueue.forEach(({ reject }) => reject(error))
-    } else if (token) {
-        pendingQueue.forEach(({ resolve }) => resolve(token))
-    }
+    if (error) pendingQueue.forEach(({ reject }) => reject(error))
+    else if (token) pendingQueue.forEach(({ resolve }) => resolve(token))
     pendingQueue = []
 }
-
-/** Set Authorization header on a given axios config */
 function setAuthHeaderOnConfig(config: AxiosRequestConfig, token: string) {
     const headers = toAxiosHeaders(config.headers)
     headers.set("Authorization", `Bearer ${token}`)
     config.headers = headers
 }
 
-/** Create a preconfigured axios instance for a specific feature */
 function createApiClient(config: ClientConfig): AxiosInstance {
     const instance = axios.create({
         baseURL: config.baseURL,
@@ -104,18 +70,15 @@ function createApiClient(config: ClientConfig): AxiosInstance {
         instance.defaults.headers.common["X-Feature"] = config.feature
     }
 
-    /** ---------- REQUEST INTERCEPTOR ---------- */
+    // Request interceptor
     instance.interceptors.request.use(
         (requestConfig: InternalAxiosRequestConfig) => {
             const token = getAccessToken()
             if (token && config.enableAuth) {
                 const headers = toAxiosHeaders(requestConfig.headers)
-                if (!headers.has("Authorization")) {
-                    headers.set("Authorization", `Bearer ${token}`)
-                }
+                if (!headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`)
                 requestConfig.headers = headers
             }
-
             if (API_CONFIG.DEV.LOG_REQUESTS) {
                 defaultLogger.info("API Request", {
                     method: requestConfig.method?.toUpperCase(),
@@ -125,13 +88,12 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     feature: config.feature,
                 })
             }
-
             return requestConfig
         },
         (err) => Promise.reject(err)
     )
 
-    /** ---------- RESPONSE LOGGING INTERCEPTOR ---------- */
+    // Response logger
     instance.interceptors.response.use(
         (response) => {
             if (API_CONFIG.DEV.LOG_RESPONSES) {
@@ -157,15 +119,13 @@ function createApiClient(config: ClientConfig): AxiosInstance {
         }
     )
 
-    /** ---------- REFRESH LOGIC INTERCEPTOR ---------- */
+    // Refresh logic
     if (config.enableRefresh !== false) {
         instance.interceptors.response.use(
             (response) => response,
             async (error: AxiosError) => {
                 const originalRequest = error.config as
-                    | (InternalAxiosRequestConfig & {
-                    [RETRY_FLAG]?: boolean
-                })
+                    | (InternalAxiosRequestConfig & { [RETRY_FLAG]?: boolean })
                     | undefined
                 const status = error.response?.status
 
@@ -173,7 +133,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     return Promise.reject(error)
                 }
 
-                // اگر قبلاً یک بار تلاش کردیم و دوباره 401 شد → خروج اجباری
+                // retried request again 401 → logout
                 if (originalRequest[RETRY_FLAG]) {
                     clearAuthStorage()
                     delete instance.defaults.headers.common["Authorization"]
@@ -181,7 +141,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     return Promise.reject(error)
                 }
 
-                // اگر در حال حاضر یک رفرش در جریان است → منتظر بمان
+                // wait if refreshing
                 if (isRefreshing) {
                     try {
                         const newToken = await new Promise<string>((resolve, reject) => {
@@ -195,22 +155,18 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     }
                 }
 
-                // شروع اولین رفرش
+                // start refresh
                 originalRequest[RETRY_FLAG] = true
                 isRefreshing = true
 
                 try {
                     const rt = getRefreshToken()
                     if (!rt) {
-                        // ❗ اگر رفرش‌توکن نداریم، همینجا logout کن
-                        clearAuthStorage()
-                        delete instance.defaults.headers.common["Authorization"]
-                        emitForcedLogout({ reason: "no_refresh_token" })
-                        processQueue(new Error("No refresh token"))
-                        return Promise.reject(error)
+                        throw error
                     }
 
-                    const refreshUrl = `${API_CONFIG.AUTH.BASE_URL}/auth/refresh`
+                    // ⬅️ مسیر صحیح رفرش بر اساس API_ROUTES + BASE_URL سرویس AUTH
+                    const refreshUrl = buildFeatureUrl("AUTH", API_ROUTES.AUTH.REFRESH)
 
                     const { data } = await axios.post<RefreshResponse>(
                         refreshUrl,
@@ -220,19 +176,14 @@ function createApiClient(config: ClientConfig): AxiosInstance {
 
                     const payload = (data?.data ?? data ?? {}) as Record<string, unknown>
                     const newAccess =
-                        typeof payload.access_token === "string"
-                            ? (payload.access_token as string)
-                            : ""
+                        typeof payload.access_token === "string" ? (payload.access_token as string) : ""
                     const newRefresh =
-                        typeof payload.refresh_token === "string"
-                            ? (payload.refresh_token as string)
-                            : ""
+                        typeof payload.refresh_token === "string" ? (payload.refresh_token as string) : ""
 
                     if (!newAccess || !newRefresh) {
                         throw new Error("Invalid refresh response: missing tokens")
                     }
 
-                    // ذخیره توکن جدید و اطلاع به بقیه
                     setTokens(newAccess, newRefresh)
                     instance.defaults.headers.common["Authorization"] = `Bearer ${newAccess}`
                     emitTokenRefreshed({ accessToken: newAccess, refreshToken: newRefresh })
@@ -276,7 +227,7 @@ export const apiClient = createApiClient({
     enableRefresh: true,
 })
 
-/** Auth-scoped client (talks to auth service) */
+/** Auth-scoped client */
 export const authClient = createApiClient({
     baseURL: API_CONFIG.AUTH.BASE_URL,
     feature: "auth",
@@ -284,15 +235,14 @@ export const authClient = createApiClient({
     enableRefresh: true,
 })
 
-/** Catalog-scoped client (refresh MUST be enabled to recover from 401) */
+/** Catalog-scoped client (refresh enabled) */
 export const catalogClient = createApiClient({
     baseURL: API_CONFIG.CATALOG.BASE_URL || "http://localhost:8000",
     feature: "catalog",
     enableAuth: true,
-    enableRefresh: true, // ← قبلاً false بود؛ برای رفع مشکل 401 باید true باشد
+    enableRefresh: true,
 })
 
-/** Factory to create additional feature clients on demand */
 export function createFeatureClient(config: ClientConfig): AxiosInstance {
     return createApiClient(config)
 }

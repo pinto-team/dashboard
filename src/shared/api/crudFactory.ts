@@ -1,6 +1,6 @@
 // shared/api/crudFactory.ts
 import type { AxiosInstance, AxiosRequestConfig } from "axios";
-import apiClient, { createFeatureClient } from "@/lib/axios"; // ← این همون اینستنس با رفرش‌ـه
+import apiClient, { createFeatureClient } from "@/lib/axios";
 import type { ApiResponse } from "./types";
 
 export type Id = string | number;
@@ -22,6 +22,20 @@ export type CrudFactoryOptions = {
     client?: AxiosInstance;
 };
 
+/** شکل تایپی CRUD که createCrudApi برمی‌گرداند */
+export type CrudApi<
+    TData,
+    TCreate,
+    TUpdate = Partial<TCreate>,
+    TParams extends ListParams = ListParams
+> = {
+    list: (params?: TParams, cfg?: AxiosRequestConfig) => Promise<ApiResponse<TData[]>>;
+    detail: (id: Id, cfg?: AxiosRequestConfig) => Promise<ApiResponse<TData>>;
+    create: (payload: TCreate, cfg?: AxiosRequestConfig) => Promise<ApiResponse<TData>>;
+    update: (id: Id, payload: TUpdate, cfg?: AxiosRequestConfig) => Promise<ApiResponse<TData>>;
+    remove: (id: Id, cfg?: AxiosRequestConfig) => Promise<ApiResponse<void>>;
+};
+
 /** نرمال‌سازی مسیرها: جلو/عقب اسلش اضافه نیفتد */
 function joinPath(basePath: string, suffix?: string | number) {
     const base = basePath.replace(/\/+$/, "");
@@ -35,10 +49,15 @@ function joinPath(basePath: string, suffix?: string | number) {
  * - اگر client دادی: از همان استفاده می‌کند (⚠️ مسئولیت با خودت).
  * - در غیر این صورت: apiClient پیش‌فرض استفاده می‌شود.
  */
-export function createCrudApi<TData, TCreate, TUpdate = Partial<TCreate>>(
+export function createCrudApi<
+    TData,
+    TCreate,
+    TUpdate = Partial<TCreate>,
+    TParams extends ListParams = ListParams
+>(
     basePath: string,
     opts: CrudFactoryOptions = {}
-) {
+): CrudApi<TData, TCreate, TUpdate, TParams> {
     const client: AxiosInstance =
         opts.client ??
         (opts.baseURL
@@ -51,20 +70,16 @@ export function createCrudApi<TData, TCreate, TUpdate = Partial<TCreate>>(
             : apiClient);
 
     return {
-        list: (params?: ListParams, cfg?: AxiosRequestConfig) =>
+        list: (params?: TParams, cfg?: AxiosRequestConfig) =>
             client
                 .get<ApiResponse<TData[]>>(joinPath(basePath), { params, ...cfg })
                 .then((r) => r.data),
 
         detail: (id: Id, cfg?: AxiosRequestConfig) =>
-            client
-                .get<ApiResponse<TData>>(joinPath(basePath, id), cfg)
-                .then((r) => r.data),
+            client.get<ApiResponse<TData>>(joinPath(basePath, id), cfg).then((r) => r.data),
 
         create: (payload: TCreate, cfg?: AxiosRequestConfig) =>
-            client
-                .post<ApiResponse<TData>>(joinPath(basePath), payload, cfg)
-                .then((r) => r.data),
+            client.post<ApiResponse<TData>>(joinPath(basePath), payload, cfg).then((r) => r.data),
 
         update: (id: Id, payload: TUpdate, cfg?: AxiosRequestConfig) =>
             client
@@ -72,9 +87,7 @@ export function createCrudApi<TData, TCreate, TUpdate = Partial<TCreate>>(
                 .then((r) => r.data),
 
         remove: (id: Id, cfg?: AxiosRequestConfig) =>
-            client
-                .delete<ApiResponse<void>>(joinPath(basePath, id), cfg)
-                .then((r) => r.data),
+            client.delete<ApiResponse<void>>(joinPath(basePath, id), cfg).then((r) => r.data),
     };
 }
 
