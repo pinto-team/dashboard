@@ -1,17 +1,20 @@
 import { ReactNode, useCallback, useEffect, useState } from "react"
 
-import { apiLogin, apiMe, apiRefresh } from "@/features/auth/services/auth.api"
+import { apiLogin, apiLogout, apiRefresh } from "@/features/auth/services/auth.api"
 import {
     clearAuthStorage,
     getAccessToken,
     getCachedUser,
     getRefreshToken,
+    getSessionId as getStoredSessionId,
     setCachedUser,
+    setSessionId as persistSessionId,
     setTokens,
 } from "@/features/auth/storage"
 import { AuthUser } from "@/features/auth/types"
 import { HttpError } from "@/lib/http-error"
 import { onForcedLogout, onTokenRefreshed } from "@/features/auth/lib/auth-events"
+import { defaultLogger } from "@/shared/lib/logger"
 
 import { AuthContext } from "./auth-context"
 
@@ -19,34 +22,39 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null)
     const [accessToken, setAccessToken] = useState<string | null>(null)
     const [refreshToken, setRefreshToken] = useState<string | null>(null)
+    const [sessionId, setSessionId] = useState<string | null>(null)
     const [ready, setReady] = useState(false)
 
-    /** Clear all auth state and storage */
     const hardLogout = useCallback(() => {
         setUser(null)
         setAccessToken(null)
         setRefreshToken(null)
+        setSessionId(null)
         clearAuthStorage()
     }, [])
 
-    /** Perform credential login and persist tokens/user */
     async function login({
-                             username,
-                             password,
-                         }: {
+        username,
+        password,
+    }: {
         username: string
         password: string
     }) {
         try {
-            const r = await apiLogin(username, password)
-            setAccessToken(r.accessToken)
-            setRefreshToken(r.refreshToken)
+            const result = await apiLogin(username, password)
 
-            const u: AuthUser = r.user
+            setAccessToken(result.accessToken)
+            setRefreshToken(result.refreshToken)
 
-            setUser(u)
-            setTokens(r.accessToken, r.refreshToken)
-            setCachedUser(u)
+            const session = result.sessionId ?? null
+            setSessionId(session)
+
+            const authenticatedUser: AuthUser = result.user
+            setUser(authenticatedUser)
+
+            setTokens(result.accessToken, result.refreshToken)
+            setCachedUser(authenticatedUser)
+            persistSessionId(session)
         } catch (err: unknown) {
             if (err instanceof HttpError) throw new Error(err.message)
             if (err instanceof Error) throw err
@@ -54,44 +62,74 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    /** Logout current user and clear state */
     function logout() {
-        hardLogout()
+        const sid = sessionId ?? getStoredSessionId()
+
+        const performLogout = async () => {
+            if (sid) {
+                try {
+                    await apiLogout(sid)
+                } catch (error) {
+                    defaultLogger.error("Failed to revoke session during logout", { error })
+                }
+            }
+
+            hardLogout()
+        }
+
+        void performLogout()
     }
 
-    // bootstrap on mount
     useEffect(() => {
         let isActive = true
 
         const at = getAccessToken()
         const rt = getRefreshToken()
         const cachedUser = getCachedUser<AuthUser>()
+        const storedSessionId = getStoredSessionId()
 
-        if (at && cachedUser) {
+        if (storedSessionId) {
+            setSessionId(storedSessionId)
+        }
+
+        if (at) {
             setAccessToken(at)
+        }
+        if (rt) {
             setRefreshToken(rt)
+        }
+        if (cachedUser) {
             setUser(cachedUser)
-            setReady(true)
+        }
 
-            apiMe(at).catch(async () => {
-                if (!isActive) return
-                if (rt) {
-                    try {
-                        const r = await apiRefresh(rt)
-                        setAccessToken(r.accessToken)
-                        setRefreshToken(r.refreshToken)
-                        setTokens(r.accessToken, r.refreshToken)
-                        if (r.user) {
-                            setUser(r.user)
-                            setCachedUser(r.user)
-                        }
-                    } catch {
-                        hardLogout()
+        if (rt && !cachedUser) {
+            ;(async () => {
+                try {
+                    const response = await apiRefresh(rt)
+                    if (!isActive) return
+
+                    setAccessToken(response.accessToken)
+                    setRefreshToken(response.refreshToken)
+                    setTokens(response.accessToken, response.refreshToken)
+
+                    if (response.user) {
+                        setUser(response.user)
+                        setCachedUser(response.user)
                     }
-                } else {
+
+                    if (response.sessionId) {
+                        setSessionId(response.sessionId)
+                        persistSessionId(response.sessionId)
+                    }
+                } catch {
+                    if (!isActive) return
                     hardLogout()
+                } finally {
+                    if (isActive) {
+                        setReady(true)
+                    }
                 }
-            })
+            })()
         } else {
             setReady(true)
         }
@@ -99,7 +137,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         return () => {
             isActive = false
         }
-    }, [])
+    }, [hardLogout])
 
     useEffect(() => {
         const unsubscribeLogout = onForcedLogout((payload) => {
@@ -109,10 +147,17 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
             }
         })
 
-        const unsubscribeTokenUpdate = onTokenRefreshed(({ accessToken: nextAccessToken, refreshToken: nextRefreshToken }) => {
-            setAccessToken(nextAccessToken)
-            setRefreshToken(nextRefreshToken)
-        })
+        const unsubscribeTokenUpdate = onTokenRefreshed(
+            ({ accessToken: nextAccessToken, refreshToken: nextRefreshToken, sessionId: nextSessionId }) => {
+                setAccessToken(nextAccessToken)
+                setRefreshToken(nextRefreshToken)
+
+                if (nextSessionId) {
+                    setSessionId(nextSessionId)
+                    persistSessionId(nextSessionId)
+                }
+            },
+        )
 
         return () => {
             unsubscribeLogout()
@@ -126,6 +171,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
                 user,
                 accessToken,
                 refreshToken,
+                sessionId,
                 isAuthenticated: Boolean(user && accessToken),
                 ready,
                 login,

@@ -17,7 +17,6 @@ function joinSegments(...segments: (string | number)[]): string {
 
 const API_V1 = joinSegments('api', 'v1')
 const ADMIN_AUTH = joinSegments(API_V1, 'admin', 'auth')
-const AUTH_ROOT = joinSegments('auth')
 const FILES_ROOT = joinSegments('files')
 const BRANDS_ROOT = joinSegments(API_V1, 'brands')
 const CATEGORIES_ROOT = joinSegments(API_V1, 'categories')
@@ -27,13 +26,7 @@ const SESSIONS_ROOT = joinSegments(API_V1, 'sessions')
 export const API_ROUTES = {
     AUTH: {
         LOGIN: joinSegments(ADMIN_AUTH, 'login'),
-        LOGOUT: joinSegments('api', 'users', 'logout'),
-        ME: joinSegments(AUTH_ROOT, 'me'),
         REFRESH: joinSegments(API_V1, 'auth', 'refresh'),
-        REGISTER: joinSegments(AUTH_ROOT, 'register'),
-        FORGOT_PASSWORD: joinSegments(AUTH_ROOT, 'forgot-password'),
-        RESET_PASSWORD: joinSegments(AUTH_ROOT, 'reset-password'),
-        VERIFY_EMAIL: joinSegments(AUTH_ROOT, 'verify-email'),
     },
 
     FILES: {
@@ -57,7 +50,7 @@ export const API_ROUTES = {
         CURRENT: joinSegments(SESSIONS_ROOT, 'current'),
         ME_ALL: joinSegments(SESSIONS_ROOT, 'me', 'all'),
         ME_OTHERS: joinSegments(SESSIONS_ROOT, 'me', 'others'),
-        BY_ID: (sessionId: string) => joinSegments(SESSIONS_ROOT, sessionId),
+        BY_ID: (sessionId: string) => joinSegments(SESSIONS_ROOT, 'me', sessionId),
     },
 } as const
 

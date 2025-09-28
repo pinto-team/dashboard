@@ -3,6 +3,7 @@ export const LS_KEYS = {
     ACCESS_TOKEN: 'auth.accessToken',
     REFRESH_TOKEN: 'auth.refreshToken',
     USER: 'auth.user',
+    SESSION_ID: 'auth.sessionId',
 } as const
 
 export function getAccessToken(): string | null {
@@ -21,6 +22,22 @@ export function setTokens(accessToken: string, refreshToken: string): void {
 export function clearTokens(): void {
     localStorage.removeItem(LS_KEYS.ACCESS_TOKEN)
     localStorage.removeItem(LS_KEYS.REFRESH_TOKEN)
+}
+
+export function getSessionId(): string | null {
+    return localStorage.getItem(LS_KEYS.SESSION_ID)
+}
+
+export function setSessionId(sessionId: string | null): void {
+    if (sessionId) {
+        localStorage.setItem(LS_KEYS.SESSION_ID, sessionId)
+    } else {
+        localStorage.removeItem(LS_KEYS.SESSION_ID)
+    }
+}
+
+export function clearSessionId(): void {
+    localStorage.removeItem(LS_KEYS.SESSION_ID)
 }
 
 export function getCachedUser<T = unknown>(): T | null {
@@ -44,4 +61,5 @@ export function clearCachedUser(): void {
 export function clearAuthStorage(): void {
     clearTokens()
     clearCachedUser()
+    clearSessionId()
 }

@@ -17,12 +17,14 @@ export type AuthLoginResult = {
     tokenType: string
     audience: string[]
     user: AuthUser
+    sessionId: string | null
 }
 
 export type AuthCtx = {
     user: AuthUser | null
     accessToken: string | null
     refreshToken: string | null
+    sessionId: string | null
     isAuthenticated: boolean
     ready: boolean
     login: (params: { username: string; password: string }) => Promise<void> // eslint-disable-line no-unused-vars

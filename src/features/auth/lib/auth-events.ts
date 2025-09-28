@@ -3,7 +3,7 @@ import { defaultLogger } from '@/shared/lib/logger'
 
 export type AuthEventMap = {
     logout: { reason?: string; redirect?: boolean } | undefined
-    tokenRefreshed: { accessToken: string; refreshToken: string }
+    tokenRefreshed: { accessToken: string; refreshToken: string; sessionId?: string | null }
 }
 
 type Listener<K extends keyof AuthEventMap> = (payload: AuthEventMap[K]) => void

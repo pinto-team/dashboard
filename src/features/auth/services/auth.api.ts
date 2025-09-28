@@ -18,6 +18,9 @@ type RawLoginPayload = {
     token_type?: unknown
     audience?: unknown
     profile?: unknown
+    session_id?: unknown
+    sessionId?: unknown
+    session?: unknown
 }
 
 type RawRefreshPayload = {
@@ -27,6 +30,9 @@ type RawRefreshPayload = {
     expires_in?: unknown
     audience?: unknown
     profile?: unknown
+    session_id?: unknown
+    sessionId?: unknown
+    session?: unknown
 }
 
 function normalizeString(value: unknown, fallback = ''): string {
@@ -49,6 +55,39 @@ function mapProfileToUser(profile: Record<string, unknown>, fallbackId = ''): Au
         phone: normalizeString(profile.phone, '') || undefined,
         avatar: normalizeString(profile.avatar, '') || undefined,
     }
+}
+
+function extractSessionId(payload: Record<string, unknown>): string | null {
+    const direct = normalizeString(payload.session_id, '')
+    if (direct) {
+        return direct
+    }
+
+    const camel = normalizeString(payload.sessionId, '')
+    if (camel) {
+        return camel
+    }
+
+    const nested = payload.session
+    if (nested && typeof nested === 'object') {
+        const record = nested as Record<string, unknown>
+        const nestedDirect = normalizeString(record.session_id, '')
+        if (nestedDirect) {
+            return nestedDirect
+        }
+
+        const nestedCamel = normalizeString(record.sessionId, '')
+        if (nestedCamel) {
+            return nestedCamel
+        }
+
+        const nestedId = normalizeString(record.id, '')
+        if (nestedId) {
+            return nestedId
+        }
+    }
+
+    return null
 }
 
 export async function apiLogin(username: string, password: string): Promise<AuthLoginResult> {
@@ -85,6 +124,7 @@ export async function apiLogin(username: string, password: string): Promise<Auth
                 }
 
                 const user = mapProfileToUser(normalizedProfile, username)
+                const sessionId = extractSessionId(payload as Record<string, unknown>)
 
                 return {
                     accessToken,
@@ -98,40 +138,12 @@ export async function apiLogin(username: string, password: string): Promise<Auth
                               .filter((entry) => entry.length > 0)
                         : [],
                     user,
+                    sessionId,
                 }
             }),
         'Login failed',
     )
 }
-
-export async function apiMe(token: string) {
-    const logger = getLogger('fetchUserInfo')
-
-    logger.info('Fetching user info')
-
-    return handleAsyncError(
-        authClient
-            .get(API_ROUTES.AUTH.ME, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            .then(({ data: response }) => {
-                logger.info('User info fetched successfully')
-                const profile = response.data?.profile || response.data
-                const user: AuthUser = {
-                    id: profile.id,
-                    username: profile.username || profile.email,
-                    email: profile.email,
-                    firstName: profile.first_name,
-                    lastName: profile.last_name,
-                    phone: profile.phone,
-                    avatar: profile.avatar,
-                }
-                return user
-            }),
-        'Failed to fetch user info',
-    )
-}
-
 export async function apiRefresh(refreshToken: string) {
     const logger = getLogger('refreshToken')
 
@@ -154,61 +166,29 @@ export async function apiRefresh(refreshToken: string) {
                 const user = Object.keys(normalizedProfile).length
                     ? mapProfileToUser(normalizedProfile, '')
                     : null
+                const sessionId = extractSessionId(payload as Record<string, unknown>)
 
                 return {
                     accessToken,
                     refreshToken: newRefreshToken,
                     user,
+                    sessionId,
                 }
             }),
         'Token refresh failed',
     )
 }
 
-export async function apiLogout() {
+export async function apiLogout(sessionId: string) {
     const logger = getLogger('logout')
 
-    logger.info('Attempting logout')
+    logger.info('Attempting logout', { sessionId })
 
     return handleAsyncError(
-        authClient.delete(API_ROUTES.SESSIONS.CURRENT).then(({ data }) => {
+        authClient.delete(API_ROUTES.SESSIONS.BY_ID(sessionId)).then(({ data }) => {
             logger.info('Logout successful')
             return data
         }),
         'Logout failed',
-    )
-}
-
-export async function apiRegister(userData: {
-    username: string
-    email: string
-    password: string
-    firstName?: string
-    lastName?: string
-}) {
-    const logger = getLogger('register', { email: userData.email })
-
-    logger.info('Attempting user registration')
-
-    return handleAsyncError(
-        authClient.post(API_ROUTES.AUTH.REGISTER, userData).then(({ data }) => {
-            logger.info('Registration successful')
-            return data
-        }),
-        'Registration failed',
-    )
-}
-
-export async function apiForgotPassword(email: string) {
-    const logger = getLogger('forgotPassword', { email })
-
-    logger.info('Attempting password reset request')
-
-    return handleAsyncError(
-        authClient.post(API_ROUTES.AUTH.FORGOT_PASSWORD, { email }).then(({ data }) => {
-            logger.info('Password reset request successful')
-            return data
-        }),
-        'Password reset request failed',
     )
 }

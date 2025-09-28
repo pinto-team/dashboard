@@ -25,6 +25,8 @@ export function createCrudHooks<
             useQuery<ApiResponse<TData[]>, AxiosError<ApiResponse<unknown>>>({
                 queryKey: [key, 'list', params ? JSON.stringify(params) : undefined],
                 queryFn: () => api.list(params),
+                staleTime: 5 * 60 * 1000,
+                gcTime: 10 * 60 * 1000,
             }),
 
         /**
