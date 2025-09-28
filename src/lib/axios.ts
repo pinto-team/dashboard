@@ -27,6 +27,7 @@ import {
     getRefreshToken,
     setTokens,
 } from '@/features/auth/storage'
+import { emitForcedLogout, emitTokenRefreshed } from '@/features/auth/lib/auth-events'
 import { buildRefreshRequestPayload } from '@/features/auth/utils/context'
 import { API_CONFIG } from '@/shared/config/api.config'
 import { defaultLogger } from '@/shared/lib/logger'
@@ -162,7 +163,14 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                     | undefined
                 const status = error.response?.status
 
-                if (status !== 401 || !originalRequest || originalRequest[RETRY_FLAG]) {
+                if (status !== 401 || !originalRequest) {
+                    return Promise.reject(error)
+                }
+
+                if (originalRequest[RETRY_FLAG]) {
+                    clearAuthStorage()
+                    delete instance.defaults.headers.common['Authorization']
+                    emitForcedLogout({ reason: 'unauthorized_after_refresh' })
                     return Promise.reject(error)
                 }
 
@@ -171,6 +179,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                         const newToken = await new Promise<string>((resolve, reject) => {
                             pendingQueue.push({ resolve, reject })
                         })
+                        originalRequest[RETRY_FLAG] = true
                         setAuthHeaderOnConfig(originalRequest, newToken)
                         return instance(originalRequest)
                     } catch (e) {
@@ -211,6 +220,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
 
                     setTokens(newAccess, newRefresh)
                     instance.defaults.headers.common['Authorization'] = `Bearer ${newAccess}`
+                    emitTokenRefreshed({ accessToken: newAccess, refreshToken: newRefresh })
 
                     processQueue(null, newAccess)
 
@@ -219,6 +229,8 @@ function createApiClient(config: ClientConfig): AxiosInstance {
                 } catch (refreshErr) {
                     processQueue(refreshErr)
                     clearAuthStorage()
+                    delete instance.defaults.headers.common['Authorization']
+                    emitForcedLogout({ reason: 'refresh_failed' })
                     return Promise.reject(refreshErr)
                 } finally {
                     isRefreshing = false

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react"
+import { ReactNode, useCallback, useEffect, useState } from "react"
 
 import { apiLogin, apiMe, apiRefresh } from "@/features/auth/services/auth.api"
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/features/auth/storage"
 import { AuthUser } from "@/features/auth/types"
 import { HttpError } from "@/lib/http-error"
+import { onForcedLogout, onTokenRefreshed } from "@/features/auth/lib/auth-events"
 
 import { AuthContext } from "./auth-context"
 
@@ -21,12 +22,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     const [ready, setReady] = useState(false)
 
     /** Clear all auth state and storage */
-    function hardLogout() {
+    const hardLogout = useCallback(() => {
         setUser(null)
         setAccessToken(null)
         setRefreshToken(null)
         clearAuthStorage()
-    }
+    }, [])
 
     /** Perform credential login and persist tokens/user */
     async function login({
@@ -99,6 +100,25 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
             isActive = false
         }
     }, [])
+
+    useEffect(() => {
+        const unsubscribeLogout = onForcedLogout((payload) => {
+            hardLogout()
+            if (payload?.redirect !== false) {
+                window.location.replace("/login")
+            }
+        })
+
+        const unsubscribeTokenUpdate = onTokenRefreshed(({ accessToken: nextAccessToken, refreshToken: nextRefreshToken }) => {
+            setAccessToken(nextAccessToken)
+            setRefreshToken(nextRefreshToken)
+        })
+
+        return () => {
+            unsubscribeLogout()
+            unsubscribeTokenUpdate()
+        }
+    }, [hardLogout])
 
     return (
         <AuthContext.Provider
