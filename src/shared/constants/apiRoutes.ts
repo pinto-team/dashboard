@@ -1,52 +1,111 @@
-import { API_CONFIG } from '@/shared/config/api.config'
+import { API_CONFIG, normalizeBaseUrl } from '@/shared/config/api.config'
+
+type FeatureKey = 'AUTH' | 'CATALOG'
+
+function joinSegments(...segments: (string | number)[]): string {
+    const cleaned = segments
+        .map((segment) => String(segment).trim())
+        .filter(Boolean)
+        .map((segment) => segment.replace(/^\/+|\/+$/g, ''))
+
+    if (cleaned.length === 0) {
+        return '/'
+    }
+
+    return `/${cleaned.join('/')}`
+}
+
+const API_V1 = joinSegments('api', 'v1')
+const ADMIN_AUTH = joinSegments(API_V1, 'admin', 'auth')
+const AUTH_ROOT = joinSegments('auth')
+const FILES_ROOT = joinSegments('files')
+const BRANDS_ROOT = joinSegments(API_V1, 'brands')
+const CATEGORIES_ROOT = joinSegments(API_V1, 'categories')
+const PRODUCTS_ROOT = joinSegments('products')
+const SESSIONS_ROOT = joinSegments(API_V1, 'sessions')
 
 export const API_ROUTES = {
     AUTH: {
-        LOGIN: '/api/v1/admin/auth/login',
-        LOGOUT: '/api/users/logout',
-        ME: '/auth/me',
-        REFRESH: '/api/v1/auth/refresh',
-        REGISTER: '/auth/register',
-        FORGOT_PASSWORD: '/auth/forgot-password',
-        RESET_PASSWORD: '/auth/reset-password',
-        VERIFY_EMAIL: '/auth/verify-email',
+        LOGIN: joinSegments(ADMIN_AUTH, 'login'),
+        LOGOUT: joinSegments('api', 'users', 'logout'),
+        ME: joinSegments(AUTH_ROOT, 'me'),
+        REFRESH: joinSegments(API_V1, 'auth', 'refresh'),
+        REGISTER: joinSegments(AUTH_ROOT, 'register'),
+        FORGOT_PASSWORD: joinSegments(AUTH_ROOT, 'forgot-password'),
+        RESET_PASSWORD: joinSegments(AUTH_ROOT, 'reset-password'),
+        VERIFY_EMAIL: joinSegments(AUTH_ROOT, 'verify-email'),
     },
 
     FILES: {
-        UPLOAD: '/files/upload',
-        DELETE: (id: string | number) => `/files/${id}`,
-        GET: (id: string | number) => `/files/${id}`,
-        THUMBNAIL: (id: string | number) => `/files/${id}/thumbnail`,
+        UPLOAD: joinSegments(FILES_ROOT, 'upload'),
+        DELETE: (id: string | number) => joinSegments(FILES_ROOT, id),
+        GET: (id: string | number) => joinSegments(FILES_ROOT, id),
+        THUMBNAIL: (id: string | number) => joinSegments(FILES_ROOT, id, 'thumbnail'),
     },
     BRANDS: {
-        ROOT: '/api/v1/brands',
+        ROOT: BRANDS_ROOT,
     },
     CATEGORIES: {
-        ROOT: '/api/v1/categories',
-        BY_ID: (id: string | number) => `/api/v1/categories/${id}`,
-        BY_SLUG: (slug: string) => `/api/v1/categories/slug/${slug}`,
+        ROOT: CATEGORIES_ROOT,
+        BY_ID: (id: string | number) => joinSegments(CATEGORIES_ROOT, id),
+        BY_SLUG: (slug: string) => joinSegments(CATEGORIES_ROOT, 'slug', slug),
     },
     PRODUCTS: {
-        ROOT: '/products',
+        ROOT: PRODUCTS_ROOT,
     },
     SESSIONS: {
-        CURRENT: '/api/v1/sessions/current',
-        ME_ALL: '/api/v1/sessions/me/all',
-        ME_OTHERS: '/api/v1/sessions/me/others',
-        BY_ID: (sessionId: string) => `/api/v1/sessions/${sessionId}`,
+        CURRENT: joinSegments(SESSIONS_ROOT, 'current'),
+        ME_ALL: joinSegments(SESSIONS_ROOT, 'me', 'all'),
+        ME_OTHERS: joinSegments(SESSIONS_ROOT, 'me', 'others'),
+        BY_ID: (sessionId: string) => joinSegments(SESSIONS_ROOT, sessionId),
     },
 } as const
 
 export type ApiRoute = typeof API_ROUTES
 
-// Helper function to build full URLs
-export function buildApiUrl(route: string, baseUrl?: string): string {
-    const base = baseUrl || import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    return `${base}${route}`
+type BuildApiUrlOptions = {
+    baseUrl?: string
+    feature?: FeatureKey
 }
 
-// Helper function to build feature-specific URLs
-export function buildFeatureUrl(feature: keyof typeof API_CONFIG, route: string): string {
-    const base = API_CONFIG[feature]?.BASE_URL || API_CONFIG.BASE_URL
-    return `${base}${route}`
+function normalizeRoute(route: string): string {
+    if (!route) {
+        return '/'
+    }
+    return route.startsWith('/') ? route : `/${route}`
+}
+
+function resolveBaseUrl(feature?: FeatureKey, override?: string): string {
+    if (override) {
+        return normalizeBaseUrl(override)
+    }
+
+    if (!feature) {
+        return API_CONFIG.BASE_URL
+    }
+
+    return API_CONFIG[feature].BASE_URL
+}
+
+export function buildApiUrl(route: string, baseUrl?: string): string
+export function buildApiUrl(route: string, options?: BuildApiUrlOptions): string
+export function buildApiUrl(
+    route: string,
+    arg?: string | BuildApiUrlOptions,
+): string {
+    const options: BuildApiUrlOptions =
+        typeof arg === 'string' ? { baseUrl: arg } : arg ?? {}
+
+    const normalizedRoute = normalizeRoute(route)
+    const base = resolveBaseUrl(options.feature, options.baseUrl)
+
+    return `${base}${normalizedRoute}`
+}
+
+export function buildFeatureUrl(
+    feature: FeatureKey,
+    route: string,
+    baseUrl?: string,
+): string {
+    return buildApiUrl(route, { feature, baseUrl })
 }
