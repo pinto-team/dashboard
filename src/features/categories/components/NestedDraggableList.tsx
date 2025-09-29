@@ -133,10 +133,18 @@ export default function NestedDraggableList({
                     const payload = buildReorderPayload(plan.targetSiblings)
                     await categoriesApiService.reorderMany(payload)
                 } else {
-                    await categoriesApiService.update(params.sourceId, {
-                        parent_id: params.toParentId,
-                        sort_index: plan.targetSiblings.findIndex((node) => node.id === params.sourceId),
-                    })
+                    await categoriesApiService.update(
+                        params.sourceId,
+                        {
+                            parent_id: params.toParentId,
+                            sort_index: plan.targetSiblings.findIndex((node) => node.id === params.sourceId),
+                        },
+                        {
+                            headers: {
+                                "X-Category-Id": params.sourceId,
+                            },
+                        },
+                    )
                     const payload = buildReorderPayload(plan.sourceSiblings, plan.targetSiblings)
                     if (payload.length > 0) {
                         await categoriesApiService.reorderMany(payload)

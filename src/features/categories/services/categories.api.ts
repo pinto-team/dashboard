@@ -31,8 +31,16 @@ export const categoriesApiService = {
         return catalogClient.post<CategoryResponse>(API_ROUTES.CATEGORIES.ROOT, payload)
     },
 
-    update(id: UUID, payload: UpdateCategoryRequest) {
-        return catalogClient.put<CategoryResponse>(API_ROUTES.CATEGORIES.BY_ID(id), payload)
+    update(id: UUID, payload: UpdateCategoryRequest, config?: Parameters<typeof catalogClient.patch>[2]) {
+        const mergedConfig = {
+            ...(config ?? {}),
+            headers: {
+                ...(config?.headers ?? {}),
+                "X-Category-Id": id,
+            },
+        }
+
+        return catalogClient.patch<CategoryResponse>(API_ROUTES.CATEGORIES.BY_ID(id), payload, mergedConfig)
     },
 
     reorderOne(id: UUID, payload: ReorderCategoryItem) {
