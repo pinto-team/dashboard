@@ -49,3 +49,10 @@ export interface CategoryFormValues {
 
 export type CategoryResponse = ApiResponse<CategoryData>
 export type CategoryListResponse = ApiResponse<CategoryData[]>
+
+export interface ReorderCategoryItem {
+    id: UUID
+    sort_index: number
+}
+
+export type ReorderCategories = ReorderCategoryItem[]
