@@ -15,7 +15,23 @@ export type CategoryNode = {
     name: string
     image_url: string | null
     expanded?: boolean
+    sort_index: number
     children: CategoryNode[]
+}
+
+export type ReorderParams = {
+    sourceId: UUID
+    fromParentId: UUID | null
+    toParentId: UUID | null
+    toIndex: number
+}
+
+export type ReorderPlan = {
+    tree: CategoryNode[]
+    fromParentId: UUID | null
+    toParentId: UUID | null
+    sourceSiblings: CategoryNode[]
+    targetSiblings: CategoryNode[]
 }
 
 const extractImagePath = (category: CategoryData): string | null => {
@@ -35,6 +51,7 @@ export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (cou
             name: getLocalizedValue(category.name, locale),
             image_url: extractImagePath(category),
             expanded: false,
+            sort_index: category.sort_index,
             children: [],
         }),
         [locale],
@@ -99,7 +116,10 @@ export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (cou
     const loadChildren = React.useCallback(
         async (parentId: UUID | null) => {
             const list = await fetchAllCategories()
-            return list.filter((c) => c.parent_id === parentId).map(toNode)
+            return list
+                .filter((c) => c.parent_id === parentId)
+                .sort((a, b) => a.sort_index - b.sort_index)
+                .map(toNode)
         },
         [fetchAllCategories, toNode],
     )
@@ -225,5 +245,49 @@ export function useNestedCategories(onAddRoot?: () => void, onCountChange?: (cou
         findAndUpdate,
         findChildrenRef,
         deepClone,
+        createReorderPlan: (params: ReorderParams): ReorderPlan | null => {
+            const next = deepClone(categories)
+            const sourceSiblings = findChildrenRef(next, params.fromParentId)
+            if (!sourceSiblings) return null
+
+            const currentIndex = sourceSiblings.findIndex((child) => child.id === params.sourceId)
+            if (currentIndex === -1) return null
+
+            const [moved] = sourceSiblings.splice(currentIndex, 1)
+
+            const targetSiblings =
+                params.fromParentId === params.toParentId
+                    ? sourceSiblings
+                    : findChildrenRef(next, params.toParentId)
+
+            if (!targetSiblings) return null
+
+            let insertAt = params.toIndex
+            if (params.fromParentId === params.toParentId && insertAt > currentIndex) {
+                insertAt -= 1
+            }
+            insertAt = Math.max(0, Math.min(insertAt, targetSiblings.length))
+
+            targetSiblings.splice(insertAt, 0, moved)
+
+            const normalize = (nodes: CategoryNode[]) => {
+                nodes.forEach((node, index) => {
+                    node.sort_index = index
+                })
+            }
+
+            normalize(sourceSiblings)
+            if (targetSiblings !== sourceSiblings) {
+                normalize(targetSiblings)
+            }
+
+            return {
+                tree: next,
+                fromParentId: params.fromParentId,
+                toParentId: params.toParentId,
+                sourceSiblings,
+                targetSiblings,
+            }
+        },
     }
 }
