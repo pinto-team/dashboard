@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom"
 import { ROUTES } from "@/app/routes/routes"
 import { toAbsoluteUrl } from "@/shared/api/files"
 import { useI18n } from "@/shared/hooks/useI18n"
-import { useNestedCategories, CategoryNode, UUID } from "./useNestedCategories"
+import { useNestedCategories, CategoryNode, ReorderParams, UUID } from "./useNestedCategories"
 import { categoriesApiService } from "@/features/categories/services/categories.api"
 import { toast } from "sonner"
 
@@ -42,6 +42,7 @@ export default function NestedDraggableList({
         findAndUpdate,
         findChildrenRef,
         deepClone,
+        createReorderPlan,
     } = useNestedCategories(onAddRoot, onCountChange)
 
     const { t, locale } = useI18n()
@@ -52,6 +53,15 @@ export default function NestedDraggableList({
     const [draggedItem, setDraggedItem] = React.useState<{ item: CategoryNode; parentId: UUID | null } | null>(null)
     const [dragOverItem, setDragOverItem] = React.useState<{ item: CategoryNode; parentId: UUID | null } | null>(null)
     const expandTimer = React.useRef<number | null>(null)
+
+    const resetDragState = React.useCallback(() => {
+        if (expandTimer.current) {
+            window.clearTimeout(expandTimer.current)
+            expandTimer.current = null
+        }
+        setDraggedItem(null)
+        setDragOverItem(null)
+    }, [])
 
     const toggleExpand = async (id: UUID) => {
         const next = deepClone(categories)
@@ -95,6 +105,105 @@ export default function NestedDraggableList({
         }
     }
 
+    const handleDragEnd = () => {
+        resetDragState()
+    }
+
+    const buildReorderPayload = React.useCallback((...lists: CategoryNode[][]) => {
+        const map = new Map<UUID, number>()
+        lists.forEach((list) => {
+            list.forEach((node) => {
+                map.set(node.id, node.sort_index)
+            })
+        })
+        return Array.from(map.entries()).map(([id, sort_index]) => ({ id, sort_index }))
+    }, [])
+
+    const executeReorder = React.useCallback(
+        async (params: ReorderParams) => {
+            const plan = createReorderPlan(params)
+            if (!plan) {
+                resetDragState()
+                return
+            }
+
+            try {
+                setDragOverItem(null)
+                if (params.fromParentId === params.toParentId) {
+                    const payload = buildReorderPayload(plan.targetSiblings)
+                    await categoriesApiService.reorderMany(payload)
+                } else {
+                    await categoriesApiService.update(params.sourceId, {
+                        parent_id: params.toParentId,
+                        sort_index: plan.targetSiblings.findIndex((node) => node.id === params.sourceId),
+                    })
+                    const payload = buildReorderPayload(plan.sourceSiblings, plan.targetSiblings)
+                    if (payload.length > 0) {
+                        await categoriesApiService.reorderMany(payload)
+                    }
+                }
+
+                setCategories(plan.tree)
+                toast.success(t("common.success"))
+            } catch (error) {
+                toast.error(t("common.error"))
+            } finally {
+                resetDragState()
+            }
+        },
+        [buildReorderPayload, createReorderPlan, resetDragState, setCategories, setDragOverItem, t],
+    )
+
+    const handleDropOnItem = (e: React.DragEvent, item: CategoryNode, parentId: UUID | null) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!draggedItem || draggedItem.item.id === item.id) {
+            resetDragState()
+            return
+        }
+
+        const siblings = findChildrenRef(categories, parentId)
+        if (!siblings) {
+            resetDragState()
+            return
+        }
+
+        const targetIndex = siblings.findIndex((sibling) => sibling.id === item.id)
+        if (targetIndex === -1) {
+            resetDragState()
+            return
+        }
+
+        executeReorder({
+            sourceId: draggedItem.item.id,
+            fromParentId: draggedItem.parentId,
+            toParentId: parentId,
+            toIndex: targetIndex,
+        })
+    }
+
+    const handleDropAsChild = (e: React.DragEvent, parent: CategoryNode) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!draggedItem || draggedItem.item.id === parent.id) {
+            resetDragState()
+            return
+        }
+
+        const children = findChildrenRef(categories, parent.id)
+        if (!children) {
+            resetDragState()
+            return
+        }
+
+        executeReorder({
+            sourceId: draggedItem.item.id,
+            fromParentId: draggedItem.parentId,
+            toParentId: parent.id,
+            toIndex: children.length,
+        })
+    }
+
     const deleteCategory = async (id: UUID, parentId: UUID | null = null) => {
         const prev = categories
         try {
@@ -132,6 +241,8 @@ export default function NestedDraggableList({
                     onDragStart={(e) => handleDragStart(e, item, parentId)}
                     onDragOver={handleDragOver}
                     onDragEnter={(e) => handleDragEnter(e, item, parentId)}
+                    onDragEnd={handleDragEnd}
+                    onDrop={(e) => handleDropOnItem(e, item, parentId)}
                     className={`group flex items-center gap-2 p-2 rounded-lg transition-all cursor-move ${
                         isBeingDragged ? "opacity-50" : ""
                     } ${
@@ -202,7 +313,7 @@ export default function NestedDraggableList({
                 {/* Drop-zone برای تبدیل به فرزند */}
                 <div
                     onDragOver={handleDragOver}
-                    // ↓ اینجا می‌تونی تابع handleDropAsChild خودت رو اضافه کنی (از هوک هم می‌تونه بیاد)
+                    onDrop={(e) => handleDropAsChild(e, item)}
                     className={
                         item.expanded
                             ? "mt-1 min-h-[20px]"
