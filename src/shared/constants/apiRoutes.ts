@@ -42,6 +42,8 @@ export const API_ROUTES = {
         ROOT: CATEGORIES_ROOT,
         BY_ID: (id: string | number) => joinSegments(CATEGORIES_ROOT, id),
         BY_SLUG: (slug: string) => joinSegments(CATEGORIES_ROOT, 'slug', slug),
+        REORDER_BULK: joinSegments(CATEGORIES_ROOT, 'reorder'),
+        REORDER_SINGLE: (id: string | number) => joinSegments(CATEGORIES_ROOT, id, 'reorder'),
     },
     PRODUCTS: {
         ROOT: PRODUCTS_ROOT,
