@@ -5,6 +5,8 @@ import type {
     CategoryListResponse,
     CategoryResponse,
     CreateCategoryRequest,
+    ReorderCategories,
+    ReorderCategoryItem,
     UpdateCategoryRequest,
     UUID,
 } from '@/features/categories/model/types'
@@ -31,6 +33,14 @@ export const categoriesApiService = {
 
     update(id: UUID, payload: UpdateCategoryRequest) {
         return catalogClient.put<CategoryResponse>(API_ROUTES.CATEGORIES.BY_ID(id), payload)
+    },
+
+    reorderOne(id: UUID, payload: ReorderCategoryItem) {
+        return catalogClient.put<void>(API_ROUTES.CATEGORIES.REORDER_SINGLE(id), payload)
+    },
+
+    reorderMany(payload: ReorderCategories) {
+        return catalogClient.put<void>(API_ROUTES.CATEGORIES.REORDER_BULK, payload)
     },
 
     remove(id: UUID) {
