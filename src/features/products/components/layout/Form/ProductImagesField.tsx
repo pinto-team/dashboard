@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useI18n } from '@/shared/hooks/useI18n'
 import type { CreateProductRequest } from '@/features/products/model/types'
-import ProductImageUploader from '@/features/products/components/layout/Uploader/ProductImageUploader'
+import ImageUploader from '@/components/layout/uploader/ImageUploader'
 import { toAbsoluteUrl } from '@/shared/api/files'
 
 type ImageInfo = { id: string; url: string }
@@ -77,11 +77,13 @@ export default function ProductImagesField({ initialImages }: Props) {
                         </Button>
                     </div>
                 ))}
-                <ProductImageUploader
+                <ImageUploader
                     key={uploadKey}
                     value={null}
                     onChange={addImage}
                     className="h-24 w-24"
+                    emptyContent={'+'}
+                    altText={t('products.image_alt')}
                 />
             </div>
         </div>

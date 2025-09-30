@@ -17,7 +17,7 @@ function joinSegments(...segments: (string | number)[]): string {
 
 const API_V1 = joinSegments('api', 'v1')
 const ADMIN_AUTH = joinSegments(API_V1, 'admin', 'auth')
-const FILES_ROOT = joinSegments('files')
+const FILES_ROOT = joinSegments(API_V1, 'files')
 const BRANDS_ROOT = joinSegments(API_V1, 'brands')
 const CATEGORIES_ROOT = joinSegments(API_V1, 'categories')
 const PRODUCTS_ROOT = joinSegments('products')
@@ -30,7 +30,7 @@ export const API_ROUTES = {
     },
 
     FILES: {
-        UPLOAD: joinSegments(FILES_ROOT, 'upload'),
+        ROOT: FILES_ROOT,
         DELETE: (id: string | number) => joinSegments(FILES_ROOT, id),
         GET: (id: string | number) => joinSegments(FILES_ROOT, id),
         THUMBNAIL: (id: string | number) => joinSegments(FILES_ROOT, id, 'thumbnail'),

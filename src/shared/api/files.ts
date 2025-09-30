@@ -2,7 +2,8 @@ import type { AxiosRequestConfig } from 'axios'
 import { catalogClient } from '@/lib/axios'
 import { API_ROUTES } from '@/shared/constants/apiRoutes'
 import { API_CONFIG } from '@/shared/config/api.config'
-import type { UploadFilesResponse } from '@/features/brands/model/types'
+import type { UploadFilesResponse } from '@/shared/api/files.types'
+import type { UploadedFile } from '@/shared/api/files.types'
 
 export function toAbsoluteUrl(pathOrUrl: string): string {
     if (!pathOrUrl) return ''
@@ -25,13 +26,13 @@ export async function uploadSingleImage(
     }
 
     const { data } = await catalogClient.post<UploadFilesResponse>(
-        API_ROUTES.FILES.UPLOAD,
+        API_ROUTES.FILES.ROOT,
         form,
         cfg,
     )
 
-    const first = data.files?.[0]
-    if (!first || !first.url || !first.id) {
+    const first = data.data?.[0]
+    if (!first || !first.id) {
         throw new Error('Upload failed: empty response')
     }
     return { id: first.id, url: toAbsoluteUrl(first.url) }
@@ -48,10 +49,10 @@ export async function uploadFiles(files: File[], signal?: AbortSignal): Promise<
     }
 
     const { data } = await catalogClient.post<UploadFilesResponse>(
-        API_ROUTES.FILES.UPLOAD,
+        API_ROUTES.FILES.ROOT,
         form,
         cfg,
     )
-    return (data.files || []).map((f: { url: string }) => toAbsoluteUrl(f.url))
+    return (data.data || []).map((f: UploadedFile) => toAbsoluteUrl(f.url))
 }
 

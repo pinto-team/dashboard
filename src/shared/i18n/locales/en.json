@@ -279,6 +279,7 @@
   "uploader.aria.drop_or_click": "Drop image here or click to upload",
   "uploader.actions.remove": "Remove",
   "uploader.status.uploading": "Uploading...",
+  "uploader.alt.image_preview": "Uploaded image preview",
   "uploader.hint.drag_or_click": "Drag an image here or click to upload",
 
   "login.title": "Sign in",

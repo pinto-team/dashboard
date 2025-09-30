@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useFormContext } from 'react-hook-form'
-import CategoryImageUploader from '@/features/categories/components/CategoryImageUploader.tsx'
+import ImageUploader from '@/components/layout/uploader/ImageUploader'
 import { useI18n } from '@/shared/hooks/useI18n.ts'
 import type { CategoryFormValues } from '@/features/categories/model/types.ts'
 import { toAbsoluteUrl } from '@/shared/api/files'
@@ -18,7 +18,7 @@ export default function CategoryImageField({ initialImageUrl, submitting = false
 
     return (
         <div className="flex flex-col">
-            <CategoryImageUploader
+            <ImageUploader
                 value={imagePreviewUrl ? imagePreviewUrl : null}
                 onChange={(file) => {
                     const id = file?.id || ''
@@ -30,6 +30,8 @@ export default function CategoryImageField({ initialImageUrl, submitting = false
                 aspect="square"
                 className="h-56 w-full self-start"
                 disabled={submitting}
+                altText={t('categories.image_alt')}
+                emptyContent={t('uploader.hint.drag_or_click')}
             />
             <p className="mt-2 text-xs text-muted-foreground">
                 {t('categories.form.image_help')}
