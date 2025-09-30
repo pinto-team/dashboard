@@ -8,7 +8,7 @@ import type { UploadedFile } from '@/shared/api/files.types'
 export function toAbsoluteUrl(pathOrUrl: string): string {
     if (!pathOrUrl) return ''
     if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
-    const base = API_CONFIG.CATALOG.BASE_URL || API_CONFIG.BASE_URL
+    const base = API_CONFIG.CATALOG.BASE_URL
     return `${base}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`
 }
 

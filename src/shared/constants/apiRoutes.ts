@@ -1,6 +1,10 @@
-import { API_CONFIG, normalizeBaseUrl } from '@/shared/config/api.config'
+import {
+    API_CONFIG,
+    normalizeBaseUrl,
+    type ApiFeature,
+} from '@/shared/config/api.config'
 
-type FeatureKey = 'AUTH' | 'CATALOG'
+type FeatureKey = ApiFeature
 
 function joinSegments(...segments: (string | number)[]): string {
     const cleaned = segments
@@ -76,7 +80,7 @@ function resolveBaseUrl(feature?: FeatureKey, override?: string): string {
     }
 
     if (!feature) {
-        return API_CONFIG.BASE_URL
+        return ''
     }
 
     return API_CONFIG[feature].BASE_URL

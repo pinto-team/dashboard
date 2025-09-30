@@ -18,7 +18,7 @@ import {
 } from "@/features/auth/storage"
 import { emitForcedLogout, emitTokenRefreshed } from "@/features/auth/lib/auth-events"
 import { buildRefreshRequestPayload } from "@/features/auth/utils/context"
-import { API_CONFIG } from "@/shared/config/api.config"
+import { API_CONFIG, normalizeBaseUrl } from "@/shared/config/api.config"
 import { API_ROUTES, buildFeatureUrl } from "@/shared/constants/apiRoutes"
 import { defaultLogger } from "@/shared/lib/logger"
 
@@ -35,7 +35,7 @@ type RefreshResponse = {
     meta?: unknown
 }
 type ClientConfig = {
-    baseURL: string
+    baseURL?: string
     feature?: string
     enableAuth?: boolean
     enableRefresh?: boolean
@@ -92,8 +92,9 @@ function resolveSessionId(payload: Record<string, unknown>): string | null {
 }
 
 function createApiClient(config: ClientConfig): AxiosInstance {
+    const baseURL = normalizeBaseUrl(config.baseURL ?? "")
     const instance = axios.create({
-        baseURL: config.baseURL,
+        baseURL: baseURL || undefined,
         headers: new AxiosHeaders({ "Content-Type": "application/json" }),
         timeout: 10000,
     })
@@ -262,11 +263,7 @@ function createApiClient(config: ClientConfig): AxiosInstance {
 }
 
 /** Default API client for the primary backend */
-export const apiClient = createApiClient({
-    baseURL: API_CONFIG.BASE_URL,
-    enableAuth: true,
-    enableRefresh: true,
-})
+export const apiClient = createApiClient({ enableAuth: true, enableRefresh: true })
 
 /** Auth-scoped client */
 export const authClient = createApiClient({
@@ -278,7 +275,7 @@ export const authClient = createApiClient({
 
 /** Catalog-scoped client (refresh enabled) */
 export const catalogClient = createApiClient({
-    baseURL: API_CONFIG.CATALOG.BASE_URL || "http://localhost:8000",
+    baseURL: API_CONFIG.CATALOG.BASE_URL,
     feature: "catalog",
     enableAuth: true,
     enableRefresh: true,
