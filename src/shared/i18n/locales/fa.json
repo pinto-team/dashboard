@@ -279,6 +279,7 @@
   "uploader.aria.drop_or_click": "تصویر را اینجا بکشید یا برای آپلود کلیک کنید",
   "uploader.actions.remove": "حذف",
   "uploader.status.uploading": "در حال آپلود...",
+  "uploader.alt.image_preview": "پیش‌نمایش تصویر آپلود شده",
   "uploader.hint.drag_or_click": "یک تصویر اینجا بکشید یا برای آپلود کلیک کنید",
 
   "login.title": "ورود",

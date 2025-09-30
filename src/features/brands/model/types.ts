@@ -46,13 +46,3 @@ export interface BrandFormValues {
     social_links: Array<{ key: SocialLinkKey | ''; url: string }>
 }
 
-export interface UploadFilesResponse {
-    files: Array<{
-        id: string
-        url: string
-        filename: string
-        content_type: string
-        size: number
-        created_at: string
-    }>
-}
