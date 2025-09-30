@@ -18,28 +18,39 @@ function normalizeBaseUrl(url: string): string {
     return url.replace(/\/+$/, '')
 }
 
+function readEnv(key: string): string {
+    const env = import.meta.env as Record<string, string | undefined>
+    return env[key] ?? ''
+}
+
 const DEFAULT_BASE_URL = normalizeBaseUrl(
-    import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    readEnv('VITE_API_URL') || 'http://localhost:3000',
 )
-const DEFAULT_AUTH_URL = normalizeBaseUrl(
-    import.meta.env.VITE_AUTH_API_URL || DEFAULT_BASE_URL,
-)
-const DEFAULT_CATALOG_URL = normalizeBaseUrl(
-    import.meta.env.VITE_CATALOG_API_URL || DEFAULT_BASE_URL,
-)
+
+function buildFeatureConfig(envKey: string, fallback: string = DEFAULT_BASE_URL) {
+    return {
+        BASE_URL: normalizeBaseUrl(readEnv(envKey) || fallback),
+    }
+}
+
+const FEATURE_CONFIG = {
+    AUTH: buildFeatureConfig('VITE_AUTH_API_URL'),
+    CATALOG: buildFeatureConfig('VITE_CATALOG_API_URL'),
+    FILES: buildFeatureConfig('VITE_FILES_API_URL'),
+    BRANDS: buildFeatureConfig('VITE_BRANDS_API_URL'),
+    CATEGORIES: buildFeatureConfig('VITE_CATEGORIES_API_URL'),
+    PRODUCTS: buildFeatureConfig('VITE_PRODUCTS_API_URL'),
+    SESSIONS: buildFeatureConfig('VITE_SESSIONS_API_URL'),
+} as const
+
+export type ApiFeature = keyof typeof FEATURE_CONFIG
 
 export const API_CONFIG = {
     // Main API URL (fallback for backward compatibility)
     BASE_URL: DEFAULT_BASE_URL,
 
     // Feature-specific API URLs
-    AUTH: {
-        BASE_URL: DEFAULT_AUTH_URL,
-    },
-
-    CATALOG: {
-        BASE_URL: DEFAULT_CATALOG_URL,
-    },
+    ...FEATURE_CONFIG,
 
     // MSW configuration
     MSW: {

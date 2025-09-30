@@ -1,6 +1,10 @@
-import { API_CONFIG, normalizeBaseUrl } from '@/shared/config/api.config'
+import {
+    API_CONFIG,
+    normalizeBaseUrl,
+    type ApiFeature,
+} from '@/shared/config/api.config'
 
-type FeatureKey = 'AUTH' | 'CATALOG'
+type FeatureKey = ApiFeature
 
 function joinSegments(...segments: (string | number)[]): string {
     const cleaned = segments
