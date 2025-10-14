@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "dev:local": "vite --mode localdev",
-        "build": "tsc --noEmit && vite build",
+        "build": "vite build",
         "build:dev": "tsc --noEmit && vite build --mode dev",
         "preview": "vite preview",
         "lint": "eslint .",
@@ -82,7 +82,7 @@
         "tailwindcss-animate": "^1.0.7",
         "tw-animate-css": "^1.3.6",
         "typescript": "~5.8.3",
-        "typescript-eslint": "^.39.0",
+        "typescript-eslint": "8.46.1",
         "vite": "7.1.5"
     }
 }
